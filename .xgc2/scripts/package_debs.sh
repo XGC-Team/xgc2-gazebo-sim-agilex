@@ -143,7 +143,7 @@ description_dep="ros-noetic-xgc2-scout-description (>= 0.4.10-8)"
 build_deb \
   "${gazebo_pkg}" \
   "gazebo_sim_scout" \
-  "${description_dep}, ros-noetic-xgc2-gazebo-sim-worlds (>= 1.1.0-10), ros-noetic-xgc2-gazebo-sim-vrpn-bridge (>= 1.1.0-12), ros-noetic-scout-msgs (>= 0.3.3-5), ros-noetic-roscpp, ros-noetic-geometry-msgs, ros-noetic-gazebo-msgs, ros-noetic-nav-msgs, ros-noetic-sensor-msgs, ros-noetic-std-msgs, ros-noetic-tf, ros-noetic-tf2, ros-noetic-tf2-ros, ros-noetic-controller-manager, ros-noetic-gazebo-plugins, ros-noetic-gazebo-ros, ros-noetic-gazebo-ros-control, ros-noetic-joint-state-controller, ros-noetic-joint-state-publisher, ros-noetic-robot-state-publisher, ros-noetic-rostopic, ros-noetic-rviz, ros-noetic-velocity-controllers" \
+  "${description_dep}, ros-noetic-xgc2-gazebo-sim-worlds (>= 1.1.0-10), ros-noetic-xgc2-gazebo-sim-vrpn-bridge (>= 1.1.0-13), ros-noetic-scout-msgs (>= 0.3.3-5), ros-noetic-roscpp, ros-noetic-geometry-msgs, ros-noetic-gazebo-msgs, ros-noetic-nav-msgs, ros-noetic-sensor-msgs, ros-noetic-std-msgs, ros-noetic-tf, ros-noetic-tf2, ros-noetic-tf2-ros, ros-noetic-controller-manager, ros-noetic-gazebo-plugins, ros-noetic-gazebo-ros, ros-noetic-gazebo-ros-control, ros-noetic-joint-state-controller, ros-noetic-joint-state-publisher, ros-noetic-robot-state-publisher, ros-noetic-rostopic, ros-noetic-rviz, ros-noetic-velocity-controllers" \
   "XGC2 AgileX Scout Gazebo Classic simulation" \
   "Replaces: ros-noetic-xgc2-scout-gazebo-sim, ros-noetic-xgc2-gz-classic-scout
 Conflicts: ros-noetic-xgc2-scout-gazebo-sim, ros-noetic-xgc2-gz-classic-scout" \
