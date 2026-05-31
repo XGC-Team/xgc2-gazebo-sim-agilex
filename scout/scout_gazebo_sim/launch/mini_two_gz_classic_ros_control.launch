@@ -1,0 +1,70 @@
+<?xml version="1.0"?>
+<launch>
+    <arg name="world_name" default="$(find scout_gazebo_sim)/worlds/weston_robot_empty.world"/>
+    <arg name="gui" default="true"/>
+    <arg name="rviz" default="true"/>
+    <arg name="rviz_config" default="$(find scout_description)/rviz/two_ugv_navigation.rviz"/>
+    <arg name="paused" default="false"/>
+    <arg name="enable_vrpn_server" default="true"/>
+
+    <arg name="ugv1_namespace" default="ugv1"/>
+    <arg name="ugv1_model_name" default="$(arg ugv1_namespace)"/>
+    <arg name="ugv1_x" default="0.0"/>
+    <arg name="ugv1_y" default="0.6"/>
+    <arg name="ugv1_z" default="0.181"/>
+    <arg name="ugv1_yaw" default="0.0"/>
+
+    <arg name="ugv2_namespace" default="ugv2"/>
+    <arg name="ugv2_model_name" default="$(arg ugv2_namespace)"/>
+    <arg name="ugv2_x" default="0.0"/>
+    <arg name="ugv2_y" default="-0.6"/>
+    <arg name="ugv2_z" default="0.181"/>
+    <arg name="ugv2_yaw" default="0.0"/>
+
+    <include file="$(find gazebo_ros)/launch/empty_world.launch">
+        <arg name="world_name" value="$(arg world_name)"/>
+        <arg name="paused" value="$(arg paused)"/>
+        <arg name="use_sim_time" value="true"/>
+        <arg name="gui" value="$(arg gui)"/>
+        <arg name="headless" value="false"/>
+        <arg name="debug" value="false"/>
+    </include>
+
+    <include file="$(find scout_gazebo_sim)/launch/mini_spawn_ros_control.launch">
+        <arg name="robot_namespace" value="$(arg ugv1_namespace)" />
+        <arg name="model_name" value="$(arg ugv1_model_name)" />
+        <arg name="x" value="$(arg ugv1_x)" />
+        <arg name="y" value="$(arg ugv1_y)" />
+        <arg name="z" value="$(arg ugv1_z)" />
+        <arg name="yaw" value="$(arg ugv1_yaw)" />
+        <arg name="robot_description_param" value="/$(arg ugv1_namespace)/robot_description" />
+        <arg name="odom_topic" value="/$(arg ugv1_namespace)/odom" />
+        <arg name="odom_frame" value="odom" />
+        <arg name="base_frame" value="$(arg ugv1_namespace)/base_link" />
+        <arg name="tf_prefix" value="$(arg ugv1_namespace)" />
+        <arg name="frame_prefix" value="$(arg ugv1_namespace)/" />
+        <arg name="sensor_namespace" value="$(arg ugv1_namespace)" />
+        <arg name="robot_state_publisher_namespace" value="$(arg ugv1_namespace)" />
+    </include>
+
+    <include file="$(find scout_gazebo_sim)/launch/mini_spawn_ros_control.launch">
+        <arg name="robot_namespace" value="$(arg ugv2_namespace)" />
+        <arg name="model_name" value="$(arg ugv2_model_name)" />
+        <arg name="x" value="$(arg ugv2_x)" />
+        <arg name="y" value="$(arg ugv2_y)" />
+        <arg name="z" value="$(arg ugv2_z)" />
+        <arg name="yaw" value="$(arg ugv2_yaw)" />
+        <arg name="robot_description_param" value="/$(arg ugv2_namespace)/robot_description" />
+        <arg name="odom_topic" value="/$(arg ugv2_namespace)/odom" />
+        <arg name="odom_frame" value="odom" />
+        <arg name="base_frame" value="$(arg ugv2_namespace)/base_link" />
+        <arg name="tf_prefix" value="$(arg ugv2_namespace)" />
+        <arg name="frame_prefix" value="$(arg ugv2_namespace)/" />
+        <arg name="sensor_namespace" value="$(arg ugv2_namespace)" />
+        <arg name="robot_state_publisher_namespace" value="$(arg ugv2_namespace)" />
+    </include>
+
+    <include if="$(arg enable_vrpn_server)" file="$(find localization_router)/launch/gazebo_vrpn_server.launch"/>
+
+    <node if="$(arg rviz)" name="rviz" pkg="rviz" type="rviz" args="-d $(arg rviz_config)" />
+</launch>

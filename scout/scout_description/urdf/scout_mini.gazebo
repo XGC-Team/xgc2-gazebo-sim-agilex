@@ -2,31 +2,60 @@
 
 
 <robot xmlns:xacro="http://ros.org/wiki/xacro">
-    <xacro:include filename="$(find scout_description)/urdf/scout_wheel.gazebo" />
+    <xacro:macro name="scout_wheel_contact" params="link_name">
+        <gazebo reference="${link_name}">
+            <mu1 value="1.0"/>
+            <mu2 value="0.3"/>
+            <fdir1 value="1 0 0"/>
+            <slip1 value="0.0"/>
+            <slip2 value="0.1"/>
+            <kp value="1000000.0"/>
+            <kd value="1.0"/>
+            <minDepth value="0.001"/>
+            <maxContacts value="16"/>
+        </gazebo>
+    </xacro:macro>
 
-    <!-- Actuator configurations -->
-    <xacro:scout_wheel_transmission wheel_prefix="front_right" />
-    <xacro:scout_wheel_transmission wheel_prefix="front_left" />
-    <xacro:scout_wheel_transmission wheel_prefix="rear_left" />
-    <xacro:scout_wheel_transmission wheel_prefix="rear_right" />
+    <xacro:if value="$(arg enable_ros_control)">
+        <xacro:include filename="$(find scout_description)/urdf/scout_wheel.gazebo" />
 
-    <!-- Controller configurations -->
-    <gazebo>
-        <plugin name="gazebo_ros_control" filename="libgazebo_ros_control.so">
-            <robotNamespace>$(arg robot_namespace)</robotNamespace>
-        </plugin>
+        <!-- Actuator configurations -->
+        <xacro:scout_wheel_transmission wheel_prefix="front_right" />
+        <xacro:scout_wheel_transmission wheel_prefix="front_left" />
+        <xacro:scout_wheel_transmission wheel_prefix="rear_left" />
+        <xacro:scout_wheel_transmission wheel_prefix="rear_right" />
+
+        <!-- Controller configurations -->
+        <gazebo>
+            <plugin name="gazebo_ros_control" filename="libgazebo_ros_control.so">
+                <robotNamespace>$(arg robot_namespace)</robotNamespace>
+                <robotParam>$(arg robot_description_param)</robotParam>
+            </plugin>
+        </gazebo>
+    </xacro:if>
+
+    <gazebo reference="imu_link">
+        <sensor name="imu_sensor" type="imu">
+            <always_on>true</always_on>
+            <update_rate>100.0</update_rate>
+            <visualize>false</visualize>
+            <plugin name="imu_plugin" filename="libgazebo_ros_imu_sensor.so">
+                <robotNamespace>$(arg robot_namespace)</robotNamespace>
+                <topicName>imu</topicName>
+                <frameName>$(arg frame_prefix)imu_link</frameName>
+                <updateRateHZ>100.0</updateRateHZ>
+                <gaussianNoise>0.0002</gaussianNoise>
+                <initialOrientationAsReference>false</initialOrientationAsReference>
+            </plugin>
+        </sensor>
     </gazebo>
 
-    <!-- kp spring constant, kd damping constant -->
-    <!-- <gazebo>
-        <mu1 value="1.0"/>
-        <mu2 value="0.9"/>
-        <kp value="10000000.0" />
-        <kd value="1.0" />
-        <fdir1 value="1 0 0"/>
-        <minDepth value="0.001" />
-        <maxContacts value="64"/>
-    </gazebo> -->
+    <!-- Wheel contact uses high rolling friction and lower lateral friction so
+         skid-steer yaw can slip instead of locking diagonal wheels. -->
+    <xacro:scout_wheel_contact link_name="front_left_wheel_link"/>
+    <xacro:scout_wheel_contact link_name="front_right_wheel_link"/>
+    <xacro:scout_wheel_contact link_name="rear_left_wheel_link"/>
+    <xacro:scout_wheel_contact link_name="rear_right_wheel_link"/>
 
         <gazebo reference="laser_link">
             <sensor type="ray" name="laser_sensor">
@@ -54,8 +83,9 @@
                 </noise>
               </ray>
               <plugin name="gazebo_ros_laser_sensor" filename="libgazebo_ros_laser.so">
-                <topicName>/scan</topicName>
-                <frameName>laser_link</frameName>
+                <robotNamespace>$(arg sensor_namespace)</robotNamespace>
+                <topicName>scan</topicName>
+                <frameName>$(arg frame_prefix)laser_link</frameName>
               </plugin>
             </sensor>
           </gazebo>
@@ -64,7 +94,7 @@
           <sensor name="sensor_camera" type="depth">
             <pose>0.0 0.0 0.0 0.0 0.0 0.0</pose>
             <always_on>true</always_on>
-            <visualize>true</visualize>
+            <visualize>false</visualize>
             <update_rate>10.0</update_rate>
             <camera name="head">
               <horizontal_fov>1.3962634</horizontal_fov>
@@ -80,6 +110,7 @@
             </camera>
 
             <plugin name="gazebo_ros_depth_camera_sensor" filename="libgazebo_ros_openni_kinect.so">
+              <robotNamespace>$(arg sensor_namespace)</robotNamespace>
               <baseline>0.2</baseline>
               <alwaysOn>true</alwaysOn>
               <updateRate>0.0</updateRate>
@@ -89,8 +120,8 @@
               <depthImageTopicName>depth/image_raw</depthImageTopicName>
               <depthImageCameraInfoTopicName>depth/camera_info</depthImageCameraInfoTopicName>
               <pointCloudTopicName>depth/points</pointCloudTopicName>
-              <frameName>camera_link</frameName>
-              <cameraname>camera_link</cameraname>
+              <frameName>$(arg frame_prefix)camera_link</frameName>
+              <cameraname>$(arg frame_prefix)camera_link</cameraname>
               <pointCloudCutoff>0.5</pointCloudCutoff>
               <pointCloudCutoffMax>3.0</pointCloudCutoffMax>
               <distortionK1>0</distortionK1>
@@ -107,6 +138,7 @@
         </sensor>
           </gazebo>
 
+    <xacro:if value="$(arg use_skid_steer_plugin)">
     <gazebo>
         <plugin name="skid_steer_drive_controller" filename="libgazebo_ros_skid_steer_drive.so">
             <updateRate>100.0</updateRate>
@@ -115,9 +147,9 @@
             <rightFrontJoint>front_right_wheel</rightFrontJoint>
             <leftRearJoint>rear_left_wheel</leftRearJoint>
             <rightRearJoint>rear_right_wheel</rightRearJoint>
-            <wheelSeparation>0.58</wheelSeparation>
-            <wheelbase>0.49</wheelbase>
-            <wheelDiameter>0.16</wheelDiameter>
+            <wheelSeparation>${track}</wheelSeparation>
+            <wheelbase>${wheelbase}</wheelbase>
+            <wheelDiameter>${wheel_diameter}</wheelDiameter>
             <robotBaseFrame>base_link</robotBaseFrame>
             <torque>1000</torque>
             <commandTopic>cmd_vel</commandTopic>
@@ -129,6 +161,7 @@
             <covariance_yaw>0.010000</covariance_yaw>
         </plugin>
     </gazebo>
+    </xacro:if>
 
     <!-- <gazebo>
         <plugin name="object_controller" filename="libgazebo_ros_planar_move.so">

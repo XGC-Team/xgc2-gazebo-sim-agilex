@@ -30,8 +30,9 @@ class ScoutSkidSteer {
   std::string motor_rr_topic_;
   std::string cmd_topic_;
 
-  const double SCOUT_WHEELBASE = 0.498;
-  const double SCOUT_WHEEL_RADIUS = 0.16459;
+  double wheel_separation_;
+  double wheel_radius_;
+  double command_gain_;
 
   ros::NodeHandle *nh_;
 
@@ -43,6 +44,7 @@ class ScoutSkidSteer {
   ros::Subscriber cmd_sub_;
 
   void TwistCmdCallback(const geometry_msgs::Twist::ConstPtr &msg);
+  std::string JoinTopic(const std::string &ns, const std::string &topic) const;
 };
 }  // namespace wescore
 
