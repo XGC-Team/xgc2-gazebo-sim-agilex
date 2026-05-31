@@ -72,6 +72,7 @@ docker run --rm \
       ros-noetic-nav-msgs \
       ros-noetic-robot-state-publisher \
       ros-noetic-roslaunch \
+      ros-noetic-roslint \
       ros-noetic-rospack \
       ros-noetic-rostopic \
       ros-noetic-rviz \
