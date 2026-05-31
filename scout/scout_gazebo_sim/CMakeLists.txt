@@ -50,6 +50,13 @@ target_link_libraries(gazebo_model_odom ${catkin_LIBRARIES})
 roslaunch_add_file_check(launch)
 
 install(
+  TARGETS scout_gazebo scout_skid_steer_controller odom_to_tf gazebo_model_odom
+  ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+)
+
+install(
   DIRECTORY config launch worlds
   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
 )
