@@ -1,0 +1,56 @@
+name: check-apt-ssh
+
+on:
+  workflow_dispatch:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    env:
+      APT_REPO_HOST: ${{ secrets.APT_REPO_HOST }}
+      APT_REPO_PORT: ${{ secrets.APT_REPO_PORT }}
+      APT_REPO_SSH_KEY: ${{ secrets.APT_REPO_SSH_KEY }}
+      APT_REPO_KNOWN_HOSTS: ${{ secrets.APT_REPO_KNOWN_HOSTS }}
+
+    steps:
+      - name: Validate APT repository SSH secrets
+        shell: bash
+        run: |
+          set -euo pipefail
+          missing=0
+          for name in APT_REPO_HOST APT_REPO_SSH_KEY APT_REPO_KNOWN_HOSTS; do
+            if [ -z "${!name:-}" ]; then
+              echo "::error::${name} secret is not configured"
+              missing=1
+            fi
+          done
+          if [ -z "${APT_REPO_PORT:-}" ]; then
+            echo "APT_REPO_PORT=22" >> "${GITHUB_ENV}"
+          fi
+          exit "${missing}"
+
+      - name: Prepare SSH files
+        shell: bash
+        run: |
+          set -euo pipefail
+          umask 077
+          printf '%s\n' "${APT_REPO_SSH_KEY}" > "${RUNNER_TEMP}/apt-repo-key"
+          printf '%s\n' "${APT_REPO_KNOWN_HOSTS}" > "${RUNNER_TEMP}/known_hosts"
+
+      - name: Check forced SSH health command
+        shell: bash
+        run: |
+          set -euo pipefail
+          ssh_output="$(
+            ssh \
+              -i "${RUNNER_TEMP}/apt-repo-key" \
+              -p "${APT_REPO_PORT}" \
+              -o IdentitiesOnly=yes \
+              -o StrictHostKeyChecking=yes \
+              -o "UserKnownHostsFile=${RUNNER_TEMP}/known_hosts" \
+              -o LogLevel=ERROR \
+              "aptdeploy@${APT_REPO_HOST}" \
+              health
+          )"
+          test "${ssh_output}" = "ok"
+          echo "APT repository SSH health check passed."
