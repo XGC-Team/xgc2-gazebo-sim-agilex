@@ -30,13 +30,13 @@ jobs:
       - name: Build and install-check deb packages in Docker
         run: |
           .xgc2/scripts/build_debs_in_docker.sh \
-            --work-dir "$RUNNER_TEMP/xgc2-agilex-${{ matrix.arch }}" \
+            --work-dir "$RUNNER_TEMP/xgc2-gz-classic-scout-${{ matrix.arch }}" \
             --output-dir "$GITHUB_WORKSPACE/debs"
 
       - name: Upload deb artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: xgc2-agilex-debs-${{ matrix.arch }}
+          name: xgc2-gz-classic-scout-debs-${{ matrix.arch }}
           path: debs/*.deb
 
       - name: Publish to self-hosted APT repository

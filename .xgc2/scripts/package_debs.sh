@@ -86,7 +86,7 @@ Maintainer: XGC2 <apt@example.com>
 Depends: ${depends}
 Description: ${description}
 EOF
-  printf 'xgc2-agilex package\n' > "${pkg_root}/usr/share/doc/${package}/README"
+  printf 'xgc2 gz-classic scout package\n' > "${pkg_root}/usr/share/doc/${package}/README"
   chmod 0755 "${pkg_root}/DEBIAN"
 }
 
@@ -129,9 +129,9 @@ build_deb \
   libscout_gazebo
 
 build_deb \
-  "ros-noetic-xgc2-agilex" \
+  "ros-noetic-xgc2-gz-classic-scout" \
   "" \
   "${description_pkg} (= ${VERSION}), ${gazebo_pkg} (= ${VERSION})" \
-  "XGC2 AgileX aggregate package"
+  "XGC2 Gazebo Classic Scout aggregate package"
 
 find "${OUTPUT_DIR}" -maxdepth 1 -type f -name '*.deb' -print | sort

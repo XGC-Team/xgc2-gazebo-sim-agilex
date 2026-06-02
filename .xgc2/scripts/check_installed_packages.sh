@@ -8,7 +8,7 @@ source "/opt/ros/${ROS_DISTRO}/setup.bash"
 required_debs=(
   ros-noetic-xgc2-scout-description
   ros-noetic-xgc2-scout-gazebo-sim
-  ros-noetic-xgc2-agilex
+  ros-noetic-xgc2-gz-classic-scout
 )
 required_ros_packages=(
   scout_description
