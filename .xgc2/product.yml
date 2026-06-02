@@ -18,6 +18,9 @@ apt:
     - ros-noetic-xgc2-scout-description
     - ros-noetic-xgc2-scout-gazebo-sim
     - ros-noetic-xgc2-agilex
+  depends:
+    - ros-noetic-xgc2-scout-description
+    - ros-noetic-xgc2-scout-gazebo-sim
 
 usage:
   install: |
