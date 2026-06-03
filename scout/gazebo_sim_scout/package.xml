@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <package>
-  <name>scout_gazebo_sim</name>
+  <name>gazebo_sim_scout</name>
   <version>0.0.1</version>
   <description>AgileX Scout 2.0 Simulator bringup</description>
 

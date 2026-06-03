@@ -7,12 +7,11 @@ source "/opt/ros/${ROS_DISTRO}/setup.bash"
 
 required_debs=(
   ros-noetic-xgc2-scout-description
-  ros-noetic-xgc2-scout-gazebo-sim
-  ros-noetic-xgc2-gz-classic-scout
+  ros-noetic-xgc2-gazebo-sim-scout
 )
 required_ros_packages=(
   scout_description
-  scout_gazebo_sim
+  gazebo_sim_scout
 )
 
 for package in "${required_debs[@]}"; do
@@ -24,12 +23,12 @@ for ros_pkg in "${required_ros_packages[@]}"; do
 done
 
 roslaunch --files scout_description mini_description.launch >/tmp/xgc2-scout-description-files.txt
-roslaunch --files scout_gazebo_sim mini_spawn.launch >/tmp/xgc2-scout-spawn-files.txt
-roslaunch --files scout_gazebo_sim mini_gz_classic_simple.launch rviz:=false >/tmp/xgc2-scout-simple-files.txt
-roslaunch --files scout_gazebo_sim mini_gz_classic_ros_control.launch rviz:=false enable_vrpn_server:=false >/tmp/xgc2-scout-ros-control-files.txt
+roslaunch --files gazebo_sim_scout spawn_simple.launch >/tmp/xgc2-scout-spawn-files.txt
+roslaunch --files gazebo_sim_scout simple.launch rviz:=false >/tmp/xgc2-scout-simple-files.txt
+roslaunch --files gazebo_sim_scout accurate.launch rviz:=false enable_vrpn_server:=false >/tmp/xgc2-scout-accurate-files.txt
 
 check_paths=(
-  "/opt/ros/${ROS_DISTRO}/lib/scout_gazebo_sim"
+  "/opt/ros/${ROS_DISTRO}/lib/gazebo_sim_scout"
   "/opt/ros/${ROS_DISTRO}/lib/libscout_gazebo.a"
 )
 

@@ -1,12 +1,12 @@
 <?xml version="1.0"?>
 <launch>
     <arg name="robot_namespace" default="ugv1"/>
-    <arg name="world_name" default="$(find scout_gazebo_sim)/worlds/weston_robot_empty.world"/>
+    <arg name="world_name" default="$(find gazebo_sim_scout)/worlds/weston_robot_empty.world"/>
     <arg name="model_name" default="$(arg robot_namespace)"/>
     <arg name="gui" default="true"/>
     <arg name="rviz" default="true"/>
     <arg name="paused" default="false"/>
-    <arg name="enable_vrpn_server" default="true"/>
+    <arg name="enable_vrpn_server" default="false"/>
 
     <include file="$(find gazebo_ros)/launch/empty_world.launch">
         <arg name="world_name" value="$(arg world_name)"/>
@@ -17,12 +17,14 @@
         <arg name="debug" value="false"/>
     </include>
 
-    <include file="$(find scout_gazebo_sim)/launch/mini_spawn_ros_control.launch">
+    <include file="$(find gazebo_sim_scout)/launch/spawn_accurate.launch">
         <arg name="robot_namespace" value="$(arg robot_namespace)" />
         <arg name="model_name" value="$(arg model_name)" />
     </include>
 
-    <include if="$(arg enable_vrpn_server)" file="$(find localization_router)/launch/gazebo_vrpn_server.launch"/>
+    <include if="$(arg enable_vrpn_server)" file="$(find gazebo_sim_vrpn_bridge)/launch/vrpn_server.launch">
+        <arg name="auto_track_known_models" value="true"/>
+    </include>
 
     <node if="$(arg rviz)" name="rviz" pkg="rviz" type="rviz" args="-d $(find scout_description)/rviz/navigation.rviz" />
 </launch>

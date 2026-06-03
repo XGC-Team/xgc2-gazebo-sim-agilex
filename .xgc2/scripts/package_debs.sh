@@ -74,9 +74,11 @@ write_control() {
   local package="$2"
   local depends="$3"
   local description="$4"
+  local extra_fields="${5:-}"
 
   mkdir -p "${pkg_root}/DEBIAN" "${pkg_root}/usr/share/doc/${package}"
-  cat > "${pkg_root}/DEBIAN/control" <<EOF
+  {
+    cat <<EOF
 Package: ${package}
 Version: ${VERSION}
 Section: misc
@@ -84,8 +86,14 @@ Priority: optional
 Architecture: ${ARCH}
 Maintainer: XGC2 <apt@example.com>
 Depends: ${depends}
+EOF
+    if [[ -n "${extra_fields}" ]]; then
+      printf '%s\n' "${extra_fields}"
+    fi
+    cat <<EOF
 Description: ${description}
 EOF
+  } > "${pkg_root}/DEBIAN/control"
   printf 'xgc2 gz-classic scout package\n' > "${pkg_root}/usr/share/doc/${package}/README"
   chmod 0755 "${pkg_root}/DEBIAN"
 }
@@ -96,6 +104,11 @@ build_deb() {
   local depends="$3"
   local description="$4"
   shift 4
+  local extra_fields=""
+  if [[ "$#" -gt 0 ]]; then
+    extra_fields="$1"
+    shift
+  fi
 
   local pkg_root="${BUILD_DIR}/${package}"
   rm -rf "${pkg_root}"
@@ -108,30 +121,27 @@ build_deb() {
     copy_libs "${pkg_root}" "$@"
   fi
 
-  write_control "${pkg_root}" "${package}" "${depends}" "${description}"
+  write_control "${pkg_root}" "${package}" "${depends}" "${description}" "${extra_fields}"
   fakeroot dpkg-deb --build "${pkg_root}" "${OUTPUT_DIR}/${package}_${VERSION}_${ARCH}.deb" >/dev/null
 }
 
 description_pkg="ros-noetic-xgc2-scout-description"
-gazebo_pkg="ros-noetic-xgc2-scout-gazebo-sim"
+gazebo_pkg="ros-noetic-xgc2-gazebo-sim-scout"
 
 build_deb \
   "${description_pkg}" \
   "scout_description" \
   "ros-noetic-urdf, ros-noetic-xacro, ros-noetic-joint-state-publisher, ros-noetic-joint-state-publisher-gui, ros-noetic-robot-state-publisher, ros-noetic-rviz" \
-  "XGC2 AgileX Scout robot description"
+  "XGC2 AgileX Scout robot description" \
+  ""
 
 build_deb \
   "${gazebo_pkg}" \
-  "scout_gazebo_sim" \
+  "gazebo_sim_scout" \
   "${description_pkg} (= ${VERSION}), ros-noetic-roscpp, ros-noetic-geometry-msgs, ros-noetic-gazebo-msgs, ros-noetic-nav-msgs, ros-noetic-sensor-msgs, ros-noetic-std-msgs, ros-noetic-tf, ros-noetic-tf2, ros-noetic-tf2-ros, ros-noetic-controller-manager, ros-noetic-gazebo-plugins, ros-noetic-gazebo-ros, ros-noetic-gazebo-ros-control, ros-noetic-joint-state-controller, ros-noetic-joint-state-publisher, ros-noetic-robot-state-publisher, ros-noetic-rostopic, ros-noetic-rviz, ros-noetic-velocity-controllers" \
   "XGC2 AgileX Scout Gazebo Classic simulation" \
+  "Replaces: ros-noetic-xgc2-scout-gazebo-sim, ros-noetic-xgc2-gz-classic-scout
+Conflicts: ros-noetic-xgc2-scout-gazebo-sim, ros-noetic-xgc2-gz-classic-scout" \
   libscout_gazebo
-
-build_deb \
-  "ros-noetic-xgc2-gz-classic-scout" \
-  "" \
-  "${description_pkg} (= ${VERSION}), ${gazebo_pkg} (= ${VERSION})" \
-  "XGC2 Gazebo Classic Scout aggregate package"
 
 find "${OUTPUT_DIR}" -maxdepth 1 -type f -name '*.deb' -print | sort

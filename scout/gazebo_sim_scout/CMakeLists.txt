@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(scout_gazebo_sim)
+project(gazebo_sim_scout)
 
 ## C++ standard and release flags are set by workspace build defaults.
 

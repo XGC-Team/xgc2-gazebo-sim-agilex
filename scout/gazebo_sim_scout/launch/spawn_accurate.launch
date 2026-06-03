@@ -25,7 +25,7 @@
     </include>
 
     <group ns="$(arg robot_namespace)">
-        <rosparam file="$(find scout_gazebo_sim)/config/scout_mini_ros_control.yaml" command="load"/>
+        <rosparam file="$(find gazebo_sim_scout)/config/scout_mini_ros_control.yaml" command="load"/>
     </group>
 
     <node name="$(arg robot_namespace)_spawn_scout_model" pkg="gazebo_ros" type="spawn_model" args="-x $(arg x)
@@ -41,14 +41,14 @@
           ns="$(arg robot_namespace)"
           args="scout_state_controller scout_motor_fr_controller scout_motor_fl_controller scout_motor_rl_controller scout_motor_rr_controller"/>
 
-    <node name="$(arg robot_namespace)_scout_skid_steer_controller" pkg="scout_gazebo_sim" type="scout_skid_steer_controller" output="screen">
+    <node name="$(arg robot_namespace)_scout_skid_steer_controller" pkg="gazebo_sim_scout" type="scout_skid_steer_controller" output="screen">
         <param name="robot_namespace" type="string" value="$(arg robot_namespace)" />
         <param name="wheel_separation" type="double" value="0.416503" />
         <param name="wheel_radius" type="double" value="0.08" />
         <param name="command_gain" type="double" value="1.0" />
     </node>
 
-    <node name="$(arg robot_namespace)_gazebo_model_odom" pkg="scout_gazebo_sim" type="gazebo_model_odom" output="screen">
+    <node name="$(arg robot_namespace)_gazebo_model_odom" pkg="gazebo_sim_scout" type="gazebo_model_odom" output="screen">
         <param name="model_name" type="string" value="$(arg model_name)" />
         <param name="odom_topic" type="string" value="$(arg odom_topic)" />
         <param name="odom_frame" type="string" value="$(arg odom_frame)" />

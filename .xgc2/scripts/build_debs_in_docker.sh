@@ -40,7 +40,7 @@ docker pull "${DOCKER_IMAGE}"
 docker run --rm \
   -e DEBIAN_FRONTEND=noninteractive \
   -e INSTALL_CHECK="${INSTALL_CHECK}" \
-  -v "${REPO_ROOT}:/workspace/xgc2-gz-classic-scout:ro" \
+  -v "${REPO_ROOT}:/workspace/xgc2-gazebo-sim-scout:ro" \
   -v "${WORK_DIR}:/workspace/work" \
   -v "${OUTPUT_DIR}:/workspace/out" \
   "${DOCKER_IMAGE}" \
@@ -87,7 +87,7 @@ docker run --rm \
 
     rm -rf /workspace/work/src /workspace/work/build /workspace/work/devel /workspace/work/install-root
     mkdir -p /workspace/work/src
-    rsync -a --delete /workspace/xgc2-gz-classic-scout/scout/ /workspace/work/src/
+    rsync -a --delete /workspace/xgc2-gazebo-sim-scout/scout/ /workspace/work/src/
 
     cd /workspace/work
     source /opt/ros/noetic/setup.bash
@@ -97,13 +97,13 @@ docker run --rm \
       -DCMAKE_CXX_FLAGS_RELEASE="-O3 -DNDEBUG" \
       -DCMAKE_C_FLAGS_RELEASE="-O3 -DNDEBUG"
 
-    /workspace/xgc2-gz-classic-scout/.xgc2/scripts/package_debs.sh \
+    /workspace/xgc2-gazebo-sim-scout/.xgc2/scripts/package_debs.sh \
       --install-root /workspace/work/install-root \
       --output-dir /workspace/out
 
     if [[ "${INSTALL_CHECK}" == "true" ]]; then
       apt-get install -y /workspace/out/*.deb
-      /workspace/xgc2-gz-classic-scout/.xgc2/scripts/check_installed_packages.sh
+      /workspace/xgc2-gazebo-sim-scout/.xgc2/scripts/check_installed_packages.sh
     fi
   '
 

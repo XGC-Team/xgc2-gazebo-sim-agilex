@@ -1,5 +1,5 @@
 schema: xgc2.product.v1
-id: xgc2-gz-classic-scout
+id: xgc2-gazebo-sim-scout
 name: XGC2 Gazebo Classic Scout
 kind: ros1-apt
 summary: AgileX Scout robot description and Gazebo Classic simulation packages for ROS Noetic.
@@ -8,31 +8,28 @@ ros:
   distro: noetic
   packages:
     - scout_description
-    - scout_gazebo_sim
+    - gazebo_sim_scout
 
 apt:
   distribution: focal
   install:
-    - ros-noetic-xgc2-gz-classic-scout
+    - ros-noetic-xgc2-gazebo-sim-scout
   packages:
     - ros-noetic-xgc2-scout-description
-    - ros-noetic-xgc2-scout-gazebo-sim
-    - ros-noetic-xgc2-gz-classic-scout
+    - ros-noetic-xgc2-gazebo-sim-scout
   depends:
     - ros-noetic-xgc2-scout-description
-    - ros-noetic-xgc2-scout-gazebo-sim
 
 usage:
   install: |
     sudo apt update
-    sudo apt install ros-noetic-xgc2-gz-classic-scout
+    sudo apt install ros-noetic-xgc2-gazebo-sim-scout
   smoke_test: |
-    roslaunch --files scout_gazebo_sim mini_gz_classic_simple.launch rviz:=false
+    roslaunch --files gazebo_sim_scout simple.launch rviz:=false
 
 ownership:
   paths:
     - /opt/ros/noetic/share/scout_description
-    - /opt/ros/noetic/share/scout_gazebo_sim
-    - /opt/ros/noetic/include/scout_gazebo_sim
-    - /opt/ros/noetic/lib/scout_gazebo_sim
+    - /opt/ros/noetic/share/gazebo_sim_scout
+    - /opt/ros/noetic/lib/gazebo_sim_scout
     - /opt/ros/noetic/lib/libscout_gazebo.a
