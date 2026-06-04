@@ -44,6 +44,13 @@ grep -q '<wheelSeparation>0.416503</wheelSeparation>' "${expanded_urdf}"
 grep -q '<wheelDiameter>0.16</wheelDiameter>' "${expanded_urdf}"
 grep -q '<torque>1000</torque>' "${expanded_urdf}"
 
+default_params="/tmp/xgc2-scout-spawn-accurate-default-params.yaml"
+roslaunch --dump-params gazebo_sim_scout spawn_accurate.launch > "${default_params}"
+grep -q '/ugv1/scout_motor_fr_controller/pid/p: 80.0' "${default_params}"
+grep -q '/ugv1/scout_motor_fl_controller/pid/p: 80.0' "${default_params}"
+grep -q '/ugv1/scout_motor_rl_controller/pid/p: 80.0' "${default_params}"
+grep -q '/ugv1/scout_motor_rr_controller/pid/p: 80.0' "${default_params}"
+
 tuned_params="/tmp/xgc2-scout-spawn-accurate-tuned-params.yaml"
 roslaunch --dump-params gazebo_sim_scout spawn_accurate.launch \
   wheel_contact_mu2:=0.31 \

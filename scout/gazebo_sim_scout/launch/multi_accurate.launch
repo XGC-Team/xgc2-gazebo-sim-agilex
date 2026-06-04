@@ -8,7 +8,7 @@
     <arg name="enable_vrpn_server" default="false"/>
     <arg name="wheel_contact_mu2" default="0.35"/>
     <arg name="wheel_contact_slip2" default="0.1"/>
-    <arg name="wheel_pid_p" default="1.0"/>
+    <arg name="wheel_pid_p" default="80.0"/>
     <arg name="wheel_pid_i" default="0.0"/>
     <arg name="wheel_pid_d" default="0.0"/>
     <arg name="wheel_separation" default="0.416503"/>
