@@ -33,11 +33,11 @@ grep -q '<real_time_update_rate>250</real_time_update_rate>' "${world}"
 
 mini_gazebo="/opt/ros/${ROS_DISTRO}/share/scout_description/urdf/scout_mini.gazebo"
 grep -q '<mu1 value="1.0"/>' "${mini_gazebo}"
-grep -q '<mu2 value="0.9"/>' "${mini_gazebo}"
-grep -q '<kp value="10000000.0"/>' "${mini_gazebo}"
-grep -q '<maxContacts value="64"/>' "${mini_gazebo}"
-! grep -q '<slip1' "${mini_gazebo}"
-! grep -q '<slip2' "${mini_gazebo}"
+grep -q '<mu2 value="0.35"/>' "${mini_gazebo}"
+grep -q '<slip1 value="0.0"/>' "${mini_gazebo}"
+grep -q '<slip2 value="0.1"/>' "${mini_gazebo}"
+grep -q '<kp value="1000000.0"/>' "${mini_gazebo}"
+grep -q '<maxContacts value="16"/>' "${mini_gazebo}"
 
 check_paths=(
   "/opt/ros/${ROS_DISTRO}/lib/gazebo_sim_scout"

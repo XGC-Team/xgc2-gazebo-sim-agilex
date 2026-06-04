@@ -4,7 +4,7 @@ set -euo pipefail
 INSTALL_ROOT=""
 OUTPUT_DIR=""
 ROS_DISTRO="${ROS_DISTRO:-noetic}"
-VERSION="${PACKAGE_VERSION:-0.4.4-1}"
+VERSION="${PACKAGE_VERSION:-0.4.5-1}"
 
 while [[ $# -gt 0 ]]; do
   case "$1" in

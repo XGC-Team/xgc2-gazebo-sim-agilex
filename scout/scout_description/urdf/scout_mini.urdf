@@ -232,12 +232,14 @@
   <!-- kp spring constant, kd damping constant -->
   <gazebo>
     <mu1 value="1.0"/>
-    <mu2 value="0.9"/>
-    <kp value="10000000.0"/>
+    <mu2 value="0.35"/>
+    <slip1 value="0.0"/>
+    <slip2 value="0.1"/>
+    <kp value="1000000.0"/>
     <kd value="1.0"/>
     <fdir1 value="1 0 0"/>
     <minDepth value="0.001"/>
-    <maxContacts value="64"/>
+    <maxContacts value="16"/>
   </gazebo>
 
 

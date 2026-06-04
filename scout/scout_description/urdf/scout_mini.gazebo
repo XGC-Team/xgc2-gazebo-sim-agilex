@@ -5,12 +5,14 @@
     <xacro:macro name="scout_wheel_contact" params="link_name">
         <gazebo reference="${link_name}">
             <mu1 value="1.0"/>
-            <mu2 value="0.9"/>
+            <mu2 value="0.35"/>
             <fdir1 value="1 0 0"/>
-            <kp value="10000000.0"/>
+            <slip1 value="0.0"/>
+            <slip2 value="0.1"/>
+            <kp value="1000000.0"/>
             <kd value="1.0"/>
             <minDepth value="0.001"/>
-            <maxContacts value="64"/>
+            <maxContacts value="16"/>
         </gazebo>
     </xacro:macro>
 
@@ -48,7 +50,7 @@
         </sensor>
     </gazebo>
 
-    <!-- Wheel contact parameters match the AgileX Scout Mini Gazebo model. -->
+    <!-- Wheel contact allows lateral skid so differential yaw does not lock. -->
     <xacro:scout_wheel_contact link_name="front_left_wheel_link"/>
     <xacro:scout_wheel_contact link_name="front_right_wheel_link"/>
     <xacro:scout_wheel_contact link_name="rear_left_wheel_link"/>
