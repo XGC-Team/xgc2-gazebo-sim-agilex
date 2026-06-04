@@ -21,6 +21,7 @@ ScoutSkidSteer::ScoutSkidSteer(ros::NodeHandle *nh, std::string robot_name)
   private_nh.param("wheel_separation", wheel_separation_, 0.416503);
   private_nh.param("wheel_radius", wheel_radius_, 0.08);
   private_nh.param("command_gain", command_gain_, 1.0);
+  private_nh.param("angular_command_gain", angular_command_gain_, 1.0);
 
   motor_fr_topic_ = JoinTopic(robot_name_, "scout_motor_fr_controller/command");
   motor_fl_topic_ = JoinTopic(robot_name_, "scout_motor_fl_controller/command");
@@ -28,10 +29,10 @@ ScoutSkidSteer::ScoutSkidSteer(ros::NodeHandle *nh, std::string robot_name)
   motor_rr_topic_ = JoinTopic(robot_name_, "scout_motor_rr_controller/command");
   cmd_topic_ = JoinTopic(robot_name_, "cmd_vel");
 
-  ROS_INFO("Scout skid steer: cmd=%s fr=%s fl=%s rl=%s rr=%s wheel_separation=%.6f wheel_radius=%.6f gain=%.3f",
+  ROS_INFO("Scout skid steer: cmd=%s fr=%s fl=%s rl=%s rr=%s wheel_separation=%.6f wheel_radius=%.6f gain=%.3f angular_gain=%.3f",
            cmd_topic_.c_str(), motor_fr_topic_.c_str(), motor_fl_topic_.c_str(),
            motor_rl_topic_.c_str(), motor_rr_topic_.c_str(), wheel_separation_,
-           wheel_radius_, command_gain_);
+           wheel_radius_, command_gain_, angular_command_gain_);
 }
 
 void ScoutSkidSteer::SetupSubscription() {
@@ -49,7 +50,7 @@ void ScoutSkidSteer::SetupSubscription() {
 void ScoutSkidSteer::TwistCmdCallback(
     const geometry_msgs::Twist::ConstPtr &msg) {
   double driving_vel = msg->linear.x;
-  double steering_vel = msg->angular.z;
+  double steering_vel = msg->angular.z * angular_command_gain_;
   if (!std::isfinite(driving_vel) || !std::isfinite(steering_vel) ||
       wheel_radius_ <= 0.0) {
     ROS_WARN_THROTTLE(1.0, "Ignoring invalid Scout cmd_vel or wheel radius");

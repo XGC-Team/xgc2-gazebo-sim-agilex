@@ -14,20 +14,34 @@
     <arg name="wheel_separation" default="0.416503"/>
     <arg name="wheel_radius" default="0.08"/>
     <arg name="command_gain" default="1.0"/>
+    <!-- Shared base default. Per-robot args below can override this for calibration. -->
+    <arg name="angular_command_gain" default="1.0"/>
 
     <arg name="ugv1_namespace" default="ugv1"/>
     <arg name="ugv1_model_name" default="$(arg ugv1_namespace)"/>
-    <arg name="ugv1_x" default="0.0"/>
-    <arg name="ugv1_y" default="0.6"/>
+    <arg name="ugv1_x" default="-4.0"/>
+    <arg name="ugv1_y" default="3.0"/>
     <arg name="ugv1_z" default="0.181"/>
     <arg name="ugv1_yaw" default="0.0"/>
+    <arg name="ugv1_wheel_contact_mu2" default="$(arg wheel_contact_mu2)"/>
+    <arg name="ugv1_wheel_contact_slip2" default="$(arg wheel_contact_slip2)"/>
+    <arg name="ugv1_wheel_pid_p" default="$(arg wheel_pid_p)"/>
+    <arg name="ugv1_wheel_pid_i" default="$(arg wheel_pid_i)"/>
+    <arg name="ugv1_wheel_pid_d" default="$(arg wheel_pid_d)"/>
+    <arg name="ugv1_angular_command_gain" default="$(arg angular_command_gain)"/>
 
     <arg name="ugv2_namespace" default="ugv2"/>
     <arg name="ugv2_model_name" default="$(arg ugv2_namespace)"/>
-    <arg name="ugv2_x" default="0.0"/>
-    <arg name="ugv2_y" default="-0.6"/>
+    <arg name="ugv2_x" default="-4.0"/>
+    <arg name="ugv2_y" default="-3.0"/>
     <arg name="ugv2_z" default="0.181"/>
     <arg name="ugv2_yaw" default="0.0"/>
+    <arg name="ugv2_wheel_contact_mu2" default="$(arg wheel_contact_mu2)"/>
+    <arg name="ugv2_wheel_contact_slip2" default="$(arg wheel_contact_slip2)"/>
+    <arg name="ugv2_wheel_pid_p" default="$(arg wheel_pid_p)"/>
+    <arg name="ugv2_wheel_pid_i" default="$(arg wheel_pid_i)"/>
+    <arg name="ugv2_wheel_pid_d" default="$(arg wheel_pid_d)"/>
+    <arg name="ugv2_angular_command_gain" default="$(arg angular_command_gain)"/>
 
     <include file="$(find gazebo_ros)/launch/empty_world.launch">
         <arg name="world_name" value="$(arg world_name)"/>
@@ -53,14 +67,15 @@
         <arg name="frame_prefix" value="$(arg ugv1_namespace)/" />
         <arg name="sensor_namespace" value="$(arg ugv1_namespace)" />
         <arg name="robot_state_publisher_namespace" value="$(arg ugv1_namespace)" />
-        <arg name="wheel_contact_mu2" value="$(arg wheel_contact_mu2)" />
-        <arg name="wheel_contact_slip2" value="$(arg wheel_contact_slip2)" />
-        <arg name="wheel_pid_p" value="$(arg wheel_pid_p)" />
-        <arg name="wheel_pid_i" value="$(arg wheel_pid_i)" />
-        <arg name="wheel_pid_d" value="$(arg wheel_pid_d)" />
+        <arg name="wheel_contact_mu2" value="$(arg ugv1_wheel_contact_mu2)" />
+        <arg name="wheel_contact_slip2" value="$(arg ugv1_wheel_contact_slip2)" />
+        <arg name="wheel_pid_p" value="$(arg ugv1_wheel_pid_p)" />
+        <arg name="wheel_pid_i" value="$(arg ugv1_wheel_pid_i)" />
+        <arg name="wheel_pid_d" value="$(arg ugv1_wheel_pid_d)" />
         <arg name="wheel_separation" value="$(arg wheel_separation)" />
         <arg name="wheel_radius" value="$(arg wheel_radius)" />
         <arg name="command_gain" value="$(arg command_gain)" />
+        <arg name="angular_command_gain" value="$(arg ugv1_angular_command_gain)" />
     </include>
 
     <include file="$(find gazebo_sim_scout)/launch/spawn_accurate.launch">
@@ -78,14 +93,15 @@
         <arg name="frame_prefix" value="$(arg ugv2_namespace)/" />
         <arg name="sensor_namespace" value="$(arg ugv2_namespace)" />
         <arg name="robot_state_publisher_namespace" value="$(arg ugv2_namespace)" />
-        <arg name="wheel_contact_mu2" value="$(arg wheel_contact_mu2)" />
-        <arg name="wheel_contact_slip2" value="$(arg wheel_contact_slip2)" />
-        <arg name="wheel_pid_p" value="$(arg wheel_pid_p)" />
-        <arg name="wheel_pid_i" value="$(arg wheel_pid_i)" />
-        <arg name="wheel_pid_d" value="$(arg wheel_pid_d)" />
+        <arg name="wheel_contact_mu2" value="$(arg ugv2_wheel_contact_mu2)" />
+        <arg name="wheel_contact_slip2" value="$(arg ugv2_wheel_contact_slip2)" />
+        <arg name="wheel_pid_p" value="$(arg ugv2_wheel_pid_p)" />
+        <arg name="wheel_pid_i" value="$(arg ugv2_wheel_pid_i)" />
+        <arg name="wheel_pid_d" value="$(arg ugv2_wheel_pid_d)" />
         <arg name="wheel_separation" value="$(arg wheel_separation)" />
         <arg name="wheel_radius" value="$(arg wheel_radius)" />
         <arg name="command_gain" value="$(arg command_gain)" />
+        <arg name="angular_command_gain" value="$(arg ugv2_angular_command_gain)" />
     </include>
 
     <include if="$(arg enable_vrpn_server)" file="$(find gazebo_sim_vrpn_bridge)/launch/vrpn_server.launch">

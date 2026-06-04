@@ -15,6 +15,8 @@
     <arg name="wheel_separation" default="0.416503"/>
     <arg name="wheel_radius" default="0.08"/>
     <arg name="command_gain" default="1.0"/>
+    <!-- Base-controller yaw gain. Keep 1.0 for the uncalibrated Scout model. -->
+    <arg name="angular_command_gain" default="1.0"/>
 
     <include file="$(find gazebo_ros)/launch/empty_world.launch">
         <arg name="world_name" value="$(arg world_name)"/>
@@ -36,6 +38,7 @@
         <arg name="wheel_separation" value="$(arg wheel_separation)" />
         <arg name="wheel_radius" value="$(arg wheel_radius)" />
         <arg name="command_gain" value="$(arg command_gain)" />
+        <arg name="angular_command_gain" value="$(arg angular_command_gain)" />
     </include>
 
     <include if="$(arg enable_vrpn_server)" file="$(find gazebo_sim_vrpn_bridge)/launch/vrpn_server.launch">

@@ -22,6 +22,8 @@
     <arg name="wheel_separation" default="0.416503"/>
     <arg name="wheel_radius" default="0.08"/>
     <arg name="command_gain" default="1.0"/>
+    <!-- Base-controller yaw gain. Keep 1.0 for the uncalibrated Scout model. -->
+    <arg name="angular_command_gain" default="1.0"/>
 
     <include file="$(find scout_description)/launch/mini_description.launch">
         <arg name="robot_namespace" value="$(arg robot_namespace)" />
@@ -80,6 +82,7 @@
         <param name="wheel_separation" type="double" value="$(arg wheel_separation)" />
         <param name="wheel_radius" type="double" value="$(arg wheel_radius)" />
         <param name="command_gain" type="double" value="$(arg command_gain)" />
+        <param name="angular_command_gain" type="double" value="$(arg angular_command_gain)" />
     </node>
 
     <node name="$(arg robot_namespace)_gazebo_model_odom" pkg="gazebo_sim_scout" type="gazebo_model_odom" output="screen">

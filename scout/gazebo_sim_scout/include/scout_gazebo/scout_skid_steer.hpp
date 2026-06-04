@@ -33,6 +33,7 @@ class ScoutSkidSteer {
   double wheel_separation_;
   double wheel_radius_;
   double command_gain_;
+  double angular_command_gain_;
 
   ros::NodeHandle *nh_;
 
