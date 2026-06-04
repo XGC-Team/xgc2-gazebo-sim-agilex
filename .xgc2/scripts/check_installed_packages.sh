@@ -27,6 +27,10 @@ roslaunch --files gazebo_sim_scout spawn_simple.launch >/tmp/xgc2-scout-spawn-fi
 roslaunch --files gazebo_sim_scout simple.launch rviz:=false >/tmp/xgc2-scout-simple-files.txt
 roslaunch --files gazebo_sim_scout accurate.launch rviz:=false enable_vrpn_server:=false >/tmp/xgc2-scout-accurate-files.txt
 
+world="/opt/ros/${ROS_DISTRO}/share/gazebo_sim_scout/worlds/weston_robot_empty.world"
+grep -q '<max_step_size>0.004</max_step_size>' "${world}"
+grep -q '<real_time_update_rate>250</real_time_update_rate>' "${world}"
+
 check_paths=(
   "/opt/ros/${ROS_DISTRO}/lib/gazebo_sim_scout"
   "/opt/ros/${ROS_DISTRO}/lib/libscout_gazebo.a"
