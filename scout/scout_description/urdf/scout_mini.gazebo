@@ -5,14 +5,12 @@
     <xacro:macro name="scout_wheel_contact" params="link_name">
         <gazebo reference="${link_name}">
             <mu1 value="1.0"/>
-            <mu2 value="0.3"/>
+            <mu2 value="0.9"/>
             <fdir1 value="1 0 0"/>
-            <slip1 value="0.0"/>
-            <slip2 value="0.1"/>
-            <kp value="1000000.0"/>
+            <kp value="10000000.0"/>
             <kd value="1.0"/>
             <minDepth value="0.001"/>
-            <maxContacts value="16"/>
+            <maxContacts value="64"/>
         </gazebo>
     </xacro:macro>
 
@@ -50,8 +48,7 @@
         </sensor>
     </gazebo>
 
-    <!-- Wheel contact uses high rolling friction and lower lateral friction so
-         skid-steer yaw can slip instead of locking diagonal wheels. -->
+    <!-- Wheel contact parameters match the AgileX Scout Mini Gazebo model. -->
     <xacro:scout_wheel_contact link_name="front_left_wheel_link"/>
     <xacro:scout_wheel_contact link_name="front_right_wheel_link"/>
     <xacro:scout_wheel_contact link_name="rear_left_wheel_link"/>

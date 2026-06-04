@@ -31,6 +31,14 @@ world="/opt/ros/${ROS_DISTRO}/share/gazebo_sim_scout/worlds/weston_robot_empty.w
 grep -q '<max_step_size>0.004</max_step_size>' "${world}"
 grep -q '<real_time_update_rate>250</real_time_update_rate>' "${world}"
 
+mini_gazebo="/opt/ros/${ROS_DISTRO}/share/scout_description/urdf/scout_mini.gazebo"
+grep -q '<mu1 value="1.0"/>' "${mini_gazebo}"
+grep -q '<mu2 value="0.9"/>' "${mini_gazebo}"
+grep -q '<kp value="10000000.0"/>' "${mini_gazebo}"
+grep -q '<maxContacts value="64"/>' "${mini_gazebo}"
+! grep -q '<slip1' "${mini_gazebo}"
+! grep -q '<slip2' "${mini_gazebo}"
+
 check_paths=(
   "/opt/ros/${ROS_DISTRO}/lib/gazebo_sim_scout"
   "/opt/ros/${ROS_DISTRO}/lib/libscout_gazebo.a"
