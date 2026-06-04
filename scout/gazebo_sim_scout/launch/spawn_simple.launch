@@ -16,10 +16,16 @@
     <arg name="headless" default="false" />
     <arg name="debug" default="true" />
     <arg name="enable_ros_control" default="true" />
+    <arg name="wheel_contact_mu2" default="0.35" />
+    <arg name="wheel_contact_slip2" default="0.1" />
+    <arg name="skid_steer_torque" default="1000" />
 
     <include file="$(find scout_description)/launch/mini_description.launch">
         <arg name="robot_namespace" value="$(arg robot_namespace)" />
         <arg name="enable_ros_control" value="$(arg enable_ros_control)" />
+        <arg name="wheel_contact_mu2" value="$(arg wheel_contact_mu2)" />
+        <arg name="wheel_contact_slip2" value="$(arg wheel_contact_slip2)" />
+        <arg name="skid_steer_torque" value="$(arg skid_steer_torque)" />
     </include>
 
     <group if="$(arg enable_ros_control)">

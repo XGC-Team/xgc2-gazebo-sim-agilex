@@ -5,10 +5,10 @@
     <xacro:macro name="scout_wheel_contact" params="link_name">
         <gazebo reference="${link_name}">
             <mu1 value="1.0"/>
-            <mu2 value="0.35"/>
+            <mu2 value="$(arg wheel_contact_mu2)"/>
             <fdir1 value="1 0 0"/>
             <slip1 value="0.0"/>
-            <slip2 value="0.1"/>
+            <slip2 value="$(arg wheel_contact_slip2)"/>
             <kp value="1000000.0"/>
             <kd value="1.0"/>
             <minDepth value="0.001"/>
@@ -150,7 +150,7 @@
             <wheelbase>${wheelbase}</wheelbase>
             <wheelDiameter>${wheel_diameter}</wheelDiameter>
             <robotBaseFrame>base_link</robotBaseFrame>
-            <torque>1000</torque>
+            <torque>$(arg skid_steer_torque)</torque>
             <commandTopic>cmd_vel</commandTopic>
             <broadcastTF>false</broadcastTF>
             <odometryTopic>odom</odometryTopic>

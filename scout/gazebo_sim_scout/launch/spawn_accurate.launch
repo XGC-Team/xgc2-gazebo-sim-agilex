@@ -14,6 +14,14 @@
     <arg name="frame_prefix" default=""/>
     <arg name="sensor_namespace" default="/"/>
     <arg name="robot_state_publisher_namespace" default="/"/>
+    <arg name="wheel_contact_mu2" default="0.35"/>
+    <arg name="wheel_contact_slip2" default="0.1"/>
+    <arg name="wheel_pid_p" default="1.0"/>
+    <arg name="wheel_pid_i" default="0.0"/>
+    <arg name="wheel_pid_d" default="0.0"/>
+    <arg name="wheel_separation" default="0.416503"/>
+    <arg name="wheel_radius" default="0.08"/>
+    <arg name="command_gain" default="1.0"/>
 
     <include file="$(find scout_description)/launch/mini_description.launch">
         <arg name="robot_namespace" value="$(arg robot_namespace)" />
@@ -22,10 +30,36 @@
         <arg name="robot_description_param" value="$(arg robot_description_param)" />
         <arg name="frame_prefix" value="$(arg frame_prefix)" />
         <arg name="sensor_namespace" value="$(arg sensor_namespace)" />
+        <arg name="wheel_contact_mu2" value="$(arg wheel_contact_mu2)" />
+        <arg name="wheel_contact_slip2" value="$(arg wheel_contact_slip2)" />
     </include>
 
     <group ns="$(arg robot_namespace)">
         <rosparam file="$(find gazebo_sim_scout)/config/scout_mini_ros_control.yaml" command="load"/>
+        <param name="gazebo_ros_control/pid_gains/front_right_wheel/p" type="double" value="$(arg wheel_pid_p)"/>
+        <param name="gazebo_ros_control/pid_gains/front_right_wheel/i" type="double" value="$(arg wheel_pid_i)"/>
+        <param name="gazebo_ros_control/pid_gains/front_right_wheel/d" type="double" value="$(arg wheel_pid_d)"/>
+        <param name="gazebo_ros_control/pid_gains/front_left_wheel/p" type="double" value="$(arg wheel_pid_p)"/>
+        <param name="gazebo_ros_control/pid_gains/front_left_wheel/i" type="double" value="$(arg wheel_pid_i)"/>
+        <param name="gazebo_ros_control/pid_gains/front_left_wheel/d" type="double" value="$(arg wheel_pid_d)"/>
+        <param name="gazebo_ros_control/pid_gains/rear_left_wheel/p" type="double" value="$(arg wheel_pid_p)"/>
+        <param name="gazebo_ros_control/pid_gains/rear_left_wheel/i" type="double" value="$(arg wheel_pid_i)"/>
+        <param name="gazebo_ros_control/pid_gains/rear_left_wheel/d" type="double" value="$(arg wheel_pid_d)"/>
+        <param name="gazebo_ros_control/pid_gains/rear_right_wheel/p" type="double" value="$(arg wheel_pid_p)"/>
+        <param name="gazebo_ros_control/pid_gains/rear_right_wheel/i" type="double" value="$(arg wheel_pid_i)"/>
+        <param name="gazebo_ros_control/pid_gains/rear_right_wheel/d" type="double" value="$(arg wheel_pid_d)"/>
+        <param name="scout_motor_fr_controller/pid/p" type="double" value="$(arg wheel_pid_p)"/>
+        <param name="scout_motor_fr_controller/pid/i" type="double" value="$(arg wheel_pid_i)"/>
+        <param name="scout_motor_fr_controller/pid/d" type="double" value="$(arg wheel_pid_d)"/>
+        <param name="scout_motor_fl_controller/pid/p" type="double" value="$(arg wheel_pid_p)"/>
+        <param name="scout_motor_fl_controller/pid/i" type="double" value="$(arg wheel_pid_i)"/>
+        <param name="scout_motor_fl_controller/pid/d" type="double" value="$(arg wheel_pid_d)"/>
+        <param name="scout_motor_rl_controller/pid/p" type="double" value="$(arg wheel_pid_p)"/>
+        <param name="scout_motor_rl_controller/pid/i" type="double" value="$(arg wheel_pid_i)"/>
+        <param name="scout_motor_rl_controller/pid/d" type="double" value="$(arg wheel_pid_d)"/>
+        <param name="scout_motor_rr_controller/pid/p" type="double" value="$(arg wheel_pid_p)"/>
+        <param name="scout_motor_rr_controller/pid/i" type="double" value="$(arg wheel_pid_i)"/>
+        <param name="scout_motor_rr_controller/pid/d" type="double" value="$(arg wheel_pid_d)"/>
     </group>
 
     <node name="$(arg robot_namespace)_spawn_scout_model" pkg="gazebo_ros" type="spawn_model" args="-x $(arg x)
@@ -43,9 +77,9 @@
 
     <node name="$(arg robot_namespace)_scout_skid_steer_controller" pkg="gazebo_sim_scout" type="scout_skid_steer_controller" output="screen">
         <param name="robot_namespace" type="string" value="$(arg robot_namespace)" />
-        <param name="wheel_separation" type="double" value="0.416503" />
-        <param name="wheel_radius" type="double" value="0.08" />
-        <param name="command_gain" type="double" value="1.0" />
+        <param name="wheel_separation" type="double" value="$(arg wheel_separation)" />
+        <param name="wheel_radius" type="double" value="$(arg wheel_radius)" />
+        <param name="command_gain" type="double" value="$(arg command_gain)" />
     </node>
 
     <node name="$(arg robot_namespace)_gazebo_model_odom" pkg="gazebo_sim_scout" type="gazebo_model_odom" output="screen">

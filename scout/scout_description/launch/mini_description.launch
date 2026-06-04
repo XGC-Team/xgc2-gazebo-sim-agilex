@@ -7,6 +7,9 @@
     <arg name="robot_description_param" default="robot_description"/>
     <arg name="frame_prefix" default=""/>
     <arg name="sensor_namespace" default="/"/>
+    <arg name="wheel_contact_mu2" default="0.35"/>
+    <arg name="wheel_contact_slip2" default="0.1"/>
+    <arg name="skid_steer_torque" default="1000"/>
 
     <param name="$(arg robot_description_param)" command="$(find xacro)/xacro '$(find scout_description)/urdf/mini.xacro'
         robot_namespace:=$(arg robot_namespace)
@@ -15,5 +18,8 @@
         robot_description_param:=$(arg robot_description_param)
         frame_prefix:=$(arg frame_prefix)
         sensor_namespace:=$(arg sensor_namespace)
+        wheel_contact_mu2:=$(arg wheel_contact_mu2)
+        wheel_contact_slip2:=$(arg wheel_contact_slip2)
+        skid_steer_torque:=$(arg skid_steer_torque)
         urdf_extras:=$(arg urdf_extras)" />
 </launch>

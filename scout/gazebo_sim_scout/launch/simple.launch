@@ -31,6 +31,9 @@ ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSI
     <arg name="gui" default="true"/>
     <arg name="rviz" default="true"/>
     <arg name="paused" default="false"/>
+    <arg name="wheel_contact_mu2" default="0.35"/>
+    <arg name="wheel_contact_slip2" default="0.1"/>
+    <arg name="skid_steer_torque" default="1000"/>
 
     <include file="$(find gazebo_ros)/launch/empty_world.launch">
         <arg name="world_name" value="$(arg world_name)"/>
@@ -44,6 +47,9 @@ ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSI
     <include file="$(find gazebo_sim_scout)/launch/spawn_simple.launch">
         <arg name="robot_namespace" value="$(arg robot_namespace)"/>
         <arg name="model_name" value="$(arg model_name)"/>
+        <arg name="wheel_contact_mu2" value="$(arg wheel_contact_mu2)"/>
+        <arg name="wheel_contact_slip2" value="$(arg wheel_contact_slip2)"/>
+        <arg name="skid_steer_torque" value="$(arg skid_steer_torque)"/>
     </include>
         
     <node if="$(arg rviz)" name="rviz" pkg="rviz" type="rviz" args="-d $(find scout_description)/rviz/navigation.rviz" />

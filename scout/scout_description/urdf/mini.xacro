@@ -10,6 +10,9 @@
     <xacro:arg name="robot_description_param" default="robot_description" />
     <xacro:arg name="frame_prefix" default="" />
     <xacro:arg name="sensor_namespace" default="/" />
+    <xacro:arg name="wheel_contact_mu2" default="0.35" />
+    <xacro:arg name="wheel_contact_slip2" default="0.1" />
+    <xacro:arg name="skid_steer_torque" default="1000" />
 
     <xacro:include filename="$(find scout_description)/urdf/scout_mini_wheel_1.xacro" />
     <xacro:include filename="$(find scout_description)/urdf/scout_mini_wheel_2.xacro" />

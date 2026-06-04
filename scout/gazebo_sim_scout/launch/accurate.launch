@@ -7,6 +7,14 @@
     <arg name="rviz" default="true"/>
     <arg name="paused" default="false"/>
     <arg name="enable_vrpn_server" default="false"/>
+    <arg name="wheel_contact_mu2" default="0.35"/>
+    <arg name="wheel_contact_slip2" default="0.1"/>
+    <arg name="wheel_pid_p" default="1.0"/>
+    <arg name="wheel_pid_i" default="0.0"/>
+    <arg name="wheel_pid_d" default="0.0"/>
+    <arg name="wheel_separation" default="0.416503"/>
+    <arg name="wheel_radius" default="0.08"/>
+    <arg name="command_gain" default="1.0"/>
 
     <include file="$(find gazebo_ros)/launch/empty_world.launch">
         <arg name="world_name" value="$(arg world_name)"/>
@@ -20,6 +28,14 @@
     <include file="$(find gazebo_sim_scout)/launch/spawn_accurate.launch">
         <arg name="robot_namespace" value="$(arg robot_namespace)" />
         <arg name="model_name" value="$(arg model_name)" />
+        <arg name="wheel_contact_mu2" value="$(arg wheel_contact_mu2)" />
+        <arg name="wheel_contact_slip2" value="$(arg wheel_contact_slip2)" />
+        <arg name="wheel_pid_p" value="$(arg wheel_pid_p)" />
+        <arg name="wheel_pid_i" value="$(arg wheel_pid_i)" />
+        <arg name="wheel_pid_d" value="$(arg wheel_pid_d)" />
+        <arg name="wheel_separation" value="$(arg wheel_separation)" />
+        <arg name="wheel_radius" value="$(arg wheel_radius)" />
+        <arg name="command_gain" value="$(arg command_gain)" />
     </include>
 
     <include if="$(arg enable_vrpn_server)" file="$(find gazebo_sim_vrpn_bridge)/launch/vrpn_server.launch">

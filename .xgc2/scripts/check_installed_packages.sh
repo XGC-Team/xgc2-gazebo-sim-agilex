@@ -31,13 +31,36 @@ world="/opt/ros/${ROS_DISTRO}/share/gazebo_sim_scout/worlds/weston_robot_empty.w
 grep -q '<max_step_size>0.004</max_step_size>' "${world}"
 grep -q '<real_time_update_rate>250</real_time_update_rate>' "${world}"
 
-mini_gazebo="/opt/ros/${ROS_DISTRO}/share/scout_description/urdf/scout_mini.gazebo"
-grep -q '<mu1 value="1.0"/>' "${mini_gazebo}"
-grep -q '<mu2 value="0.35"/>' "${mini_gazebo}"
-grep -q '<slip1 value="0.0"/>' "${mini_gazebo}"
-grep -q '<slip2 value="0.1"/>' "${mini_gazebo}"
-grep -q '<kp value="1000000.0"/>' "${mini_gazebo}"
-grep -q '<maxContacts value="16"/>' "${mini_gazebo}"
+mini_xacro="/opt/ros/${ROS_DISTRO}/share/scout_description/urdf/mini.xacro"
+expanded_urdf="/tmp/xgc2-scout-mini-expanded.urdf"
+xacro "${mini_xacro}" > "${expanded_urdf}"
+grep -q '<mu1 value="1.0"/>' "${expanded_urdf}"
+grep -q '<mu2 value="0.35"/>' "${expanded_urdf}"
+grep -q '<slip1 value="0.0"/>' "${expanded_urdf}"
+grep -q '<slip2 value="0.1"/>' "${expanded_urdf}"
+grep -q '<kp value="1000000.0"/>' "${expanded_urdf}"
+grep -q '<maxContacts value="16"/>' "${expanded_urdf}"
+grep -q '<wheelSeparation>0.416503</wheelSeparation>' "${expanded_urdf}"
+grep -q '<wheelDiameter>0.16</wheelDiameter>' "${expanded_urdf}"
+grep -q '<torque>1000</torque>' "${expanded_urdf}"
+
+tuned_params="/tmp/xgc2-scout-spawn-accurate-tuned-params.yaml"
+roslaunch --dump-params gazebo_sim_scout spawn_accurate.launch \
+  wheel_contact_mu2:=0.31 \
+  wheel_contact_slip2:=0.08 \
+  wheel_pid_p:=2.5 \
+  wheel_pid_i:=0.1 \
+  wheel_pid_d:=0.2 \
+  wheel_separation:=0.42 \
+  wheel_radius:=0.081 \
+  command_gain:=1.4 > "${tuned_params}"
+grep -q '<mu2 value=\\"0.31\\"/>' "${tuned_params}"
+grep -q '<slip2 value=\\"0.08\\"/>' "${tuned_params}"
+grep -q '/ugv1/gazebo_ros_control/pid_gains/front_right_wheel/p: 2.5' "${tuned_params}"
+grep -q '/ugv1/scout_motor_fr_controller/pid/p: 2.5' "${tuned_params}"
+grep -q '/ugv1_scout_skid_steer_controller/command_gain: 1.4' "${tuned_params}"
+grep -q '/ugv1_scout_skid_steer_controller/wheel_radius: 0.081' "${tuned_params}"
+grep -q '/ugv1_scout_skid_steer_controller/wheel_separation: 0.42' "${tuned_params}"
 
 check_paths=(
   "/opt/ros/${ROS_DISTRO}/lib/gazebo_sim_scout"

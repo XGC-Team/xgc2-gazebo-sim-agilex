@@ -6,6 +6,14 @@
     <arg name="rviz_config" default="$(find scout_description)/rviz/two_ugv_navigation.rviz"/>
     <arg name="paused" default="false"/>
     <arg name="enable_vrpn_server" default="false"/>
+    <arg name="wheel_contact_mu2" default="0.35"/>
+    <arg name="wheel_contact_slip2" default="0.1"/>
+    <arg name="wheel_pid_p" default="1.0"/>
+    <arg name="wheel_pid_i" default="0.0"/>
+    <arg name="wheel_pid_d" default="0.0"/>
+    <arg name="wheel_separation" default="0.416503"/>
+    <arg name="wheel_radius" default="0.08"/>
+    <arg name="command_gain" default="1.0"/>
 
     <arg name="ugv1_namespace" default="ugv1"/>
     <arg name="ugv1_model_name" default="$(arg ugv1_namespace)"/>
@@ -45,6 +53,14 @@
         <arg name="frame_prefix" value="$(arg ugv1_namespace)/" />
         <arg name="sensor_namespace" value="$(arg ugv1_namespace)" />
         <arg name="robot_state_publisher_namespace" value="$(arg ugv1_namespace)" />
+        <arg name="wheel_contact_mu2" value="$(arg wheel_contact_mu2)" />
+        <arg name="wheel_contact_slip2" value="$(arg wheel_contact_slip2)" />
+        <arg name="wheel_pid_p" value="$(arg wheel_pid_p)" />
+        <arg name="wheel_pid_i" value="$(arg wheel_pid_i)" />
+        <arg name="wheel_pid_d" value="$(arg wheel_pid_d)" />
+        <arg name="wheel_separation" value="$(arg wheel_separation)" />
+        <arg name="wheel_radius" value="$(arg wheel_radius)" />
+        <arg name="command_gain" value="$(arg command_gain)" />
     </include>
 
     <include file="$(find gazebo_sim_scout)/launch/spawn_accurate.launch">
@@ -62,6 +78,14 @@
         <arg name="frame_prefix" value="$(arg ugv2_namespace)/" />
         <arg name="sensor_namespace" value="$(arg ugv2_namespace)" />
         <arg name="robot_state_publisher_namespace" value="$(arg ugv2_namespace)" />
+        <arg name="wheel_contact_mu2" value="$(arg wheel_contact_mu2)" />
+        <arg name="wheel_contact_slip2" value="$(arg wheel_contact_slip2)" />
+        <arg name="wheel_pid_p" value="$(arg wheel_pid_p)" />
+        <arg name="wheel_pid_i" value="$(arg wheel_pid_i)" />
+        <arg name="wheel_pid_d" value="$(arg wheel_pid_d)" />
+        <arg name="wheel_separation" value="$(arg wheel_separation)" />
+        <arg name="wheel_radius" value="$(arg wheel_radius)" />
+        <arg name="command_gain" value="$(arg command_gain)" />
     </include>
 
     <include if="$(arg enable_vrpn_server)" file="$(find gazebo_sim_vrpn_bridge)/launch/vrpn_server.launch">
