@@ -19,6 +19,7 @@ apt:
     - ros-noetic-xgc2-gazebo-sim-scout
   depends:
     - ros-noetic-xgc2-scout-description
+    - ros-noetic-xgc2-gazebo-sim-vrpn-bridge
 
 usage:
   install: |
