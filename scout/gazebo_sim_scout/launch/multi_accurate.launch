@@ -17,8 +17,8 @@
     <!-- Shared base default. Per-robot args below can override this for calibration. -->
     <arg name="angular_command_gain" default="1.0"/>
 
-    <arg name="ugv1_namespace" default="ugv1"/>
-    <arg name="ugv1_model_name" default="$(arg ugv1_namespace)"/>
+    <arg name="ugv1_ns" default="ugv1"/>
+    <arg name="ugv1_model_name" default="$(arg ugv1_ns)"/>
     <arg name="ugv1_x" default="-4.0"/>
     <arg name="ugv1_y" default="3.0"/>
     <arg name="ugv1_z" default="0.181"/>
@@ -30,8 +30,8 @@
     <arg name="ugv1_wheel_pid_d" default="$(arg wheel_pid_d)"/>
     <arg name="ugv1_angular_command_gain" default="$(arg angular_command_gain)"/>
 
-    <arg name="ugv2_namespace" default="ugv2"/>
-    <arg name="ugv2_model_name" default="$(arg ugv2_namespace)"/>
+    <arg name="ugv2_ns" default="ugv2"/>
+    <arg name="ugv2_model_name" default="$(arg ugv2_ns)"/>
     <arg name="ugv2_x" default="-4.0"/>
     <arg name="ugv2_y" default="-3.0"/>
     <arg name="ugv2_z" default="0.181"/>
@@ -52,21 +52,21 @@
         <arg name="debug" value="false"/>
     </include>
 
-    <include file="$(find gazebo_sim_scout)/launch/spawn_accurate.launch">
-        <arg name="robot_namespace" value="$(arg ugv1_namespace)" />
+    <include file="$(dirname)/spawn_accurate.launch">
+        <arg name="ns" value="$(arg ugv1_ns)" />
         <arg name="model_name" value="$(arg ugv1_model_name)" />
         <arg name="x" value="$(arg ugv1_x)" />
         <arg name="y" value="$(arg ugv1_y)" />
         <arg name="z" value="$(arg ugv1_z)" />
         <arg name="yaw" value="$(arg ugv1_yaw)" />
-        <arg name="robot_description_param" value="/$(arg ugv1_namespace)/robot_description" />
-        <arg name="odom_topic" value="/$(arg ugv1_namespace)/odom" />
+        <arg name="robot_description_param" value="/$(arg ugv1_ns)/robot_description" />
+        <arg name="odom_topic" value="/$(arg ugv1_ns)/odom" />
         <arg name="odom_frame" value="odom" />
-        <arg name="base_frame" value="$(arg ugv1_namespace)/base_link" />
-        <arg name="tf_prefix" value="$(arg ugv1_namespace)" />
-        <arg name="frame_prefix" value="$(arg ugv1_namespace)/" />
-        <arg name="sensor_namespace" value="$(arg ugv1_namespace)" />
-        <arg name="robot_state_publisher_namespace" value="$(arg ugv1_namespace)" />
+        <arg name="base_frame" value="$(arg ugv1_ns)/base_link" />
+        <arg name="tf_prefix" value="$(arg ugv1_ns)" />
+        <arg name="frame_prefix" value="$(arg ugv1_ns)/" />
+        <arg name="sensor_ns" value="$(arg ugv1_ns)" />
+        <arg name="robot_state_publisher_ns" value="$(arg ugv1_ns)" />
         <arg name="wheel_contact_mu2" value="$(arg ugv1_wheel_contact_mu2)" />
         <arg name="wheel_contact_slip2" value="$(arg ugv1_wheel_contact_slip2)" />
         <arg name="wheel_pid_p" value="$(arg ugv1_wheel_pid_p)" />
@@ -78,21 +78,21 @@
         <arg name="angular_command_gain" value="$(arg ugv1_angular_command_gain)" />
     </include>
 
-    <include file="$(find gazebo_sim_scout)/launch/spawn_accurate.launch">
-        <arg name="robot_namespace" value="$(arg ugv2_namespace)" />
+    <include file="$(dirname)/spawn_accurate.launch">
+        <arg name="ns" value="$(arg ugv2_ns)" />
         <arg name="model_name" value="$(arg ugv2_model_name)" />
         <arg name="x" value="$(arg ugv2_x)" />
         <arg name="y" value="$(arg ugv2_y)" />
         <arg name="z" value="$(arg ugv2_z)" />
         <arg name="yaw" value="$(arg ugv2_yaw)" />
-        <arg name="robot_description_param" value="/$(arg ugv2_namespace)/robot_description" />
-        <arg name="odom_topic" value="/$(arg ugv2_namespace)/odom" />
+        <arg name="robot_description_param" value="/$(arg ugv2_ns)/robot_description" />
+        <arg name="odom_topic" value="/$(arg ugv2_ns)/odom" />
         <arg name="odom_frame" value="odom" />
-        <arg name="base_frame" value="$(arg ugv2_namespace)/base_link" />
-        <arg name="tf_prefix" value="$(arg ugv2_namespace)" />
-        <arg name="frame_prefix" value="$(arg ugv2_namespace)/" />
-        <arg name="sensor_namespace" value="$(arg ugv2_namespace)" />
-        <arg name="robot_state_publisher_namespace" value="$(arg ugv2_namespace)" />
+        <arg name="base_frame" value="$(arg ugv2_ns)/base_link" />
+        <arg name="tf_prefix" value="$(arg ugv2_ns)" />
+        <arg name="frame_prefix" value="$(arg ugv2_ns)/" />
+        <arg name="sensor_ns" value="$(arg ugv2_ns)" />
+        <arg name="robot_state_publisher_ns" value="$(arg ugv2_ns)" />
         <arg name="wheel_contact_mu2" value="$(arg ugv2_wheel_contact_mu2)" />
         <arg name="wheel_contact_slip2" value="$(arg ugv2_wheel_contact_slip2)" />
         <arg name="wheel_pid_p" value="$(arg ugv2_wheel_pid_p)" />

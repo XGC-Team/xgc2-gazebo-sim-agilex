@@ -25,8 +25,8 @@ ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSI
 -->
 <launch>
 
-    <arg name="robot_namespace" default="ugv1"/>
-    <arg name="model_name" default="$(arg robot_namespace)"/>
+    <arg name="ns" default="ugv1"/>
+    <arg name="model_name" default="$(arg ns)"/>
     <arg name="world_name" default="$(find gazebo_sim_scout)/worlds/weston_robot_empty.world"/>
     <arg name="gui" default="true"/>
     <arg name="rviz" default="true"/>
@@ -44,8 +44,8 @@ ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSI
         <arg name="debug" value="false"/>
     </include>
 
-    <include file="$(find gazebo_sim_scout)/launch/spawn_simple.launch">
-        <arg name="robot_namespace" value="$(arg robot_namespace)"/>
+    <include file="$(dirname)/spawn_simple.launch">
+        <arg name="ns" value="$(arg ns)"/>
         <arg name="model_name" value="$(arg model_name)"/>
         <arg name="wheel_contact_mu2" value="$(arg wheel_contact_mu2)"/>
         <arg name="wheel_contact_slip2" value="$(arg wheel_contact_slip2)"/>

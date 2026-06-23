@@ -28,7 +28,7 @@
         <!-- Controller configurations -->
         <gazebo>
             <plugin name="gazebo_ros_control" filename="libgazebo_ros_control.so">
-                <robotNamespace>$(arg robot_namespace)</robotNamespace>
+                <robotNamespace>$(arg ns)</robotNamespace>
                 <robotParam>$(arg robot_description_param)</robotParam>
             </plugin>
         </gazebo>
@@ -40,7 +40,7 @@
             <update_rate>100.0</update_rate>
             <visualize>false</visualize>
             <plugin name="imu_plugin" filename="libgazebo_ros_imu_sensor.so">
-                <robotNamespace>$(arg robot_namespace)</robotNamespace>
+                <robotNamespace>$(arg ns)</robotNamespace>
                 <topicName>imu</topicName>
                 <frameName>$(arg frame_prefix)imu_link</frameName>
                 <updateRateHZ>100.0</updateRateHZ>
@@ -82,7 +82,7 @@
                 </noise>
               </ray>
               <plugin name="gazebo_ros_laser_sensor" filename="libgazebo_ros_laser.so">
-                <robotNamespace>$(arg sensor_namespace)</robotNamespace>
+                <robotNamespace>$(arg sensor_ns)</robotNamespace>
                 <topicName>scan</topicName>
                 <frameName>$(arg frame_prefix)laser_link</frameName>
               </plugin>
@@ -109,7 +109,7 @@
             </camera>
 
             <plugin name="gazebo_ros_depth_camera_sensor" filename="libgazebo_ros_openni_kinect.so">
-              <robotNamespace>$(arg sensor_namespace)</robotNamespace>
+              <robotNamespace>$(arg sensor_ns)</robotNamespace>
               <baseline>0.2</baseline>
               <alwaysOn>true</alwaysOn>
               <updateRate>0.0</updateRate>

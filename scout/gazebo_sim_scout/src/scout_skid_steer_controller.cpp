@@ -15,13 +15,12 @@ int main(int argc, char **argv) {
   ros::NodeHandle node(""), private_node("~");
 
   // fetch parameters
-  std::string robot_namespace;
-  private_node.param<std::string>("robot_namespace", robot_namespace,
-                                  std::string("scout_default"));
+  std::string ns;
+  private_node.param<std::string>("ns", ns, std::string("scout_default"));
 
-  ROS_INFO("Namespace: %s", robot_namespace.c_str());
+  ROS_INFO("Namespace: %s", ns.c_str());
 
-  ScoutSkidSteer skid_steer_controller(&node, robot_namespace);
+  ScoutSkidSteer skid_steer_controller(&node, ns);
   skid_steer_controller.SetupSubscription();
 
   ros::spin();

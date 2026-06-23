@@ -4,16 +4,16 @@
     <arg name="y" default="0.0"/>
     <arg name="z" default="0.181"/>
     <arg name="yaw" default="0.0"/>
-    <arg name="robot_namespace" default="ugv1"/>
-    <arg name="model_name" default="$(arg robot_namespace)"/>
+    <arg name="ns" default="ugv1"/>
+    <arg name="model_name" default="$(arg ns)"/>
     <arg name="robot_description_param" default="robot_description"/>
     <arg name="odom_topic" default="odom"/>
     <arg name="odom_frame" default="odom"/>
     <arg name="base_frame" default="base_link"/>
     <arg name="tf_prefix" default=""/>
     <arg name="frame_prefix" default=""/>
-    <arg name="sensor_namespace" default="/"/>
-    <arg name="robot_state_publisher_namespace" default="/"/>
+    <arg name="sensor_ns" default="/"/>
+    <arg name="robot_state_publisher_ns" default="/"/>
     <arg name="wheel_contact_mu2" default="0.35"/>
     <arg name="wheel_contact_slip2" default="0.1"/>
     <arg name="wheel_pid_p" default="1.0"/>
@@ -26,17 +26,17 @@
     <arg name="angular_command_gain" default="1.0"/>
 
     <include file="$(find scout_description)/launch/mini_description.launch">
-        <arg name="robot_namespace" value="$(arg robot_namespace)" />
+        <arg name="ns" value="$(arg ns)" />
         <arg name="enable_ros_control" value="true" />
         <arg name="use_skid_steer_plugin" value="false" />
         <arg name="robot_description_param" value="$(arg robot_description_param)" />
         <arg name="frame_prefix" value="$(arg frame_prefix)" />
-        <arg name="sensor_namespace" value="$(arg sensor_namespace)" />
+        <arg name="sensor_ns" value="$(arg sensor_ns)" />
         <arg name="wheel_contact_mu2" value="$(arg wheel_contact_mu2)" />
         <arg name="wheel_contact_slip2" value="$(arg wheel_contact_slip2)" />
     </include>
 
-    <group ns="$(arg robot_namespace)">
+    <group ns="$(arg ns)">
         <rosparam file="$(find gazebo_sim_scout)/config/scout_mini_ros_control.yaml" command="load"/>
         <param name="gazebo_ros_control/pid_gains/front_right_wheel/p" type="double" value="$(arg wheel_pid_p)"/>
         <param name="gazebo_ros_control/pid_gains/front_right_wheel/i" type="double" value="$(arg wheel_pid_i)"/>
@@ -64,7 +64,7 @@
         <param name="scout_motor_rr_controller/pid/d" type="double" value="$(arg wheel_pid_d)"/>
     </group>
 
-    <node name="$(arg robot_namespace)_spawn_scout_model" pkg="gazebo_ros" type="spawn_model" args="-x $(arg x)
+    <node name="$(arg ns)_spawn_scout_model" pkg="gazebo_ros" type="spawn_model" args="-x $(arg x)
               -y $(arg y)
               -z $(arg z)
               -Y $(arg yaw)
@@ -74,18 +74,18 @@
               -model $(arg model_name)" />
 
     <node name="controller_spawner" pkg="controller_manager" type="spawner" respawn="false" output="screen"
-          ns="$(arg robot_namespace)"
+          ns="$(arg ns)"
           args="scout_state_controller scout_motor_fr_controller scout_motor_fl_controller scout_motor_rl_controller scout_motor_rr_controller"/>
 
-    <node name="$(arg robot_namespace)_scout_skid_steer_controller" pkg="gazebo_sim_scout" type="scout_skid_steer_controller" output="screen">
-        <param name="robot_namespace" type="string" value="$(arg robot_namespace)" />
+    <node name="$(arg ns)_scout_skid_steer_controller" pkg="gazebo_sim_scout" type="scout_skid_steer_controller" output="screen">
+        <param name="ns" type="string" value="$(arg ns)" />
         <param name="wheel_separation" type="double" value="$(arg wheel_separation)" />
         <param name="wheel_radius" type="double" value="$(arg wheel_radius)" />
         <param name="command_gain" type="double" value="$(arg command_gain)" />
         <param name="angular_command_gain" type="double" value="$(arg angular_command_gain)" />
     </node>
 
-    <node name="$(arg robot_namespace)_gazebo_model_odom" pkg="gazebo_sim_scout" type="gazebo_model_odom" output="screen">
+    <node name="$(arg ns)_gazebo_model_odom" pkg="gazebo_sim_scout" type="gazebo_model_odom" output="screen">
         <param name="model_name" type="string" value="$(arg model_name)" />
         <param name="odom_topic" type="string" value="$(arg odom_topic)" />
         <param name="odom_frame" type="string" value="$(arg odom_frame)" />
@@ -93,9 +93,9 @@
         <param name="publish_tf" type="bool" value="true" />
     </node>
 
-    <node name="$(arg robot_namespace)_robot_state_publisher" ns="$(arg robot_state_publisher_namespace)" pkg="robot_state_publisher" type="robot_state_publisher">
+    <node name="$(arg ns)_robot_state_publisher" ns="$(arg robot_state_publisher_ns)" pkg="robot_state_publisher" type="robot_state_publisher">
         <param name="tf_prefix" type="string" value="$(arg tf_prefix)" />
         <param name="frame_prefix" type="string" value="$(arg frame_prefix)" />
-        <remap from="joint_states" to="/$(arg robot_namespace)/joint_states"/>
+        <remap from="joint_states" to="/$(arg ns)/joint_states"/>
     </node>
 </launch>

@@ -3,13 +3,13 @@
 <robot name="scout_mini"
     xmlns:xacro="http://ros.org/wiki/xacro">
 
-    <xacro:arg name="robot_namespace" default="/" />
+    <xacro:arg name="ns" default="/" />
     <xacro:arg name="urdf_extras" default="empty.urdf" />
     <xacro:arg name="enable_ros_control" default="false" />
     <xacro:arg name="use_skid_steer_plugin" default="true" />
     <xacro:arg name="robot_description_param" default="robot_description" />
     <xacro:arg name="frame_prefix" default="" />
-    <xacro:arg name="sensor_namespace" default="/" />
+    <xacro:arg name="sensor_ns" default="/" />
     <xacro:arg name="wheel_contact_mu2" default="0.35" />
     <xacro:arg name="wheel_contact_slip2" default="0.1" />
     <xacro:arg name="skid_steer_torque" default="1000" />

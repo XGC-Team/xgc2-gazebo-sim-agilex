@@ -6,8 +6,8 @@
     <arg name="z" default="0.0"/>
     <arg name="yaw" default="0.0"/>
 
-    <arg name="robot_namespace" default="ugv1"/>
-    <arg name="model_name" default="$(arg robot_namespace)"/>
+    <arg name="ns" default="ugv1"/>
+    <arg name="model_name" default="$(arg ns)"/>
 
     <!-- these are the arguments you can pass this launch file, for example paused:=true -->
     <arg name="paused" default="true" />
@@ -21,7 +21,7 @@
     <arg name="skid_steer_torque" default="1000" />
 
     <include file="$(find scout_description)/launch/mini_description.launch">
-        <arg name="robot_namespace" value="$(arg robot_namespace)" />
+        <arg name="ns" value="$(arg ns)" />
         <arg name="enable_ros_control" value="$(arg enable_ros_control)" />
         <arg name="wheel_contact_mu2" value="$(arg wheel_contact_mu2)" />
         <arg name="wheel_contact_slip2" value="$(arg wheel_contact_slip2)" />
@@ -56,6 +56,6 @@
     </node>
 
     <!-- <node name="scout_skid_steer_controller" pkg="gazebo_sim_scout" type="scout_skid_steer_controller">
-        <param name="robot_namespace" type="string" value="$(arg robot_namespace)" />
+        <param name="ns" type="string" value="$(arg ns)" />
     </node> -->
 </launch> 

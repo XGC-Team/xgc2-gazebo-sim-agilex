@@ -1,23 +1,23 @@
 <?xml version="1.0"?>
 <launch>
-    <arg name="robot_namespace" default="/"/>
+    <arg name="ns" default="/"/>
     <arg name="urdf_extras" default="$(find scout_description)/urdf/empty.urdf"/>
     <arg name="enable_ros_control" default="false"/>
     <arg name="use_skid_steer_plugin" default="true"/>
     <arg name="robot_description_param" default="robot_description"/>
     <arg name="frame_prefix" default=""/>
-    <arg name="sensor_namespace" default="/"/>
+    <arg name="sensor_ns" default="/"/>
     <arg name="wheel_contact_mu2" default="0.35"/>
     <arg name="wheel_contact_slip2" default="0.1"/>
     <arg name="skid_steer_torque" default="1000"/>
 
     <param name="$(arg robot_description_param)" command="$(find xacro)/xacro '$(find scout_description)/urdf/mini.xacro'
-        robot_namespace:=$(arg robot_namespace)
+        ns:=$(arg ns)
         enable_ros_control:=$(arg enable_ros_control)
         use_skid_steer_plugin:=$(arg use_skid_steer_plugin)
         robot_description_param:=$(arg robot_description_param)
         frame_prefix:=$(arg frame_prefix)
-        sensor_namespace:=$(arg sensor_namespace)
+        sensor_ns:=$(arg sensor_ns)
         wheel_contact_mu2:=$(arg wheel_contact_mu2)
         wheel_contact_slip2:=$(arg wheel_contact_slip2)
         skid_steer_torque:=$(arg skid_steer_torque)
