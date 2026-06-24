@@ -57,6 +57,6 @@ install(
 )
 
 install(
-  DIRECTORY config launch worlds
+  DIRECTORY config launch
   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
 )

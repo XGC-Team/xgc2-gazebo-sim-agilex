@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <launch>
     <arg name="ns" default="ugv1"/>
-    <arg name="world_name" default="$(find gazebo_sim_scout)/worlds/weston_robot_empty.world"/>
+    <arg name="world_name" default="$(find gazebo_sim_worlds)/worlds/weston_robot_empty/weston_robot_empty.world"/>
     <arg name="model_name" default="$(arg ns)"/>
     <arg name="gui" default="true"/>
     <arg name="rviz" default="true"/>

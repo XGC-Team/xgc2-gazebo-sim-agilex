@@ -4,7 +4,7 @@ set -euo pipefail
 INSTALL_ROOT=""
 OUTPUT_DIR=""
 ROS_DISTRO="${ROS_DISTRO:-noetic}"
-VERSION="${PACKAGE_VERSION:-0.4.8-1}"
+VERSION="${PACKAGE_VERSION:-0.4.9-1}"
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -138,7 +138,7 @@ build_deb \
 build_deb \
   "${gazebo_pkg}" \
   "gazebo_sim_scout" \
-  "${description_pkg} (= ${VERSION}), ros-noetic-roscpp, ros-noetic-geometry-msgs, ros-noetic-gazebo-msgs, ros-noetic-nav-msgs, ros-noetic-sensor-msgs, ros-noetic-std-msgs, ros-noetic-tf, ros-noetic-tf2, ros-noetic-tf2-ros, ros-noetic-controller-manager, ros-noetic-gazebo-plugins, ros-noetic-gazebo-ros, ros-noetic-gazebo-ros-control, ros-noetic-joint-state-controller, ros-noetic-joint-state-publisher, ros-noetic-robot-state-publisher, ros-noetic-rostopic, ros-noetic-rviz, ros-noetic-velocity-controllers" \
+  "${description_pkg} (= ${VERSION}), ros-noetic-xgc2-gazebo-sim-worlds (>= 1.0.21-1), ros-noetic-roscpp, ros-noetic-geometry-msgs, ros-noetic-gazebo-msgs, ros-noetic-nav-msgs, ros-noetic-sensor-msgs, ros-noetic-std-msgs, ros-noetic-tf, ros-noetic-tf2, ros-noetic-tf2-ros, ros-noetic-controller-manager, ros-noetic-gazebo-plugins, ros-noetic-gazebo-ros, ros-noetic-gazebo-ros-control, ros-noetic-joint-state-controller, ros-noetic-joint-state-publisher, ros-noetic-robot-state-publisher, ros-noetic-rostopic, ros-noetic-rviz, ros-noetic-velocity-controllers" \
   "XGC2 AgileX Scout Gazebo Classic simulation" \
   "Replaces: ros-noetic-xgc2-scout-gazebo-sim, ros-noetic-xgc2-gz-classic-scout
 Conflicts: ros-noetic-xgc2-scout-gazebo-sim, ros-noetic-xgc2-gz-classic-scout" \

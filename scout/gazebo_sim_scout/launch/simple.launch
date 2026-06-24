@@ -27,7 +27,7 @@ ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSI
 
     <arg name="ns" default="ugv1"/>
     <arg name="model_name" default="$(arg ns)"/>
-    <arg name="world_name" default="$(find gazebo_sim_scout)/worlds/weston_robot_empty.world"/>
+    <arg name="world_name" default="$(find gazebo_sim_worlds)/worlds/weston_robot_empty/weston_robot_empty.world"/>
     <arg name="gui" default="true"/>
     <arg name="rviz" default="true"/>
     <arg name="paused" default="false"/>

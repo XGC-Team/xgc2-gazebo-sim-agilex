@@ -1,6 +1,7 @@
 schema: xgc2.product.v1
 id: xgc2-gazebo-sim-scout
 name: XGC2 Gazebo Classic Scout
+version: 0.4.9-1
 kind: ros1-apt
 summary: AgileX Scout robot description and Gazebo Classic simulation packages for ROS Noetic.
 
@@ -19,6 +20,7 @@ apt:
     - ros-noetic-xgc2-gazebo-sim-scout
   depends:
     - ros-noetic-xgc2-scout-description
+    - ros-noetic-xgc2-gazebo-sim-worlds (>= 1.0.21-1)
     - ros-noetic-xgc2-gazebo-sim-vrpn-bridge
 
 usage:

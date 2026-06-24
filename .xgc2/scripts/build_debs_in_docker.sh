@@ -49,6 +49,10 @@ docker run --rm \
 
     export DEBIAN_FRONTEND=noninteractive
     apt-get update
+    apt-get install -y --no-install-recommends ca-certificates
+    echo "deb [trusted=yes arch=$(dpkg --print-architecture)] https://xgc2.apt.xiaokang.ink focal main" \
+      > /etc/apt/sources.list.d/xgc2.list
+    apt-get update
     apt-get install -y --no-install-recommends \
       build-essential \
       ca-certificates \
@@ -83,6 +87,7 @@ docker run --rm \
       ros-noetic-tf2-ros \
       ros-noetic-urdf \
       ros-noetic-velocity-controllers \
+      ros-noetic-xgc2-gazebo-sim-worlds \
       ros-noetic-xacro
 
     rm -rf /workspace/work/src /workspace/work/build /workspace/work/devel /workspace/work/install-root

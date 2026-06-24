@@ -8,10 +8,12 @@ source "/opt/ros/${ROS_DISTRO}/setup.bash"
 required_debs=(
   ros-noetic-xgc2-scout-description
   ros-noetic-xgc2-gazebo-sim-scout
+  ros-noetic-xgc2-gazebo-sim-worlds
 )
 required_ros_packages=(
   scout_description
   gazebo_sim_scout
+  gazebo_sim_worlds
 )
 
 for package in "${required_debs[@]}"; do
@@ -22,14 +24,14 @@ for ros_pkg in "${required_ros_packages[@]}"; do
   test "$(rospack find "${ros_pkg}")" = "/opt/ros/${ROS_DISTRO}/share/${ros_pkg}"
 done
 
+test -f "/opt/ros/${ROS_DISTRO}/share/gazebo_sim_worlds/worlds/weston_robot_empty/weston_robot_empty.world"
+
 roslaunch --files scout_description mini_description.launch >/tmp/xgc2-scout-description-files.txt
 roslaunch --files gazebo_sim_scout spawn_simple.launch >/tmp/xgc2-scout-spawn-files.txt
-roslaunch --files gazebo_sim_scout simple.launch rviz:=false >/tmp/xgc2-scout-simple-files.txt
-roslaunch --files gazebo_sim_scout accurate.launch rviz:=false enable_vrpn_server:=false >/tmp/xgc2-scout-accurate-files.txt
+roslaunch --files gazebo_sim_scout simple.launch rviz:=false world_name:=/tmp/xgc2-scout-empty.world >/tmp/xgc2-scout-simple-files.txt
+roslaunch --files gazebo_sim_scout accurate.launch rviz:=false enable_vrpn_server:=false world_name:=/tmp/xgc2-scout-empty.world >/tmp/xgc2-scout-accurate-files.txt
 
-world="/opt/ros/${ROS_DISTRO}/share/gazebo_sim_scout/worlds/weston_robot_empty.world"
-grep -q '<max_step_size>0.004</max_step_size>' "${world}"
-grep -q '<real_time_update_rate>250</real_time_update_rate>' "${world}"
+test ! -d "/opt/ros/${ROS_DISTRO}/share/gazebo_sim_scout/worlds"
 
 mini_xacro="/opt/ros/${ROS_DISTRO}/share/scout_description/urdf/mini.xacro"
 expanded_urdf="/tmp/xgc2-scout-mini-expanded.urdf"

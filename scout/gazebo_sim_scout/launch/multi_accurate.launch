@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <launch>
-    <arg name="world_name" default="$(find gazebo_sim_scout)/worlds/weston_robot_empty.world"/>
+    <arg name="world_name" default="$(find gazebo_sim_worlds)/worlds/weston_robot_empty/weston_robot_empty.world"/>
     <arg name="gui" default="true"/>
     <arg name="rviz" default="true"/>
     <arg name="rviz_config" default="$(find scout_description)/rviz/two_ugv_navigation.rviz"/>

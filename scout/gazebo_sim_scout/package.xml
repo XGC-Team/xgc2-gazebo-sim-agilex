@@ -35,6 +35,7 @@
   <run_depend>gazebo_plugins</run_depend>
   <run_depend>gazebo_ros</run_depend>
   <run_depend>gazebo_ros_control</run_depend>
+  <run_depend>gazebo_sim_worlds</run_depend>
   <run_depend>gazebo_sim_vrpn_bridge</run_depend>
   <run_depend>joint_state_controller</run_depend>
   <run_depend>joint_state_publisher</run_depend>
