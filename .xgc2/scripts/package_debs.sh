@@ -1,10 +1,22 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
+
 INSTALL_ROOT=""
 OUTPUT_DIR=""
 ROS_DISTRO="${ROS_DISTRO:-noetic}"
-VERSION="${PACKAGE_VERSION:-0.4.9-1}"
+
+product_version() {
+  awk -F': *' '/^version:[[:space:]]*/ {print $2; exit}' "${REPO_ROOT}/.xgc2/product.yml"
+}
+
+VERSION="${PACKAGE_VERSION:-$(product_version)}"
+if [[ -z "${VERSION}" ]]; then
+  echo "package version is missing; set PACKAGE_VERSION or .xgc2/product.yml version" >&2
+  exit 1
+fi
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
