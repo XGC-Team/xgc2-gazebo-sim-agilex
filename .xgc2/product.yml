@@ -1,38 +1,38 @@
 schema: xgc2.product.v1
 id: xgc2-gazebo-sim-scout
 name: XGC2 Gazebo Classic Scout
-version: 0.4.9-1
+version: 0.4.9-2
 kind: ros1-apt
-summary: AgileX Scout robot description and Gazebo Classic simulation packages for ROS Noetic.
-
+summary: AgileX Scout robot description and Gazebo Classic simulation packages for
+  ROS Noetic.
 ros:
   distro: noetic
   packages:
-    - scout_description
-    - gazebo_sim_scout
-
+  - scout_description
+  - gazebo_sim_scout
 apt:
   distribution: focal
   install:
-    - ros-noetic-xgc2-gazebo-sim-scout
+  - ros-noetic-xgc2-gazebo-sim-scout
   packages:
-    - ros-noetic-xgc2-scout-description
-    - ros-noetic-xgc2-gazebo-sim-scout
+  - ros-noetic-xgc2-scout-description
+  - ros-noetic-xgc2-gazebo-sim-scout
   depends:
-    - ros-noetic-xgc2-scout-description
-    - ros-noetic-xgc2-gazebo-sim-worlds (>= 1.1.0-1)
-    - ros-noetic-xgc2-gazebo-sim-vrpn-bridge
-
+  - ros-noetic-xgc2-scout-description
+  - ros-noetic-xgc2-gazebo-sim-worlds (>= 1.1.0-4)
+  - ros-noetic-xgc2-gazebo-sim-vrpn-bridge
 usage:
-  install: |
-    sudo apt update
-    sudo apt install ros-noetic-xgc2-gazebo-sim-scout
-  smoke_test: |
-    roslaunch --files gazebo_sim_scout simple.launch rviz:=false
+  install: 'sudo apt update
 
+    sudo apt install ros-noetic-xgc2-gazebo-sim-scout
+
+    '
+  smoke_test: 'roslaunch --files gazebo_sim_scout simple.launch rviz:=false
+
+    '
 ownership:
   paths:
-    - /opt/ros/noetic/share/scout_description
-    - /opt/ros/noetic/share/gazebo_sim_scout
-    - /opt/ros/noetic/lib/gazebo_sim_scout
-    - /opt/ros/noetic/lib/libscout_gazebo.a
+  - /opt/ros/noetic/share/scout_description
+  - /opt/ros/noetic/share/gazebo_sim_scout
+  - /opt/ros/noetic/lib/gazebo_sim_scout
+  - /opt/ros/noetic/lib/libscout_gazebo.a
