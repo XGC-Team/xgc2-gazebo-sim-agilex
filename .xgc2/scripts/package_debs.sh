@@ -137,20 +137,13 @@ build_deb() {
   fakeroot dpkg-deb --build "${pkg_root}" "${OUTPUT_DIR}/${package}_${VERSION}_${ARCH}.deb" >/dev/null
 }
 
-description_pkg="ros-noetic-xgc2-scout-description"
 gazebo_pkg="ros-noetic-xgc2-gazebo-sim-scout"
-
-build_deb \
-  "${description_pkg}" \
-  "scout_description" \
-  "ros-noetic-urdf, ros-noetic-xacro, ros-noetic-joint-state-publisher, ros-noetic-joint-state-publisher-gui, ros-noetic-robot-state-publisher, ros-noetic-rviz" \
-  "XGC2 AgileX Scout robot description" \
-  ""
+description_dep="ros-noetic-xgc2-scout-description (>= 0.4.10-1)"
 
 build_deb \
   "${gazebo_pkg}" \
   "gazebo_sim_scout" \
-  "${description_pkg} (= ${VERSION}), ros-noetic-xgc2-gazebo-sim-worlds (>= 1.0.21-1), ros-noetic-roscpp, ros-noetic-geometry-msgs, ros-noetic-gazebo-msgs, ros-noetic-nav-msgs, ros-noetic-sensor-msgs, ros-noetic-std-msgs, ros-noetic-tf, ros-noetic-tf2, ros-noetic-tf2-ros, ros-noetic-controller-manager, ros-noetic-gazebo-plugins, ros-noetic-gazebo-ros, ros-noetic-gazebo-ros-control, ros-noetic-joint-state-controller, ros-noetic-joint-state-publisher, ros-noetic-robot-state-publisher, ros-noetic-rostopic, ros-noetic-rviz, ros-noetic-velocity-controllers" \
+  "${description_dep}, ros-noetic-xgc2-gazebo-sim-worlds (>= 1.0.21-1), ros-noetic-roscpp, ros-noetic-geometry-msgs, ros-noetic-gazebo-msgs, ros-noetic-nav-msgs, ros-noetic-sensor-msgs, ros-noetic-std-msgs, ros-noetic-tf, ros-noetic-tf2, ros-noetic-tf2-ros, ros-noetic-controller-manager, ros-noetic-gazebo-plugins, ros-noetic-gazebo-ros, ros-noetic-gazebo-ros-control, ros-noetic-joint-state-controller, ros-noetic-joint-state-publisher, ros-noetic-robot-state-publisher, ros-noetic-rostopic, ros-noetic-rviz, ros-noetic-velocity-controllers" \
   "XGC2 AgileX Scout Gazebo Classic simulation" \
   "Replaces: ros-noetic-xgc2-scout-gazebo-sim, ros-noetic-xgc2-gz-classic-scout
 Conflicts: ros-noetic-xgc2-scout-gazebo-sim, ros-noetic-xgc2-gz-classic-scout" \

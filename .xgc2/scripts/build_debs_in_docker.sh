@@ -88,6 +88,7 @@ docker run --rm \
       ros-noetic-urdf \
       ros-noetic-velocity-controllers \
       ros-noetic-xgc2-gazebo-sim-worlds \
+      ros-noetic-xgc2-scout-description \
       ros-noetic-xacro
 
     rm -rf /workspace/work/src /workspace/work/build /workspace/work/devel /workspace/work/install-root
