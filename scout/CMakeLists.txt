@@ -5,7 +5,6 @@ project(gazebo_sim_scout)
 
 find_package(catkin REQUIRED COMPONENTS    
     roslaunch 
-    roslint 
     roscpp 
     gazebo_msgs
     nav_msgs
