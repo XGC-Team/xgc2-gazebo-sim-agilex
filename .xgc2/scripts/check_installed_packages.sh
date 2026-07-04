@@ -31,7 +31,7 @@ for ros_pkg in "${required_ros_packages[@]}"; do
 done
 
 log "checking installed world asset"
-test -f "/opt/ros/${ROS_DISTRO}/share/gazebo_sim_worlds/worlds/weston_robot_empty/weston_robot_empty.world"
+test -f "/opt/ros/${ROS_DISTRO}/share/gazebo_sim_worlds/worlds/empty/empty.world"
 
 log "checking launch file resolution"
 roslaunch --files scout_description mini_description.launch >/tmp/xgc2-scout-description-files.txt
