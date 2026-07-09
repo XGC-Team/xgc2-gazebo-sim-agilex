@@ -26,6 +26,9 @@
     <arg name="wheel_radius" default="0.08"/>
     <arg name="command_gain" default="1.10"/>
     <arg name="angular_command_gain" default="0.80"/>
+    <arg name="enable_command_limits" default="true"/>
+    <arg name="max_linear_speed" default="1.5"/>
+    <arg name="max_angular_speed" default="0.5235"/>
     <arg name="publish_scout_status" default="true"/>
     <arg name="status_topic" default="/$(arg ns)/scout_status"/>
     <arg name="light_control_topic" default="/$(arg ns)/scout_light_control"/>
@@ -92,6 +95,9 @@
         <param name="wheel_radius" type="double" value="$(arg wheel_radius)" />
         <param name="command_gain" type="double" value="$(arg command_gain)" />
         <param name="angular_command_gain" type="double" value="$(arg angular_command_gain)" />
+        <param name="enable_command_limits" type="bool" value="$(arg enable_command_limits)" />
+        <param name="max_linear_speed" type="double" value="$(arg max_linear_speed)" />
+        <param name="max_angular_speed" type="double" value="$(arg max_angular_speed)" />
     </node>
 
     <node name="$(arg ns)_gazebo_model_odom" pkg="gazebo_sim_scout" type="gazebo_model_odom" output="screen">

@@ -1,5 +1,6 @@
 #include <cmath>
 #include <map>
+#include <stdint.h>
 #include <string>
 
 #include <nav_msgs/Odometry.h>

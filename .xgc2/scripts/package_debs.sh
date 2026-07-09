@@ -138,7 +138,7 @@ build_deb() {
 }
 
 gazebo_pkg="ros-noetic-xgc2-gazebo-sim-scout"
-description_dep="ros-noetic-xgc2-scout-description (>= 0.4.10-3)"
+description_dep="ros-noetic-xgc2-scout-description (>= 0.4.10-4)"
 
 build_deb \
   "${gazebo_pkg}" \

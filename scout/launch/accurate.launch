@@ -17,6 +17,9 @@
     <arg name="command_gain" default="1.0"/>
     <!-- Base-controller yaw gain. Keep 1.0 for the uncalibrated Scout model. -->
     <arg name="angular_command_gain" default="1.0"/>
+    <arg name="enable_command_limits" default="true"/>
+    <arg name="max_linear_speed" default="1.5"/>
+    <arg name="max_angular_speed" default="0.5235"/>
     <arg name="publish_scout_status" default="true"/>
     <arg name="status_topic" default="/$(arg ns)/scout_status"/>
     <arg name="light_control_topic" default="/$(arg ns)/scout_light_control"/>
@@ -43,6 +46,9 @@
         <arg name="wheel_radius" value="$(arg wheel_radius)" />
         <arg name="command_gain" value="$(arg command_gain)" />
         <arg name="angular_command_gain" value="$(arg angular_command_gain)" />
+        <arg name="enable_command_limits" value="$(arg enable_command_limits)" />
+        <arg name="max_linear_speed" value="$(arg max_linear_speed)" />
+        <arg name="max_angular_speed" value="$(arg max_angular_speed)" />
         <arg name="publish_scout_status" value="$(arg publish_scout_status)" />
         <arg name="status_topic" value="$(arg status_topic)" />
         <arg name="light_control_topic" value="$(arg light_control_topic)" />
