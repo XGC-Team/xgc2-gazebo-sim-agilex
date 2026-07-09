@@ -7,7 +7,10 @@
     <arg name="rviz" default="true"/>
     <arg name="paused" default="false"/>
     <arg name="enable_vrpn_server" default="false"/>
+    <arg name="wheel_contact_mu1" default="1.0"/>
     <arg name="wheel_contact_mu2" default="0.35"/>
+    <arg name="wheel_contact_fdir1" default="1 0 0"/>
+    <arg name="wheel_contact_slip1" default="0.0"/>
     <arg name="wheel_contact_slip2" default="0.1"/>
     <arg name="wheel_pid_p" default="1.0"/>
     <arg name="wheel_pid_i" default="0.0"/>
@@ -37,7 +40,10 @@
     <include file="$(dirname)/spawn_accurate.launch">
         <arg name="ns" value="$(arg ns)" />
         <arg name="model_name" value="$(arg model_name)" />
+        <arg name="wheel_contact_mu1" value="$(arg wheel_contact_mu1)" />
         <arg name="wheel_contact_mu2" value="$(arg wheel_contact_mu2)" />
+        <arg name="wheel_contact_fdir1" value="$(arg wheel_contact_fdir1)" />
+        <arg name="wheel_contact_slip1" value="$(arg wheel_contact_slip1)" />
         <arg name="wheel_contact_slip2" value="$(arg wheel_contact_slip2)" />
         <arg name="wheel_pid_p" value="$(arg wheel_pid_p)" />
         <arg name="wheel_pid_i" value="$(arg wheel_pid_i)" />
