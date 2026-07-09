@@ -80,6 +80,7 @@ docker run --rm \
       ros-noetic-rospack \
       ros-noetic-rostopic \
       ros-noetic-rviz \
+      ros-noetic-scout-msgs \
       ros-noetic-sensor-msgs \
       ros-noetic-std-msgs \
       ros-noetic-tf \
