@@ -19,6 +19,10 @@
     <arg name="wheel_contact_mu2" default="0.35" />
     <arg name="wheel_contact_slip2" default="0.1" />
     <arg name="skid_steer_torque" default="1000" />
+    <arg name="publish_scout_status" default="true" />
+    <arg name="status_topic" default="/$(arg ns)/scout_status" />
+    <arg name="light_control_topic" default="/$(arg ns)/scout_light_control" />
+    <arg name="battery_voltage" default="29.2" />
 
     <include file="$(find scout_description)/launch/mini_description.launch">
         <arg name="ns" value="$(arg ns)" />
@@ -53,6 +57,14 @@
 
     <node name="odom_to_tf" pkg="gazebo_sim_scout" type="odom_to_tf" output="screen">
         <param name="odom_topic" type="string" value="odom" />
+    </node>
+
+    <node if="$(arg publish_scout_status)" name="$(arg ns)_sim_scout_status" pkg="gazebo_sim_scout" type="sim_scout_status" output="screen">
+        <param name="odom_topic" type="string" value="odom" />
+        <param name="joint_states_topic" type="string" value="/$(arg ns)/joint_states" />
+        <param name="status_topic" type="string" value="$(arg status_topic)" />
+        <param name="light_control_topic" type="string" value="$(arg light_control_topic)" />
+        <param name="battery_voltage" type="double" value="$(arg battery_voltage)" />
     </node>
 
     <!-- <node name="scout_skid_steer_controller" pkg="gazebo_sim_scout" type="scout_skid_steer_controller">

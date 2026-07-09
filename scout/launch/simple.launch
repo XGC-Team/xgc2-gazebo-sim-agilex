@@ -34,6 +34,10 @@ ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSI
     <arg name="wheel_contact_mu2" default="0.35"/>
     <arg name="wheel_contact_slip2" default="0.1"/>
     <arg name="skid_steer_torque" default="1000"/>
+    <arg name="publish_scout_status" default="true"/>
+    <arg name="status_topic" default="/$(arg ns)/scout_status"/>
+    <arg name="light_control_topic" default="/$(arg ns)/scout_light_control"/>
+    <arg name="battery_voltage" default="29.2"/>
 
     <include file="$(find gazebo_ros)/launch/empty_world.launch">
         <arg name="world_name" value="$(arg world_name)"/>
@@ -50,6 +54,10 @@ ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSI
         <arg name="wheel_contact_mu2" value="$(arg wheel_contact_mu2)"/>
         <arg name="wheel_contact_slip2" value="$(arg wheel_contact_slip2)"/>
         <arg name="skid_steer_torque" value="$(arg skid_steer_torque)"/>
+        <arg name="publish_scout_status" value="$(arg publish_scout_status)"/>
+        <arg name="status_topic" value="$(arg status_topic)"/>
+        <arg name="light_control_topic" value="$(arg light_control_topic)"/>
+        <arg name="battery_voltage" value="$(arg battery_voltage)"/>
     </include>
         
     <node if="$(arg rviz)" name="rviz" pkg="rviz" type="rviz" args="-d $(find scout_description)/rviz/navigation.rviz" />

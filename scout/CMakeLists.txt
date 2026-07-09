@@ -8,6 +8,7 @@ find_package(catkin REQUIRED COMPONENTS
     roscpp 
     gazebo_msgs
     nav_msgs
+    scout_msgs
     std_msgs
     sensor_msgs
     geometry_msgs
@@ -17,7 +18,7 @@ find_package(catkin REQUIRED COMPONENTS
 catkin_package(
   INCLUDE_DIRS include
 #   LIBRARIES 
-  CATKIN_DEPENDS roscpp gazebo_msgs nav_msgs sensor_msgs
+  CATKIN_DEPENDS roscpp gazebo_msgs nav_msgs scout_msgs sensor_msgs
 #   DEPENDS Boost
 )
 
@@ -42,6 +43,10 @@ target_link_libraries(odom_to_tf ${catkin_LIBRARIES})
 add_executable(gazebo_model_odom src/gazebo_model_odom.cpp)
 target_link_libraries(gazebo_model_odom ${catkin_LIBRARIES})
 
+add_executable(sim_scout_status src/sim_scout_status.cpp)
+add_dependencies(sim_scout_status ${catkin_EXPORTED_TARGETS})
+target_link_libraries(sim_scout_status ${catkin_LIBRARIES})
+
 #############
 ## Install ##
 #############
@@ -49,7 +54,7 @@ target_link_libraries(gazebo_model_odom ${catkin_LIBRARIES})
 roslaunch_add_file_check(launch)
 
 install(
-  TARGETS scout_gazebo scout_skid_steer_controller odom_to_tf gazebo_model_odom
+  TARGETS scout_gazebo scout_skid_steer_controller odom_to_tf gazebo_model_odom sim_scout_status
   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}

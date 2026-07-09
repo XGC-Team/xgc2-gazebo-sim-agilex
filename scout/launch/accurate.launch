@@ -17,6 +17,10 @@
     <arg name="command_gain" default="1.0"/>
     <!-- Base-controller yaw gain. Keep 1.0 for the uncalibrated Scout model. -->
     <arg name="angular_command_gain" default="1.0"/>
+    <arg name="publish_scout_status" default="true"/>
+    <arg name="status_topic" default="/$(arg ns)/scout_status"/>
+    <arg name="light_control_topic" default="/$(arg ns)/scout_light_control"/>
+    <arg name="battery_voltage" default="29.2"/>
 
     <include file="$(find gazebo_ros)/launch/empty_world.launch">
         <arg name="world_name" value="$(arg world_name)"/>
@@ -39,6 +43,10 @@
         <arg name="wheel_radius" value="$(arg wheel_radius)" />
         <arg name="command_gain" value="$(arg command_gain)" />
         <arg name="angular_command_gain" value="$(arg angular_command_gain)" />
+        <arg name="publish_scout_status" value="$(arg publish_scout_status)" />
+        <arg name="status_topic" value="$(arg status_topic)" />
+        <arg name="light_control_topic" value="$(arg light_control_topic)" />
+        <arg name="battery_voltage" value="$(arg battery_voltage)" />
     </include>
 
     <include if="$(arg enable_vrpn_server)" file="$(find gazebo_sim_vrpn_bridge)/launch/vrpn_server.launch">

@@ -26,6 +26,10 @@
     <arg name="wheel_radius" default="0.08"/>
     <arg name="command_gain" default="1.10"/>
     <arg name="angular_command_gain" default="0.80"/>
+    <arg name="publish_scout_status" default="true"/>
+    <arg name="status_topic" default="/$(arg ns)/scout_status"/>
+    <arg name="light_control_topic" default="/$(arg ns)/scout_light_control"/>
+    <arg name="battery_voltage" default="29.2"/>
 
     <include file="$(find scout_description)/launch/mini_description.launch">
         <arg name="ns" value="$(arg ns)" />
@@ -96,6 +100,14 @@
         <param name="odom_frame" type="string" value="$(arg odom_frame)" />
         <param name="base_frame" type="string" value="$(arg base_frame)" />
         <param name="publish_tf" type="bool" value="true" />
+    </node>
+
+    <node if="$(arg publish_scout_status)" name="$(arg ns)_sim_scout_status" pkg="gazebo_sim_scout" type="sim_scout_status" output="screen">
+        <param name="odom_topic" type="string" value="$(arg odom_topic)" />
+        <param name="joint_states_topic" type="string" value="/$(arg ns)/joint_states" />
+        <param name="status_topic" type="string" value="$(arg status_topic)" />
+        <param name="light_control_topic" type="string" value="$(arg light_control_topic)" />
+        <param name="battery_voltage" type="double" value="$(arg battery_voltage)" />
     </node>
 
     <node name="$(arg ns)_robot_state_publisher" ns="$(arg robot_state_publisher_ns)" pkg="robot_state_publisher" type="robot_state_publisher">
