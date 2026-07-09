@@ -12,7 +12,7 @@
     <arg name="wheel_contact_fdir1" default="1 0 0"/>
     <arg name="wheel_contact_slip1" default="0.0"/>
     <arg name="wheel_contact_slip2" default="0.1"/>
-    <arg name="wheel_pid_p" default="1.0"/>
+    <arg name="wheel_pid_p" default="9.0"/>
     <arg name="wheel_pid_i" default="0.0"/>
     <arg name="wheel_pid_d" default="0.0"/>
     <arg name="wheel_separation" default="0.416503"/>
