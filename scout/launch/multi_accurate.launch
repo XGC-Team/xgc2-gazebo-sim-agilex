@@ -11,7 +11,9 @@
     <arg name="wheel_pid_p" default="9.0"/>
     <arg name="wheel_pid_i" default="0.0"/>
     <arg name="wheel_pid_d" default="0.0"/>
-    <arg name="wheel_separation" default="0.416503"/>
+    <arg name="wheelbase" default="0.451"/>
+    <arg name="wheel_track" default="0.490"/>
+    <arg name="wheel_separation" default="$(arg wheel_track)"/>
     <arg name="wheel_radius" default="0.08"/>
     <arg name="command_gain" default="1.0"/>
     <!-- Shared base default. Per-robot args below can override this for calibration. -->
@@ -72,6 +74,8 @@
         <arg name="wheel_pid_p" value="$(arg ugv1_wheel_pid_p)" />
         <arg name="wheel_pid_i" value="$(arg ugv1_wheel_pid_i)" />
         <arg name="wheel_pid_d" value="$(arg ugv1_wheel_pid_d)" />
+        <arg name="wheelbase" value="$(arg wheelbase)" />
+        <arg name="wheel_track" value="$(arg wheel_track)" />
         <arg name="wheel_separation" value="$(arg wheel_separation)" />
         <arg name="wheel_radius" value="$(arg wheel_radius)" />
         <arg name="command_gain" value="$(arg command_gain)" />
@@ -98,6 +102,8 @@
         <arg name="wheel_pid_p" value="$(arg ugv2_wheel_pid_p)" />
         <arg name="wheel_pid_i" value="$(arg ugv2_wheel_pid_i)" />
         <arg name="wheel_pid_d" value="$(arg ugv2_wheel_pid_d)" />
+        <arg name="wheelbase" value="$(arg wheelbase)" />
+        <arg name="wheel_track" value="$(arg wheel_track)" />
         <arg name="wheel_separation" value="$(arg wheel_separation)" />
         <arg name="wheel_radius" value="$(arg wheel_radius)" />
         <arg name="command_gain" value="$(arg command_gain)" />

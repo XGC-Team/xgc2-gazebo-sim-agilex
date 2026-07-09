@@ -1,6 +1,9 @@
 #include <gazebo_msgs/ModelStates.h>
 #include <nav_msgs/Odometry.h>
 #include <ros/ros.h>
+#include <tf2/LinearMath/Matrix3x3.h>
+#include <tf2/LinearMath/Quaternion.h>
+#include <tf2/LinearMath/Vector3.h>
 #include <tf2_ros/transform_broadcaster.h>
 
 #include <string>
@@ -39,6 +42,26 @@ class GazeboModelOdom {
       odom.child_frame_id = base_frame_;
       odom.pose.pose = msg->pose[i];
       odom.twist.twist = msg->twist[i];
+
+      const auto& orientation = msg->pose[i].orientation;
+      const tf2::Quaternion world_from_base(
+          orientation.x, orientation.y, orientation.z, orientation.w);
+      const tf2::Matrix3x3 base_from_world =
+          tf2::Matrix3x3(world_from_base).transpose();
+      const tf2::Vector3 linear_base =
+          base_from_world * tf2::Vector3(msg->twist[i].linear.x,
+                                        msg->twist[i].linear.y,
+                                        msg->twist[i].linear.z);
+      const tf2::Vector3 angular_base =
+          base_from_world * tf2::Vector3(msg->twist[i].angular.x,
+                                        msg->twist[i].angular.y,
+                                        msg->twist[i].angular.z);
+      odom.twist.twist.linear.x = linear_base.x();
+      odom.twist.twist.linear.y = linear_base.y();
+      odom.twist.twist.linear.z = linear_base.z();
+      odom.twist.twist.angular.x = angular_base.x();
+      odom.twist.twist.angular.y = angular_base.y();
+      odom.twist.twist.angular.z = angular_base.z();
       odom_pub_.publish(odom);
 
       if (publish_tf_) {

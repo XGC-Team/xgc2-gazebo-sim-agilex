@@ -18,7 +18,7 @@ namespace wescore {
 ScoutSkidSteer::ScoutSkidSteer(ros::NodeHandle *nh, std::string robot_name)
     : nh_(nh), robot_name_(robot_name) {
   ros::NodeHandle private_nh("~");
-  private_nh.param("wheel_separation", wheel_separation_, 0.416503);
+  private_nh.param("wheel_separation", wheel_separation_, 0.490);
   private_nh.param("wheel_radius", wheel_radius_, 0.08);
   private_nh.param("command_gain", command_gain_, 1.0);
   private_nh.param("angular_command_gain", angular_command_gain_, 1.0);

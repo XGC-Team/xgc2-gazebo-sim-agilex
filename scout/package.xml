@@ -42,6 +42,7 @@
   <run_depend>joint_state_controller</run_depend>
   <run_depend>joint_state_publisher</run_depend>
   <run_depend>robot_state_publisher</run_depend>
+  <run_depend>rviz</run_depend>
   <run_depend>scout_description</run_depend>
   <run_depend>rostopic</run_depend>
   <run_depend>velocity_controllers</run_depend>
