@@ -52,7 +52,7 @@ grep -q '<slip1 value="0.0"/>' "${expanded_urdf}"
 grep -q '<slip2 value="0.1"/>' "${expanded_urdf}"
 grep -q '<kp value="1000000.0"/>' "${expanded_urdf}"
 grep -q '<maxContacts value="16"/>' "${expanded_urdf}"
-grep -q '<wheelSeparation>0.490</wheelSeparation>' "${expanded_urdf}"
+grep -Eq '<wheelSeparation>0\.49(0*)?</wheelSeparation>' "${expanded_urdf}"
 grep -q '<wheelDiameter>0.16</wheelDiameter>' "${expanded_urdf}"
 grep -q '<torque>1000</torque>' "${expanded_urdf}"
 
