@@ -138,6 +138,7 @@ jobs:
       - name: Build and install-check deb packages
         if: ${{ inputs.trusted_ci_run_id == '' }}
         run: |
+          install -d "$GITHUB_WORKSPACE/.ci/build-manifests"
           .xgc2/scripts/build_debs_in_docker.sh \
             --work-dir "$RUNNER_TEMP/xgc2-gazebo-sim-scout-${{ matrix.arch }}" \
             --output-dir "$GITHUB_WORKSPACE/debs"
