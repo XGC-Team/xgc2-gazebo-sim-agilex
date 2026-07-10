@@ -25,6 +25,7 @@ on:
         description: Run optional source tests before release
         required: true
         default: false
+        type: boolean
       release_id:
         description: Parent orchestrator run id used for correlation and audit.
         required: false
