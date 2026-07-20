@@ -3,7 +3,7 @@
   "definitions": [
     {
       "id": "scout-gazebo-robot",
-      "version": "1.3.0",
+      "version": "1.5.0",
       "label": "Scout Mini Gazebo robot",
       "description": "One namespaced Scout Mini model and controller stack attached to an existing Gazebo server.",
       "drivers": [
@@ -190,7 +190,6 @@
           "status_topic:=${statusTopic}",
           "odom_frame:=odom",
           "base_frame:=${namespace}/base_link",
-          "tf_prefix:=${namespace}",
           "frame_prefix:=${namespace}/",
           "sensor_ns:=${namespace}",
           "robot_state_publisher_ns:=${namespace}",
@@ -253,34 +252,11 @@
         "failureThreshold": 5
       },
       "liveness": {
-        "kind": "exec",
-        "command": {
-          "executable": "/opt/ros/noetic/bin/rostopic",
-          "args": [
-            "echo",
-            "-n",
-            "1",
-            "${statusTopic}"
-          ],
-          "env": {
-            "CMAKE_PREFIX_PATH": "/opt/ros/noetic",
-            "LD_LIBRARY_PATH": "/opt/ros/noetic/lib:/opt/ros/noetic/lib/x86_64-linux-gnu:/opt/ros/noetic/lib/aarch64-linux-gnu",
-            "PATH": "/opt/ros/noetic/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
-            "PKG_CONFIG_PATH": "/opt/ros/noetic/lib/pkgconfig",
-            "PYTHONPATH": "/opt/ros/noetic/lib/python3/dist-packages",
-            "ROS_DISTRO": "noetic",
-            "ROS_ETC_DIR": "/opt/ros/noetic/etc/ros",
-            "ROS_MASTER_URI": "http://127.0.0.1:${rosMasterPort}",
-            "ROS_PACKAGE_PATH": "/opt/ros/noetic/share",
-            "ROS_PYTHON_VERSION": "3",
-            "ROS_ROOT": "/opt/ros/noetic/share/ros",
-            "ROS_VERSION": "1"
-          }
-        },
+        "kind": "process",
         "interval": 2000000000,
-        "timeout": 5000000000,
+        "timeout": 2000000000,
         "successThreshold": 1,
-        "failureThreshold": 5
+        "failureThreshold": 3
       },
       "beforeStart": {
         "command": {
