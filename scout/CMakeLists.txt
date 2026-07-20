@@ -4,7 +4,6 @@ project(gazebo_sim_scout)
 ## C++ standard and release flags are set by workspace build defaults.
 
 find_package(catkin REQUIRED COMPONENTS    
-    roslaunch 
     roscpp 
     gazebo_msgs
     nav_msgs
@@ -51,7 +50,10 @@ target_link_libraries(sim_scout_status ${catkin_LIBRARIES})
 ## Install ##
 #############
 
-roslaunch_add_file_check(launch)
+if(CATKIN_ENABLE_TESTING)
+  find_package(roslaunch REQUIRED)
+  roslaunch_add_file_check(launch)
+endif()
 
 install(
   TARGETS scout_gazebo scout_skid_steer_controller odom_to_tf gazebo_model_odom sim_scout_status

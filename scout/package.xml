@@ -14,7 +14,6 @@
   <url type="repository">https://github.com/westonrobot/scout_ros</url>
 
   <buildtool_depend>catkin</buildtool_depend>
-  <build_depend>roslaunch</build_depend>
   <build_depend>roscpp</build_depend>
   <build_depend>geometry_msgs</build_depend>
   <build_depend>gazebo_msgs</build_depend>
@@ -42,6 +41,7 @@
   <run_depend>joint_state_controller</run_depend>
   <run_depend>joint_state_publisher</run_depend>
   <run_depend>robot_state_publisher</run_depend>
+  <run_depend>roslaunch</run_depend>
   <run_depend>rviz</run_depend>
   <run_depend>scout_description</run_depend>
   <run_depend>rostopic</run_depend>
