@@ -3,7 +3,7 @@
   "definitions": [
     {
       "id": "scout-gazebo-robot",
-      "version": "1.5.0",
+      "version": "1.6.0",
       "label": "Scout Mini Gazebo robot",
       "description": "One namespaced Scout Mini model and controller stack attached to an existing Gazebo server.",
       "drivers": [
@@ -190,6 +190,7 @@
           "status_topic:=${statusTopic}",
           "odom_frame:=odom",
           "base_frame:=${namespace}/base_link",
+          "tf_prefix:=${namespace}",
           "frame_prefix:=${namespace}/",
           "sensor_ns:=${namespace}",
           "robot_state_publisher_ns:=${namespace}",
