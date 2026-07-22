@@ -38,6 +38,6 @@ release:
   - xgc2-scout-description
   dependency_policy:
     xgc2-gazebo-sim-vrpn-bridge: verify
-    xgc2-gazebo-sim-worlds: verify
+    xgc2-gazebo-sim-scenes: verify
     xgc2-scout-description: verify
     xgc2-scout-msgs: rebuild
