@@ -37,7 +37,7 @@ ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSI
     <arg name="publish_scout_status" default="true"/>
     <arg name="status_topic" default="/$(arg ns)/scout_status"/>
     <arg name="light_control_topic" default="/$(arg ns)/scout_light_control"/>
-    <arg name="battery_voltage" default="29.2"/>
+    <arg name="battery_voltage" default="28.765"/>
 
     <include file="$(find gazebo_ros)/launch/empty_world.launch">
         <arg name="world_name" value="$(arg world_name)"/>

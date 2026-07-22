@@ -23,7 +23,9 @@ class SimScoutStatus {
     private_nh_.param("base_state", base_state_, 0);
     private_nh_.param("control_mode", control_mode_, 1);
     private_nh_.param("fault_code", fault_code_, 0);
-    private_nh_.param("battery_voltage", battery_voltage_, 29.2);
+    // Fixed 95% Scout pack voltage using the manual's temporary linear
+    // 20.5V (0%) to 29.2V (100%) model.
+    private_nh_.param("battery_voltage", battery_voltage_, 28.765);
     private_nh_.param("motor_current", motor_current_, 0.0);
     private_nh_.param("motor_temperature", motor_temperature_, 25.0);
 
