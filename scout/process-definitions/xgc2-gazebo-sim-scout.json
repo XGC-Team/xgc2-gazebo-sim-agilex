@@ -646,6 +646,311 @@
         "backoff": 0
       },
       "digest": ""
+    },
+    {
+      "id": "scout-gazebo-robot",
+      "version": "1.8.0",
+      "label": "Scout Mini Gazebo robot",
+      "description": "One namespaced Scout Mini model and controller stack attached to an existing Gazebo server.",
+      "drivers": [
+        "host"
+      ],
+      "parameters": {
+        "properties": {
+          "gazeboMasterPort": {
+            "type": "integer",
+            "default": 11345,
+            "minimum": 1,
+            "maximum": 65535
+          },
+          "maxAngularSpeed": {
+            "type": "number",
+            "description": "Maximum angular command in radians per second",
+            "default": 0.5235,
+            "minimum": 0.01
+          },
+          "maxLinearSpeed": {
+            "type": "number",
+            "description": "Maximum linear command in meters per second",
+            "default": 1.5,
+            "minimum": 0.01
+          },
+          "modelName": {
+            "type": "string",
+            "description": "Unique Gazebo model name",
+            "default": "ugv1"
+          },
+          "namespace": {
+            "type": "string",
+            "description": "ROS namespace without a leading slash",
+            "default": "ugv1"
+          },
+          "odomTopic": {
+            "type": "string",
+            "description": "Absolute odometry topic used for readiness",
+            "default": "/ugv1/odom"
+          },
+          "rosMasterPort": {
+            "type": "integer",
+            "default": 11311,
+            "minimum": 1,
+            "maximum": 65535
+          },
+          "spawnX": {
+            "type": "number",
+            "description": "Initial world X position in meters",
+            "default": 0
+          },
+          "spawnY": {
+            "type": "number",
+            "description": "Initial world Y position in meters",
+            "default": 0
+          },
+          "spawnYaw": {
+            "type": "number",
+            "description": "Initial world yaw in radians",
+            "default": 0,
+            "minimum": -6.283185307179586,
+            "maximum": 6.283185307179586
+          },
+          "spawnZ": {
+            "type": "number",
+            "description": "Initial world Z position in meters",
+            "default": 0.181,
+            "minimum": 0
+          },
+          "statusTopic": {
+            "type": "string",
+            "description": "Absolute Scout status topic used for liveness",
+            "default": "/ugv1/scout_status"
+          },
+          "wheelContactMu2": {
+            "type": "number",
+            "description": "Lateral wheel contact friction",
+            "default": 0.35,
+            "minimum": 0
+          },
+          "wheelContactSlip2": {
+            "type": "number",
+            "description": "Lateral wheel contact slip",
+            "default": 0.1,
+            "minimum": 0
+          },
+          "wheelPidD": {
+            "type": "number",
+            "description": "Wheel controller derivative gain",
+            "default": 0,
+            "minimum": 0
+          },
+          "wheelPidI": {
+            "type": "number",
+            "description": "Wheel controller integral gain",
+            "default": 0,
+            "minimum": 0
+          },
+          "wheelPidP": {
+            "type": "number",
+            "description": "Wheel controller proportional gain",
+            "default": 9,
+            "minimum": 0
+          },
+          "wheelRadius": {
+            "type": "number",
+            "description": "Wheel radius in meters",
+            "default": 0.08,
+            "minimum": 0.001
+          },
+          "wheelTrack": {
+            "type": "number",
+            "description": "Wheel track in meters",
+            "default": 0.49,
+            "minimum": 0.01
+          },
+          "wheelbase": {
+            "type": "number",
+            "description": "Wheelbase in meters",
+            "default": 0.451,
+            "minimum": 0.01
+          }
+        },
+        "additionalProperties": false
+      },
+      "resourceClaims": [
+        {
+          "bindingKey": "robot",
+          "kind": "robot",
+          "mode": "",
+          "capacity": 0,
+          "identityParts": [
+            {
+              "parameter": "modelName"
+            }
+          ]
+        },
+        {
+          "bindingKey": "gazebo-model",
+          "kind": "custom",
+          "mode": "",
+          "capacity": 0,
+          "namespace": "gazebo-model",
+          "identityParts": [
+            {
+              "parameter": "gazeboMasterPort"
+            },
+            {
+              "parameter": "modelName"
+            }
+          ]
+        },
+        {
+          "bindingKey": "ros-stack",
+          "kind": "custom",
+          "mode": "",
+          "capacity": 0,
+          "namespace": "ros-stack",
+          "identityParts": [
+            {
+              "parameter": "rosMasterPort"
+            },
+            {
+              "parameter": "namespace"
+            },
+            {
+              "literal": "scout"
+            }
+          ]
+        }
+      ],
+      "command": {
+        "executable": "/opt/ros/noetic/bin/roslaunch",
+        "args": [
+          "/opt/ros/noetic/share/gazebo_sim_scout/launch/spawn_accurate.launch",
+          "ns:=${namespace}",
+          "model_name:=${modelName}",
+          "x:=${spawnX}",
+          "y:=${spawnY}",
+          "z:=${spawnZ}",
+          "yaw:=${spawnYaw}",
+          "robot_description_param:=/${namespace}/robot_description",
+          "odom_topic:=${odomTopic}",
+          "status_topic:=${statusTopic}",
+          "odom_frame:=odom",
+          "base_frame:=${namespace}/base_link",
+          "tf_prefix:=${namespace}",
+          "frame_prefix:=${namespace}/",
+          "sensor_ns:=${namespace}",
+          "robot_state_publisher_ns:=${namespace}",
+          "wheel_contact_mu2:=${wheelContactMu2}",
+          "wheel_contact_slip2:=${wheelContactSlip2}",
+          "wheel_pid_p:=${wheelPidP}",
+          "wheel_pid_i:=${wheelPidI}",
+          "wheel_pid_d:=${wheelPidD}",
+          "wheelbase:=${wheelbase}",
+          "wheel_track:=${wheelTrack}",
+          "wheel_separation:=${wheelTrack}",
+          "wheel_radius:=${wheelRadius}",
+          "max_linear_speed:=${maxLinearSpeed}",
+          "max_angular_speed:=${maxAngularSpeed}"
+        ],
+        "env": {
+          "CMAKE_PREFIX_PATH": "/opt/ros/noetic",
+          "GAZEBO_MASTER_URI": "http://127.0.0.1:${gazeboMasterPort}",
+          "LD_LIBRARY_PATH": "/opt/ros/noetic/lib:/opt/ros/noetic/lib/x86_64-linux-gnu:/opt/ros/noetic/lib/aarch64-linux-gnu",
+          "PATH": "/opt/ros/noetic/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+          "PKG_CONFIG_PATH": "/opt/ros/noetic/lib/pkgconfig",
+          "PYTHONPATH": "/opt/ros/noetic/lib/python3/dist-packages",
+          "ROS_DISTRO": "noetic",
+          "ROS_ETC_DIR": "/opt/ros/noetic/etc/ros",
+          "ROS_MASTER_URI": "http://127.0.0.1:${rosMasterPort}",
+          "ROS_PACKAGE_PATH": "/opt/ros/noetic/share",
+          "ROS_PYTHON_VERSION": "3",
+          "ROS_ROOT": "/opt/ros/noetic/share/ros",
+          "ROS_VERSION": "1"
+        }
+      },
+      "readiness": {
+        "kind": "ros1-topic-message",
+        "address": "http://127.0.0.1:${rosMasterPort}",
+        "topic": "${odomTopic}",
+        "interval": 2000000000,
+        "timeout": 5000000000,
+        "successThreshold": 1,
+        "failureThreshold": 5
+      },
+      "liveness": {
+        "kind": "process",
+        "interval": 2000000000,
+        "timeout": 2000000000,
+        "successThreshold": 1,
+        "failureThreshold": 3
+      },
+      "beforeStart": {
+        "command": {
+          "executable": "/usr/bin/python3",
+          "args": [
+            "-c",
+            "import fcntl,json,os,stat,subprocess,sys\nmode=\"strict\"\ntry:\n    rosservice,model,raw_port,mode=sys.argv[1:]\n    if mode not in (\"strict\",\"best-effort\"):\n        raise ValueError(\"invalid Gazebo cleanup mode: \"+mode)\n    uid=os.getuid()\n    port=int(raw_port)\n    lock_path=f\"/tmp/xgc2-gazebo-delete-model-u{uid}-ros-p{port}.lock\"\n    fd=os.open(lock_path,os.O_RDWR | os.O_CREAT | os.O_NOFOLLOW | os.O_CLOEXEC,0o600)\n    try:\n        info=os.fstat(fd)\n        if not stat.S_ISREG(info.st_mode) or info.st_uid != uid:\n            raise PermissionError(f\"unsafe Gazebo delete-model lock: {lock_path}\")\n        fcntl.flock(fd,fcntl.LOCK_EX)\n        try:\n            result=subprocess.run([rosservice,\"call\",\"/gazebo/delete_model\",json.dumps({\"model_name\":model},separators=(\",\",\":\"))],timeout=4,check=False)\n        finally:\n            fcntl.flock(fd,fcntl.LOCK_UN)\n    finally:\n        os.close(fd)\n    if result.returncode != 0:\n        raise subprocess.CalledProcessError(result.returncode,result.args)\nexcept BaseException:\n    if mode == \"best-effort\":\n        raise SystemExit(0)\n    raise\n",
+            "/opt/ros/noetic/bin/rosservice",
+            "${modelName}",
+            "${rosMasterPort}",
+            "strict"
+          ],
+          "directExecutable": true,
+          "env": {
+            "CMAKE_PREFIX_PATH": "/opt/ros/noetic",
+            "LD_LIBRARY_PATH": "/opt/ros/noetic/lib:/opt/ros/noetic/lib/x86_64-linux-gnu:/opt/ros/noetic/lib/aarch64-linux-gnu",
+            "PATH": "/opt/ros/noetic/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+            "PKG_CONFIG_PATH": "/opt/ros/noetic/lib/pkgconfig",
+            "PYTHONPATH": "/opt/ros/noetic/lib/python3/dist-packages",
+            "ROS_DISTRO": "noetic",
+            "ROS_ETC_DIR": "/opt/ros/noetic/etc/ros",
+            "ROS_MASTER_URI": "http://127.0.0.1:${rosMasterPort}",
+            "ROS_PACKAGE_PATH": "/opt/ros/noetic/share",
+            "ROS_PYTHON_VERSION": "3",
+            "ROS_ROOT": "/opt/ros/noetic/share/ros",
+            "ROS_VERSION": "1"
+          }
+        },
+        "timeout": 45000000000
+      },
+      "beforeStop": {
+        "command": {
+          "executable": "/usr/bin/python3",
+          "args": [
+            "-c",
+            "import fcntl,json,os,stat,subprocess,sys\nmode=\"strict\"\ntry:\n    rosservice,model,raw_port,mode=sys.argv[1:]\n    if mode not in (\"strict\",\"best-effort\"):\n        raise ValueError(\"invalid Gazebo cleanup mode: \"+mode)\n    uid=os.getuid()\n    port=int(raw_port)\n    lock_path=f\"/tmp/xgc2-gazebo-delete-model-u{uid}-ros-p{port}.lock\"\n    fd=os.open(lock_path,os.O_RDWR | os.O_CREAT | os.O_NOFOLLOW | os.O_CLOEXEC,0o600)\n    try:\n        info=os.fstat(fd)\n        if not stat.S_ISREG(info.st_mode) or info.st_uid != uid:\n            raise PermissionError(f\"unsafe Gazebo delete-model lock: {lock_path}\")\n        fcntl.flock(fd,fcntl.LOCK_EX)\n        try:\n            result=subprocess.run([rosservice,\"call\",\"/gazebo/delete_model\",json.dumps({\"model_name\":model},separators=(\",\",\":\"))],timeout=4,check=False)\n        finally:\n            fcntl.flock(fd,fcntl.LOCK_UN)\n    finally:\n        os.close(fd)\n    if result.returncode != 0:\n        raise subprocess.CalledProcessError(result.returncode,result.args)\nexcept BaseException:\n    if mode == \"best-effort\":\n        raise SystemExit(0)\n    raise\n",
+            "/opt/ros/noetic/bin/rosservice",
+            "${modelName}",
+            "${rosMasterPort}",
+            "strict"
+          ],
+          "directExecutable": true,
+          "env": {
+            "CMAKE_PREFIX_PATH": "/opt/ros/noetic",
+            "LD_LIBRARY_PATH": "/opt/ros/noetic/lib:/opt/ros/noetic/lib/x86_64-linux-gnu:/opt/ros/noetic/lib/aarch64-linux-gnu",
+            "PATH": "/opt/ros/noetic/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+            "PKG_CONFIG_PATH": "/opt/ros/noetic/lib/pkgconfig",
+            "PYTHONPATH": "/opt/ros/noetic/lib/python3/dist-packages",
+            "ROS_DISTRO": "noetic",
+            "ROS_ETC_DIR": "/opt/ros/noetic/etc/ros",
+            "ROS_MASTER_URI": "http://127.0.0.1:${rosMasterPort}",
+            "ROS_PACKAGE_PATH": "/opt/ros/noetic/share",
+            "ROS_PYTHON_VERSION": "3",
+            "ROS_ROOT": "/opt/ros/noetic/share/ros",
+            "ROS_VERSION": "1"
+          }
+        },
+        "timeout": 45000000000
+      },
+      "stop": {
+        "gracePeriod": 12000000000
+      },
+      "restart": {
+        "mode": "never",
+        "maxRestarts": 0,
+        "backoff": 0
+      },
+      "digest": ""
     }
   ]
 }
