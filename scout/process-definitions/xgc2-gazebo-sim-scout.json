@@ -873,9 +873,9 @@
         "address": "http://127.0.0.1:${rosMasterPort}",
         "topic": "${odomTopic}",
         "interval": 2000000000,
-        "timeout": 5000000000,
+        "timeout": 8000000000,
         "successThreshold": 1,
-        "failureThreshold": 5
+        "failureThreshold": 30
       },
       "liveness": {
         "kind": "process",
