@@ -32,8 +32,6 @@ done
 
 log "checking installed world asset"
 test -f "/opt/ros/${ROS_DISTRO}/share/gazebo_sim_worlds/worlds/empty/empty.world"
-test -f "/usr/share/xgc2/process-definitions/xgc2-gazebo-sim-scout.json"
-python3 -m json.tool /usr/share/xgc2/process-definitions/xgc2-gazebo-sim-scout.json >/dev/null
 
 log "checking launch file resolution"
 roslaunch --files scout_description mini_description.launch >/tmp/xgc2-scout-description-files.txt

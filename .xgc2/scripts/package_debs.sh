@@ -131,8 +131,6 @@ build_deb() {
   fi
   if [[ "${ros_pkg}" == "gazebo_sim_scout" ]]; then
     install -D -m 0644 \
-      "${REPO_ROOT}/scout/process-definitions/xgc2-gazebo-sim-scout.json" \
-      "${pkg_root}/usr/share/xgc2/process-definitions/xgc2-gazebo-sim-scout.json"
   fi
   if [[ "$#" -gt 0 ]]; then
     copy_libs "${pkg_root}" "$@"
