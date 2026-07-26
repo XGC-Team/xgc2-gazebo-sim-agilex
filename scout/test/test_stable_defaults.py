@@ -36,6 +36,27 @@ class ScoutStableDefaultsTest(unittest.TestCase):
         self.assertEqual(text.count("p: 6.0"), 8)
         self.assertNotIn("p: 9.0", text)
 
+    def test_sensor_simulation_is_opt_in_on_every_launch_path(self) -> None:
+        for filename in (
+            "accurate.launch",
+            "multi_accurate.launch",
+            "simple.launch",
+            "spawn_accurate.launch",
+            "spawn_simple.launch",
+        ):
+            root = ET.parse(PACKAGE / "launch" / filename).getroot()
+            defaults = {
+                element.attrib["name"]: element.attrib.get("default")
+                for element in root.findall("./arg")
+            }
+            self.assertEqual(defaults.get("enable_lidar"), "false", filename)
+            self.assertEqual(defaults.get("enable_camera"), "false", filename)
+
+        for filename in ("accurate.launch", "simple.launch", "spawn_accurate.launch", "spawn_simple.launch"):
+            text = (PACKAGE / "launch" / filename).read_text()
+            self.assertIn('name="enable_lidar" value="$(arg enable_lidar)"', text, filename)
+            self.assertIn('name="enable_camera" value="$(arg enable_camera)"', text, filename)
+
     def test_spawn_maps_only_the_known_unstable_legacy_triple(self) -> None:
         text = (PACKAGE / "launch" / "spawn_accurate.launch").read_text()
         legacy_guard = (

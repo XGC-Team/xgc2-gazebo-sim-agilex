@@ -31,6 +31,8 @@ ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSI
     <arg name="gui" default="true"/>
     <arg name="rviz" default="true"/>
     <arg name="paused" default="false"/>
+    <arg name="enable_lidar" default="false"/>
+    <arg name="enable_camera" default="false"/>
     <arg name="wheel_contact_mu2" default="0.35"/>
     <arg name="wheel_contact_slip2" default="0.1"/>
     <arg name="skid_steer_torque" default="1000"/>
@@ -51,6 +53,8 @@ ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSI
     <include file="$(dirname)/spawn_simple.launch">
         <arg name="ns" value="$(arg ns)"/>
         <arg name="model_name" value="$(arg model_name)"/>
+        <arg name="enable_lidar" value="$(arg enable_lidar)"/>
+        <arg name="enable_camera" value="$(arg enable_camera)"/>
         <arg name="wheel_contact_mu2" value="$(arg wheel_contact_mu2)"/>
         <arg name="wheel_contact_slip2" value="$(arg wheel_contact_slip2)"/>
         <arg name="skid_steer_torque" value="$(arg skid_steer_torque)"/>
