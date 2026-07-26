@@ -1,9 +1,9 @@
 gazebo_ros_control:
   pid_gains:
-    front_right_wheel: {p: 9.0, i: 0.0, d: 0.0}
-    front_left_wheel: {p: 9.0, i: 0.0, d: 0.0}
-    rear_left_wheel: {p: 9.0, i: 0.0, d: 0.0}
-    rear_right_wheel: {p: 9.0, i: 0.0, d: 0.0}
+    front_right_wheel: {p: 6.0, i: 0.0, d: 0.0}
+    front_left_wheel: {p: 6.0, i: 0.0, d: 0.0}
+    rear_left_wheel: {p: 6.0, i: 0.0, d: 0.0}
+    rear_right_wheel: {p: 6.0, i: 0.0, d: 0.0}
 
 scout_state_controller:
   type: joint_state_controller/JointStateController
@@ -12,19 +12,19 @@ scout_state_controller:
 scout_motor_fr_controller:
   type: velocity_controllers/JointVelocityController
   joint: front_right_wheel
-  pid: {p: 9.0, i: 0.0, d: 0.0}
+  pid: {p: 6.0, i: 0.0, d: 0.0}
 
 scout_motor_fl_controller:
   type: velocity_controllers/JointVelocityController
   joint: front_left_wheel
-  pid: {p: 9.0, i: 0.0, d: 0.0}
+  pid: {p: 6.0, i: 0.0, d: 0.0}
 
 scout_motor_rl_controller:
   type: velocity_controllers/JointVelocityController
   joint: rear_left_wheel
-  pid: {p: 9.0, i: 0.0, d: 0.0}
+  pid: {p: 6.0, i: 0.0, d: 0.0}
 
 scout_motor_rr_controller:
   type: velocity_controllers/JointVelocityController
   joint: rear_right_wheel
-  pid: {p: 9.0, i: 0.0, d: 0.0}
+  pid: {p: 6.0, i: 0.0, d: 0.0}

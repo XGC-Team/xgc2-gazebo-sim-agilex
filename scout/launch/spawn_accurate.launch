@@ -14,20 +14,31 @@
     <arg name="frame_prefix" default=""/>
     <arg name="sensor_ns" default="/"/>
     <arg name="robot_state_publisher_ns" default="/"/>
-    <arg name="wheel_contact_mu2" default="0.35"/>
+    <arg name="wheel_contact_mu2" default="0.10"/>
     <arg name="wheel_contact_mu1" default="1.0"/>
     <arg name="wheel_contact_fdir1" default="1 0 0"/>
     <arg name="wheel_contact_slip1" default="0.0"/>
-    <arg name="wheel_contact_slip2" default="0.1"/>
-    <arg name="wheel_pid_p" default="9.0"/>
+    <arg name="wheel_contact_slip2" default="5.0"/>
+    <arg name="wheel_pid_p" default="6.0"/>
     <arg name="wheel_pid_i" default="0.0"/>
     <arg name="wheel_pid_d" default="0.0"/>
+    <!-- Automations created before the validated chassis baseline pin the
+         unstable 0.35 / 0.1 / 9 triple in their immutable process snapshot.
+         Keep that snapshot digest valid, but map exactly that legacy triple to
+         the July stable baseline at the product boundary. Other explicit
+         tuning values pass through unchanged. -->
+    <arg name="effective_wheel_contact_mu2"
+         value="$(eval 0.10 if float(arg('wheel_contact_mu2')) == 0.35 and float(arg('wheel_contact_slip2')) == 0.1 and float(arg('wheel_pid_p')) == 9.0 else arg('wheel_contact_mu2'))"/>
+    <arg name="effective_wheel_contact_slip2"
+         value="$(eval 5.0 if float(arg('wheel_contact_mu2')) == 0.35 and float(arg('wheel_contact_slip2')) == 0.1 and float(arg('wheel_pid_p')) == 9.0 else arg('wheel_contact_slip2'))"/>
+    <arg name="effective_wheel_pid_p"
+         value="$(eval 6.0 if float(arg('wheel_contact_mu2')) == 0.35 and float(arg('wheel_contact_slip2')) == 0.1 and float(arg('wheel_pid_p')) == 9.0 else arg('wheel_pid_p'))"/>
     <arg name="wheelbase" default="0.451"/>
     <arg name="wheel_track" default="0.490"/>
     <arg name="wheel_separation" default="$(arg wheel_track)"/>
     <arg name="wheel_radius" default="0.08"/>
-    <arg name="command_gain" default="1.0"/>
-    <arg name="angular_command_gain" default="1.0"/>
+    <arg name="command_gain" default="1.03"/>
+    <arg name="angular_command_gain" default="1.20"/>
     <arg name="enable_command_limits" default="true"/>
     <arg name="max_linear_speed" default="1.5"/>
     <arg name="max_angular_speed" default="0.5235"/>
@@ -43,39 +54,39 @@
         <arg name="robot_description_param" value="$(arg robot_description_param)" />
         <arg name="frame_prefix" value="$(arg frame_prefix)" />
         <arg name="sensor_ns" value="$(arg sensor_ns)" />
-        <arg name="wheel_contact_mu2" value="$(arg wheel_contact_mu2)" />
+        <arg name="wheel_contact_mu2" value="$(arg effective_wheel_contact_mu2)" />
         <arg name="wheel_contact_mu1" value="$(arg wheel_contact_mu1)" />
         <arg name="wheel_contact_fdir1" value="$(arg wheel_contact_fdir1)" />
         <arg name="wheel_contact_slip1" value="$(arg wheel_contact_slip1)" />
-        <arg name="wheel_contact_slip2" value="$(arg wheel_contact_slip2)" />
+        <arg name="wheel_contact_slip2" value="$(arg effective_wheel_contact_slip2)" />
         <arg name="wheelbase" value="$(arg wheelbase)" />
         <arg name="wheel_track" value="$(arg wheel_track)" />
     </include>
 
     <group ns="$(arg ns)">
         <rosparam file="$(find gazebo_sim_scout)/config/scout_mini_ros_control.yaml" command="load"/>
-        <param name="gazebo_ros_control/pid_gains/front_right_wheel/p" type="double" value="$(arg wheel_pid_p)"/>
+        <param name="gazebo_ros_control/pid_gains/front_right_wheel/p" type="double" value="$(arg effective_wheel_pid_p)"/>
         <param name="gazebo_ros_control/pid_gains/front_right_wheel/i" type="double" value="$(arg wheel_pid_i)"/>
         <param name="gazebo_ros_control/pid_gains/front_right_wheel/d" type="double" value="$(arg wheel_pid_d)"/>
-        <param name="gazebo_ros_control/pid_gains/front_left_wheel/p" type="double" value="$(arg wheel_pid_p)"/>
+        <param name="gazebo_ros_control/pid_gains/front_left_wheel/p" type="double" value="$(arg effective_wheel_pid_p)"/>
         <param name="gazebo_ros_control/pid_gains/front_left_wheel/i" type="double" value="$(arg wheel_pid_i)"/>
         <param name="gazebo_ros_control/pid_gains/front_left_wheel/d" type="double" value="$(arg wheel_pid_d)"/>
-        <param name="gazebo_ros_control/pid_gains/rear_left_wheel/p" type="double" value="$(arg wheel_pid_p)"/>
+        <param name="gazebo_ros_control/pid_gains/rear_left_wheel/p" type="double" value="$(arg effective_wheel_pid_p)"/>
         <param name="gazebo_ros_control/pid_gains/rear_left_wheel/i" type="double" value="$(arg wheel_pid_i)"/>
         <param name="gazebo_ros_control/pid_gains/rear_left_wheel/d" type="double" value="$(arg wheel_pid_d)"/>
-        <param name="gazebo_ros_control/pid_gains/rear_right_wheel/p" type="double" value="$(arg wheel_pid_p)"/>
+        <param name="gazebo_ros_control/pid_gains/rear_right_wheel/p" type="double" value="$(arg effective_wheel_pid_p)"/>
         <param name="gazebo_ros_control/pid_gains/rear_right_wheel/i" type="double" value="$(arg wheel_pid_i)"/>
         <param name="gazebo_ros_control/pid_gains/rear_right_wheel/d" type="double" value="$(arg wheel_pid_d)"/>
-        <param name="scout_motor_fr_controller/pid/p" type="double" value="$(arg wheel_pid_p)"/>
+        <param name="scout_motor_fr_controller/pid/p" type="double" value="$(arg effective_wheel_pid_p)"/>
         <param name="scout_motor_fr_controller/pid/i" type="double" value="$(arg wheel_pid_i)"/>
         <param name="scout_motor_fr_controller/pid/d" type="double" value="$(arg wheel_pid_d)"/>
-        <param name="scout_motor_fl_controller/pid/p" type="double" value="$(arg wheel_pid_p)"/>
+        <param name="scout_motor_fl_controller/pid/p" type="double" value="$(arg effective_wheel_pid_p)"/>
         <param name="scout_motor_fl_controller/pid/i" type="double" value="$(arg wheel_pid_i)"/>
         <param name="scout_motor_fl_controller/pid/d" type="double" value="$(arg wheel_pid_d)"/>
-        <param name="scout_motor_rl_controller/pid/p" type="double" value="$(arg wheel_pid_p)"/>
+        <param name="scout_motor_rl_controller/pid/p" type="double" value="$(arg effective_wheel_pid_p)"/>
         <param name="scout_motor_rl_controller/pid/i" type="double" value="$(arg wheel_pid_i)"/>
         <param name="scout_motor_rl_controller/pid/d" type="double" value="$(arg wheel_pid_d)"/>
-        <param name="scout_motor_rr_controller/pid/p" type="double" value="$(arg wheel_pid_p)"/>
+        <param name="scout_motor_rr_controller/pid/p" type="double" value="$(arg effective_wheel_pid_p)"/>
         <param name="scout_motor_rr_controller/pid/i" type="double" value="$(arg wheel_pid_i)"/>
         <param name="scout_motor_rr_controller/pid/d" type="double" value="$(arg wheel_pid_d)"/>
     </group>

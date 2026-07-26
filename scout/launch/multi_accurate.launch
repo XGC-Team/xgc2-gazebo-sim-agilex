@@ -6,18 +6,18 @@
     <arg name="rviz_config" default="$(find scout_description)/rviz/two_ugv_navigation.rviz"/>
     <arg name="paused" default="false"/>
     <arg name="enable_vrpn_server" default="false"/>
-    <arg name="wheel_contact_mu2" default="0.35"/>
-    <arg name="wheel_contact_slip2" default="0.1"/>
-    <arg name="wheel_pid_p" default="9.0"/>
+    <arg name="wheel_contact_mu2" default="0.10"/>
+    <arg name="wheel_contact_slip2" default="5.0"/>
+    <arg name="wheel_pid_p" default="6.0"/>
     <arg name="wheel_pid_i" default="0.0"/>
     <arg name="wheel_pid_d" default="0.0"/>
     <arg name="wheelbase" default="0.451"/>
     <arg name="wheel_track" default="0.490"/>
     <arg name="wheel_separation" default="$(arg wheel_track)"/>
     <arg name="wheel_radius" default="0.08"/>
-    <arg name="command_gain" default="1.0"/>
+    <arg name="command_gain" default="1.03"/>
     <!-- Shared base default. Per-robot args below can override this for calibration. -->
-    <arg name="angular_command_gain" default="1.0"/>
+    <arg name="angular_command_gain" default="1.20"/>
 
     <arg name="ugv1_ns" default="ugv1"/>
     <arg name="ugv1_model_name" default="$(arg ugv1_ns)"/>

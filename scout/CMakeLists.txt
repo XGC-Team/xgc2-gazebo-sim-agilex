@@ -53,6 +53,11 @@ target_link_libraries(sim_scout_status ${catkin_LIBRARIES})
 if(CATKIN_ENABLE_TESTING)
   find_package(roslaunch REQUIRED)
   roslaunch_add_file_check(launch)
+  find_package(PythonInterp REQUIRED)
+  add_test(
+    NAME scout_stable_defaults
+    COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/test/test_stable_defaults.py
+  )
 endif()
 
 install(
