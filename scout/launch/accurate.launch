@@ -14,7 +14,7 @@
     <arg name="wheel_contact_fdir1" default="1 0 0"/>
     <arg name="wheel_contact_slip1" default="0.0"/>
     <arg name="wheel_contact_slip2" default="5.0"/>
-    <arg name="wheel_pid_p" default="6.0"/>
+    <arg name="wheel_pid_p" default="2.0"/>
     <arg name="wheel_pid_i" default="0.0"/>
     <arg name="wheel_pid_d" default="0.0"/>
     <arg name="wheelbase" default="0.451"/>

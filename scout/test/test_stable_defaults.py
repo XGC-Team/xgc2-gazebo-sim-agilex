@@ -12,7 +12,7 @@ PACKAGE = Path(__file__).resolve().parents[1]
 EXPECTED = {
     "wheel_contact_mu2": "0.10",
     "wheel_contact_slip2": "5.0",
-    "wheel_pid_p": "6.0",
+    "wheel_pid_p": "2.0",
     "wheel_pid_i": "0.0",
     "wheel_pid_d": "0.0",
     "command_gain": "1.03",
@@ -33,7 +33,8 @@ class ScoutStableDefaultsTest(unittest.TestCase):
 
     def test_controller_yaml_uses_stable_proportional_gain(self) -> None:
         text = (PACKAGE / "config" / "scout_mini_ros_control.yaml").read_text()
-        self.assertEqual(text.count("p: 6.0"), 8)
+        self.assertEqual(text.count("p: 2.0"), 8)
+        self.assertNotIn("p: 6.0", text)
         self.assertNotIn("p: 9.0", text)
 
     def test_sensor_simulation_is_opt_in_on_every_launch_path(self) -> None:
@@ -57,23 +58,18 @@ class ScoutStableDefaultsTest(unittest.TestCase):
             self.assertIn('name="enable_lidar" value="$(arg enable_lidar)"', text, filename)
             self.assertIn('name="enable_camera" value="$(arg enable_camera)"', text, filename)
 
-    def test_spawn_maps_only_the_known_unstable_legacy_triple(self) -> None:
+    def test_spawn_uses_explicit_stable_parameters_without_legacy_mapping(self) -> None:
         text = (PACKAGE / "launch" / "spawn_accurate.launch").read_text()
-        legacy_guard = (
-            "float(arg('wheel_contact_mu2')) == 0.35 and "
-            "float(arg('wheel_contact_slip2')) == 0.1 and "
-            "float(arg('wheel_pid_p')) == 9.0"
-        )
-        self.assertEqual(text.count(legacy_guard), 3)
+        self.assertNotIn("effective_wheel_", text)
         self.assertIn(
-            'name="wheel_contact_mu2" value="$(arg effective_wheel_contact_mu2)"',
+            'name="wheel_contact_mu2" value="$(arg wheel_contact_mu2)"',
             text,
         )
         self.assertIn(
-            'name="wheel_contact_slip2" value="$(arg effective_wheel_contact_slip2)"',
+            'name="wheel_contact_slip2" value="$(arg wheel_contact_slip2)"',
             text,
         )
-        self.assertEqual(text.count('value="$(arg effective_wheel_pid_p)"'), 8)
+        self.assertEqual(text.count('value="$(arg wheel_pid_p)"'), 8)
 
 
 if __name__ == "__main__":

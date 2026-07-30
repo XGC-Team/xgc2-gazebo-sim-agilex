@@ -10,7 +10,7 @@
     <arg name="enable_camera" default="false"/>
     <arg name="wheel_contact_mu2" default="0.10"/>
     <arg name="wheel_contact_slip2" default="5.0"/>
-    <arg name="wheel_pid_p" default="6.0"/>
+    <arg name="wheel_pid_p" default="2.0"/>
     <arg name="wheel_pid_i" default="0.0"/>
     <arg name="wheel_pid_d" default="0.0"/>
     <arg name="wheelbase" default="0.451"/>

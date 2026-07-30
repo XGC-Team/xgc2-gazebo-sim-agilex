@@ -1,8 +1,16 @@
 # SCOUT MINI Gazebo 模型与实物接口对齐记录
 
 本文记录 2026-07-10 完成的 SCOUT MINI Gazebo 模型、ROS1 接口、NMPC
-约束和参考轨迹检查。目的不是宣称仿真已经完成严格系统辨识，而是说明本轮保留了
-哪些修改、为什么早期摩擦力和 PID 调参没有解决问题，以及当前结论的证据边界。
+约束和参考轨迹检查，以及 2026-07-31 完成的 1000 Hz/250 Hz 物理步长回归。
+目的不是宣称仿真已经完成严格系统辨识，而是说明本轮保留了哪些修改、为什么早期
+摩擦力和 PID 调参没有解决问题，以及当前结论的证据边界。
+
+物理步长、离散轮速环稳定性、NaN 证据链和 250 Hz 闭环实证单独记录在：
+
+```text
+products/ros1/simulator/gazebo-sim/agilex/scout/docs/
+  scout_gazebo_250hz_control_tuning.md
+```
 
 ## 1. 结论摘要
 
@@ -11,11 +19,13 @@
 1. ACADOS 内部预测约束与控制器输出、Gazebo 底盘执行约束对齐。
 2. 移除默认圆轨迹中不可执行的 `CIRCLE_ENTRY` 过渡段。
 3. 修正 IMU 话题和里程计速度坐标系。
-4. 按手册值更新轮子几何，并使用中等轮速 P 增益和小幅命令增益校准。
+4. 按手册值更新轮子几何，并使轮速 P 增益与 Gazebo 物理步长匹配。
 5. 随机目标轨迹增加逐采样点硬限值检查。
 
-最终结果不是通过极端 PID 或继续增大地面摩擦获得的。当前保留的轮速控制器为
-`P=6, I=0, D=0`，最终摩擦参数没有在本轮继续修改。
+最终结果不是通过极端 PID 或继续增大地面摩擦获得的。历史 1 ms/1000 Hz 成功
+基线使用 `P=6, I=0, D=0`；2026-07-31 已重建并运行验证的 XGC accurate/process
+dev candidate 使用 `4 ms/250 Hz` 和 `P=2, I=0, D=0`。两者不能脱离物理步长
+互换，也不能把该配置外推到 simple/raw 启动链。
 
 ## 2. 参数修改清单
 
@@ -45,14 +55,16 @@ products/ros1/simulator/gazebo-sim/agilex/scout/src/scout_skid_steer.cpp
 
 | 参数 | 原场景默认值 | 当前值 |
 | --- | ---: | ---: |
-| `wheel_pid_p` | `10.0` | `6.0` |
+| `wheel_pid_p` | `10.0` | `2.0`（XGC accurate dev candidate） |
 | `wheel_pid_i` | `0.0` | `0.0` |
 | `wheel_pid_d` | `0.0` | `0.0` |
 | `command_gain` | `1.10` | `1.03` |
 | `angular_command_gain` | `0.80` | `1.20` |
 
-这些值来自固定摩擦条件下的线速度、纯角速度和耦合输入并行测试。它们是当前 Gazebo
-模型的响应校准值，不是 SCOUT MINI 厂商参数，也不能替代实车系统辨识。
+`command_gain` 和 `angular_command_gain` 来自历史 1 ms/P=6 条件下的线速度、纯角
+速度和耦合输入并行校准，本轮没有重新完成一套 P2 增益辨识。`P=2` 是 4 ms 下已经
+通过阶跃与四车闭环的保守候选，并在沿用上述命令增益时复验了稳定性；历史 `P=6`
+只属于 1 ms 基线。这些值不是 SCOUT MINI 厂商参数，也不能替代实车系统辨识。
 
 ### 2.3 摩擦和质量
 
@@ -131,7 +143,8 @@ angular velocity: [-0.5235, 0.5235] rad/s
 NMPC 会持续请求不可达输入并最终失去跟踪。摩擦系数和轮速 PID 都无法修复这个预测模型
 与执行器之间的结构性不一致。
 
-当前 NMPC 在每个预测阶段动态设置：
+当前 NMPC 在 stage `0..N-1` 设置输入界，在 stage `1..N` 设置速度界；stage 0
+状态由当前测量单独固定：
 
 ```text
 speed:              [-1.5, 1.5] m/s
@@ -167,9 +180,10 @@ yaw rate:         1 / 3 = 0.333 rad/s
 
 ### 4.3 D 项在当前 Gazebo 速度环中不稳定
 
-测试过 `P=6, D=0.05` 和 `P=6, D=0.10`。两组均出现非有限状态，车辆无法形成有效
-响应。当前证据只能说明 D 项与该离散速度环、关节速度信号和接触模型组合不稳定，尚未
-证明唯一的底层数值原因。因此最终保留 `D=0`，没有用 D 项掩盖其他问题。
+历史 1 ms 基线测试过 `P=6, D=0.05` 和 `P=6, D=0.10`。两组均出现非有限状态，
+车辆无法形成有效响应。当前证据只能说明 D 项与该离散速度环、关节速度信号和接触
+模型组合不稳定，尚未证明唯一的底层数值原因。因此 1 ms 和 4 ms 配置均保留 `D=0`，
+没有用 D 项掩盖其他问题。
 
 ### 4.4 单一纯偏航测试不足以决定参数
 
@@ -182,7 +196,9 @@ yaw-only
 linear-yaw coupled
 ```
 
-测试表明中等 `P=6` 已能跟踪轮速，继续提高 P 不是主要改进方向。
+历史 1 ms 测试表明 `P=6` 已能跟踪轮速；4 ms 下实证排除了 `P=6`，并验证了
+`P=2`。简化模型的稳定上界约为 `P<4.7`，所以不能声称 P2 是唯一稳定值；当前选择
+P2 是为了给接触非线性、调度抖动和无 effort limit 留出裕量。
 
 ## 5. ROS 接口修复
 
@@ -229,7 +245,7 @@ products/ros1/controller/ugv-controller/unicycle_reference_trajectory/
 
 ### 7.1 开环纯偏航
 
-当前候选参数下的近似稳态响应：
+以下是历史 1 ms/1000 Hz、`P=6` 候选参数下的近似稳态响应：
 
 | 命令角速度 | 仿真实际角速度 |
 | ---: | ---: |
@@ -238,8 +254,8 @@ products/ros1/controller/ugv-controller/unicycle_reference_trajectory/
 | `0.4 rad/s` | `0.384 rad/s` |
 | `0.5 rad/s` | `0.489 rad/s` |
 
-该结果说明低角速度仍有明显衰减，但 `0.2-0.5 rad/s` 不再完全无响应。当前参数是可用
-基线，不是最终实车辨识结果。
+该结果说明低角速度仍有明显衰减，但 `0.2-0.5 rad/s` 不再完全无响应。它是
+1000 Hz 历史基线，不应直接外推到当前 250 Hz/`P=2` 配置，也不是最终实车辨识结果。
 
 ### 7.2 圆轨迹 NMPC
 
@@ -251,7 +267,7 @@ speed  = 1.0 m/s
 target yaw rate = 0.333 rad/s
 ```
 
-6 秒稳态窗口测得：
+历史 1 ms/1000 Hz 的 6 秒稳态窗口测得：
 
 ```text
 mean command linear velocity = 1.015 m/s
@@ -264,7 +280,8 @@ reference flags              = 0
 
 ### 7.3 随机目标轨迹
 
-连续四次随机重规划的最大角速度分别为：
+以下是历史 1 ms/1000 Hz、P=6 工作区连续四次随机重规划的结果，不是 P2/250 Hz
+重新标定数据。最大角速度分别为：
 
 ```text
 0.437, 0.516, 0.459, 0.484 rad/s
@@ -274,7 +291,7 @@ reference flags              = 0
 
 ### 7.4 自动测试
 
-最终工作区测试结果：
+2026-07-10 历史 1 ms/P=6 工作区测试结果：
 
 ```text
 164 tests, 0 errors, 0 failures, 0 skipped
@@ -282,9 +299,13 @@ reference flags              = 0
 
 额外覆盖包括 ACADOS 运行时物理约束、非法约束拒绝和随机目标轨迹物理限值检查。
 
-## 8. 启动方式
+## 8. 启动方式与频率边界
 
-默认圆轨迹 GUI：
+以下 helper 命令用于复现历史 1 ms/1000 Hz、P=6 跟踪场景；脚本最终进入
+`gazebo_sim_examples/scout_ugv1_nmpc_tracking.launch`，不是本轮 XGC P2/250 Hz
+Experiment 启动链。
+
+历史默认圆轨迹 GUI：
 
 ```bash
 helper/run-ugv-tracking-sim.sh \
@@ -292,7 +313,7 @@ helper/run-ugv-tracking-sim.sh \
   --keep-container
 ```
 
-随机目标 GUI：
+历史随机目标 GUI：
 
 ```bash
 helper/run-ugv-tracking-sim.sh \
@@ -303,6 +324,26 @@ helper/run-ugv-tracking-sim.sh \
   --random-seed 42 \
   --keep-container
 ```
+
+当前 P2/250 Hz 回归从 XGC Experiment
+`b2e780a0-7b8a-4d29-b18d-7506937ee818` 的 `run-all` 工作流启动。Gazebo Server
+process 必须收到 world timing：
+
+```text
+overrideWorldPhysicsTiming = true
+gazeboMaxStepSize          = 0.004
+gazeboRealTimeUpdateRate   = 250
+```
+
+每台 Scout robot process 必须另行收到：
+
+```text
+wheelPidP                  = 2.0
+wheelContactMu2            = 0.10
+wheelContactSlip2          = 5.0
+```
+
+不能使用上述历史 helper 命令来声称复现了 P2/250 Hz 结果。
 
 ## 9. 剩余风险和后续标定
 
@@ -315,5 +356,5 @@ helper/run-ugv-tracking-sim.sh \
    命令严格限制在 `0.5235 rad/s` 内。
 5. 在真实地面类型和载荷条件下分别建立参数集，避免用单组摩擦参数覆盖所有场景。
 
-在这些测量完成前，应把当前模型视为“接口一致、约束一致、控制响应可用”的仿真基线，
-而不是已经精确复现实车动力学的数字孪生。
+在这些测量完成前，应把当前 dev candidate 视为“接口一致、约束一致、控制响应可用”
+的仿真基线，而不是已经精确复现实车动力学的数字孪生。
