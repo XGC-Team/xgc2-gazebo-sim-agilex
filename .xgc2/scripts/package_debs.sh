@@ -129,9 +129,6 @@ build_deb() {
   if [[ -n "${ros_pkg}" ]]; then
     copy_ros_package_paths "${ros_pkg}" "${pkg_root}"
   fi
-  if [[ "${ros_pkg}" == "gazebo_sim_scout" ]]; then
-    install -D -m 0644 \
-  fi
   if [[ "$#" -gt 0 ]]; then
     copy_libs "${pkg_root}" "$@"
   fi
