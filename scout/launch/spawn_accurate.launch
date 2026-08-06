@@ -38,7 +38,7 @@
     <arg name="light_control_topic" default="/$(arg ns)/scout_light_control"/>
     <arg name="battery_voltage" default="28.765"/>
 
-    <include file="$(find scout_description)/launch/mini_description.launch">
+    <include file="$(find gazebo_sim_scout)/launch/mini_description.launch">
         <arg name="ns" value="$(arg ns)" />
         <arg name="enable_ros_control" value="true" />
         <arg name="use_skid_steer_plugin" value="false" />

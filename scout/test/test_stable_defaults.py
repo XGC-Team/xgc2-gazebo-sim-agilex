@@ -21,6 +21,29 @@ EXPECTED = {
 
 
 class ScoutStableDefaultsTest(unittest.TestCase):
+    def test_simulation_owns_nonvisual_description_resources(self) -> None:
+        for relative in (
+            "launch/mini_description.launch",
+            "rviz/navigation.rviz",
+            "rviz/two_ugv_navigation.rviz",
+            "urdf/empty.urdf",
+            "urdf/mini.xacro",
+            "urdf/scout_mini.gazebo",
+            "urdf/scout_wheel.gazebo",
+        ):
+            self.assertTrue((PACKAGE / relative).is_file(), relative)
+
+        forbidden = ("$(find scout_description)/launch", "$(find scout_description)/rviz", "$(find scout_description)/urdf")
+        for directory in (PACKAGE / "launch", PACKAGE / "urdf"):
+            for path in directory.iterdir():
+                if path.is_file():
+                    text = path.read_text()
+                    for token in forbidden:
+                        self.assertNotIn(token, text, path.name)
+
+        model = (PACKAGE / "urdf" / "mini.xacro").read_text()
+        self.assertIn("package://scout_description/meshes/", model)
+
     def test_accurate_launches_share_validated_defaults(self) -> None:
         for filename in ("accurate.launch", "multi_accurate.launch", "spawn_accurate.launch"):
             root = ET.parse(PACKAGE / "launch" / filename).getroot()

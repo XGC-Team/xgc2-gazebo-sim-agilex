@@ -68,6 +68,6 @@ install(
 )
 
 install(
-  DIRECTORY config launch
+  DIRECTORY config launch rviz urdf
   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
 )

@@ -44,6 +44,8 @@
   <run_depend>roslaunch</run_depend>
   <run_depend>rviz</run_depend>
   <run_depend>scout_description</run_depend>
+  <run_depend>urdf</run_depend>
+  <run_depend>xacro</run_depend>
   <run_depend>rostopic</run_depend>
   <run_depend>velocity_controllers</run_depend>
 

@@ -73,5 +73,5 @@
         <arg name="auto_track_known_models" value="true"/>
     </include>
 
-    <node if="$(arg rviz)" name="rviz" pkg="rviz" type="rviz" args="-d $(find scout_description)/rviz/navigation.rviz" />
+    <node if="$(arg rviz)" name="rviz" pkg="rviz" type="rviz" args="-d $(find gazebo_sim_scout)/rviz/navigation.rviz" />
 </launch>

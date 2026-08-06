@@ -1,0 +1,39 @@
+<?xml version="1.0"?>
+<launch>
+    <arg name="ns" default="/"/>
+    <arg name="urdf_extras" default="$(find gazebo_sim_scout)/urdf/empty.urdf"/>
+    <arg name="enable_ros_control" default="false"/>
+    <arg name="use_skid_steer_plugin" default="true"/>
+    <arg name="robot_description_param" default="robot_description"/>
+    <arg name="frame_prefix" default=""/>
+    <arg name="sensor_ns" default="/"/>
+    <arg name="enable_lidar" default="false"/>
+    <arg name="enable_camera" default="false"/>
+    <arg name="wheel_contact_mu2" default="0.35"/>
+    <arg name="wheel_contact_mu1" default="1.0"/>
+    <arg name="wheel_contact_fdir1" default="1 0 0"/>
+    <arg name="wheel_contact_slip1" default="0.0"/>
+    <arg name="wheel_contact_slip2" default="0.1"/>
+    <arg name="skid_steer_torque" default="1000"/>
+    <arg name="wheelbase" default="0.451"/>
+    <arg name="wheel_track" default="0.490"/>
+
+    <param name="$(arg robot_description_param)" command="$(find xacro)/xacro '$(find gazebo_sim_scout)/urdf/mini.xacro'
+        ns:=$(arg ns)
+        enable_ros_control:=$(arg enable_ros_control)
+        use_skid_steer_plugin:=$(arg use_skid_steer_plugin)
+        robot_description_param:=$(arg robot_description_param)
+        frame_prefix:=$(arg frame_prefix)
+        sensor_ns:=$(arg sensor_ns)
+        enable_lidar:=$(arg enable_lidar)
+        enable_camera:=$(arg enable_camera)
+        wheel_contact_mu2:=$(arg wheel_contact_mu2)
+        wheel_contact_mu1:=$(arg wheel_contact_mu1)
+        wheel_contact_fdir1:='$(arg wheel_contact_fdir1)'
+        wheel_contact_slip1:=$(arg wheel_contact_slip1)
+        wheel_contact_slip2:=$(arg wheel_contact_slip2)
+        skid_steer_torque:=$(arg skid_steer_torque)
+        wheelbase:=$(arg wheelbase)
+        wheel_track:=$(arg wheel_track)
+        urdf_extras:=$(arg urdf_extras)" />
+</launch>

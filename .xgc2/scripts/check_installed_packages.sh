@@ -33,8 +33,14 @@ done
 log "checking installed world asset"
 test -f "/opt/ros/${ROS_DISTRO}/share/gazebo_sim_worlds/worlds/empty/empty.world"
 
-log "checking launch file resolution"
-roslaunch --files scout_description mini_description.launch >/tmp/xgc2-scout-description-files.txt
+log "checking simulation-owned model and launch resources"
+test -f "/opt/ros/${ROS_DISTRO}/share/gazebo_sim_scout/urdf/mini.xacro"
+test -f "/opt/ros/${ROS_DISTRO}/share/gazebo_sim_scout/launch/mini_description.launch"
+test -f "/opt/ros/${ROS_DISTRO}/share/gazebo_sim_scout/rviz/navigation.rviz"
+test ! -d "/opt/ros/${ROS_DISTRO}/share/scout_description/launch"
+test ! -d "/opt/ros/${ROS_DISTRO}/share/scout_description/rviz"
+test ! -f "/opt/ros/${ROS_DISTRO}/share/scout_description/urdf/mini.xacro"
+roslaunch --files gazebo_sim_scout mini_description.launch >/tmp/xgc2-scout-description-files.txt
 roslaunch --files gazebo_sim_scout spawn_simple.launch >/tmp/xgc2-scout-spawn-files.txt
 roslaunch --files gazebo_sim_scout simple.launch rviz:=false world_name:=/tmp/xgc2-scout-empty.world >/tmp/xgc2-scout-simple-files.txt
 roslaunch --files gazebo_sim_scout accurate.launch rviz:=false enable_vrpn_server:=false world_name:=/tmp/xgc2-scout-empty.world >/tmp/xgc2-scout-accurate-files.txt
@@ -42,8 +48,8 @@ roslaunch --files gazebo_sim_scout accurate.launch rviz:=false enable_vrpn_serve
 test ! -d "/opt/ros/${ROS_DISTRO}/share/gazebo_sim_scout/worlds"
 
 log "checking expanded Scout mini URDF defaults"
-mini_xacro="/opt/ros/${ROS_DISTRO}/share/scout_description/urdf/mini.xacro"
-empty_urdf="/opt/ros/${ROS_DISTRO}/share/scout_description/urdf/empty.urdf"
+mini_xacro="/opt/ros/${ROS_DISTRO}/share/gazebo_sim_scout/urdf/mini.xacro"
+empty_urdf="/opt/ros/${ROS_DISTRO}/share/gazebo_sim_scout/urdf/empty.urdf"
 expanded_urdf="/tmp/xgc2-scout-mini-expanded.urdf"
 xacro "${mini_xacro}" urdf_extras:="${empty_urdf}" > "${expanded_urdf}"
 grep -q '<mu1 value="1.0"/>' "${expanded_urdf}"

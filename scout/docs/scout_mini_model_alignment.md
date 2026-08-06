@@ -41,8 +41,8 @@ dev candidate 使用 `4 ms/250 Hz` 和 `P=2, I=0, D=0`。两者不能脱离物�
 相关实现：
 
 ```text
-products/ros1/robot/scout_description/urdf/mini.xacro
-products/ros1/robot/scout_description/launch/mini_description.launch
+products/ros1/simulator/gazebo-sim/agilex/scout/urdf/mini.xacro
+products/ros1/simulator/gazebo-sim/agilex/scout/launch/mini_description.launch
 products/ros1/simulator/gazebo-sim/agilex/scout/launch/spawn_accurate.launch
 products/ros1/simulator/gazebo-sim/agilex/scout/src/scout_skid_steer.cpp
 ```

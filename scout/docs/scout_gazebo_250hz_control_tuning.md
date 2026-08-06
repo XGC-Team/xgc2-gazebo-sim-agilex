@@ -34,7 +34,7 @@ wheel_pid_d               = 0.0
 
 Scout world 源文件仍保留历史 `0.001/1000`；XGC Gazebo process 在启动时根据
 Experiment 工作流参数生成 world override，得到本轮实测的 `0.004/250`。raw
-`scout_description` 和 simple 启动链也没有被本轮统一成上述接触参数，不能把该表
+`gazebo_sim_scout` 的 simple 启动链也没有被本轮统一成上述接触参数，不能把该表
 外推成所有 Scout 启动方式的默认值。
 
 ## 2. 现场模型和控制链
