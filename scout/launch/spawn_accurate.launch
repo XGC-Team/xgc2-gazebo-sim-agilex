@@ -38,6 +38,7 @@
     <arg name="status_topic" default="/$(arg ns)/scout_status"/>
     <arg name="light_control_topic" default="/$(arg ns)/scout_light_control"/>
     <arg name="battery_voltage" default="28.765"/>
+    <arg name="publish_tf" default="true"/>
 
     <include file="$(find gazebo_sim_scout)/launch/mini_description.launch">
         <arg name="ns" value="$(arg ns)" />
@@ -115,7 +116,7 @@
         <param name="odom_topic" type="string" value="$(arg odom_topic)" />
         <param name="odom_frame" type="string" value="$(arg odom_frame)" />
         <param name="base_frame" type="string" value="$(arg base_frame)" />
-        <param name="publish_tf" type="bool" value="true" />
+        <param name="publish_tf" type="bool" value="$(arg publish_tf)" />
     </node>
 
     <node if="$(arg publish_scout_status)" name="$(arg ns)_sim_scout_status" pkg="gazebo_sim_scout" type="sim_scout_status" output="screen">

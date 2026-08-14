@@ -32,6 +32,7 @@
     <arg name="status_topic" default="/$(arg ns)/scout_status"/>
     <arg name="light_control_topic" default="/$(arg ns)/scout_light_control"/>
     <arg name="battery_voltage" default="28.765"/>
+    <arg name="publish_tf" default="true"/>
 
     <include file="$(find gazebo_ros)/launch/empty_world.launch">
         <arg name="world_name" value="$(arg world_name)"/>
@@ -69,6 +70,7 @@
         <arg name="status_topic" value="$(arg status_topic)" />
         <arg name="light_control_topic" value="$(arg light_control_topic)" />
         <arg name="battery_voltage" value="$(arg battery_voltage)" />
+        <arg name="publish_tf" value="$(arg publish_tf)" />
     </include>
 
     <include if="$(arg enable_vrpn_server)" file="$(find gazebo_sim_vrpn_bridge)/launch/vrpn_server.launch">
