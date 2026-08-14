@@ -93,14 +93,17 @@
 
     <xacro:if value="$(arg enable_rslidar)">
         <gazebo reference="rslidar">
-            <sensor type="gpu_ray" name="helios16">
+            <!-- CPU ray (gpu_ray segfaults gzserver on this host).
+                 Real Helios-16 bag: 16 x 1800, pitch about +/-15 deg, 10 Hz.
+                 900 azimuth samples is a CPU compromise; 1800 is too heavy here. -->
+            <sensor type="ray" name="helios16">
               <pose>0 0 0 0 0 0</pose>
               <visualize>false</visualize>
               <update_rate>10</update_rate>
               <ray>
                 <scan>
                   <horizontal>
-                    <samples>720</samples>
+                    <samples>900</samples>
                     <resolution>1</resolution>
                     <min_angle>-3.14159265</min_angle>
                     <max_angle>3.14159265</max_angle>
@@ -108,7 +111,7 @@
                   <vertical>
                     <samples>16</samples>
                     <resolution>1</resolution>
-                    <min_angle>-0.279253</min_angle>
+                    <min_angle>-0.261799</min_angle>
                     <max_angle>0.261799</max_angle>
                   </vertical>
                 </scan>

@@ -1,17 +1,49 @@
 #!/usr/bin/env python3
-"""Republish sensor_msgs/PointCloud as PointCloud2 for Faster-LIO."""
+"""Republish Gazebo block-laser PointCloud as Helios-16-like PointCloud2.
+
+Does not invent per-point hardware timestamps. Faster-LIO then uses the
+published yaw undistortion (point time 0). Ring is the elevation bin,
+16 channels over the Helios-16 vertical FOV [-15 deg, +15 deg].
+"""
+
+import math
 
 import rospy
 from sensor_msgs.msg import PointCloud, PointCloud2, PointField
 from sensor_msgs import point_cloud2
 
 
+N_RINGS = 16
+PITCH_MIN = math.radians(-15.0)
+PITCH_MAX = math.radians(15.0)
+
+
+def ring_of(x, y, z):
+    rng = math.sqrt(x * x + y * y + z * z)
+    if rng < 1e-6:
+        return 0
+    pitch = math.asin(max(-1.0, min(1.0, z / rng)))
+    u = (pitch - PITCH_MIN) / (PITCH_MAX - PITCH_MIN)
+    r = int(math.floor(u * N_RINGS))
+    if r < 0:
+        return 0
+    if r >= N_RINGS:
+        return N_RINGS - 1
+    return r
+
+
 def convert(msg, pub):
-    points = [(p.x, p.y, p.z) for p in msg.points]
+    points = []
+    for p in msg.points:
+        rng = math.sqrt(p.x * p.x + p.y * p.y + p.z * p.z)
+        intensity = max(1.0, min(255.0, 80.0 / max(rng, 0.5)))
+        points.append((p.x, p.y, p.z, intensity, ring_of(p.x, p.y, p.z)))
     fields = [
         PointField("x", 0, PointField.FLOAT32, 1),
         PointField("y", 4, PointField.FLOAT32, 1),
         PointField("z", 8, PointField.FLOAT32, 1),
+        PointField("intensity", 16, PointField.FLOAT32, 1),
+        PointField("ring", 20, PointField.UINT16, 1),
     ]
     out = point_cloud2.create_cloud(msg.header, fields, points)
     pub.publish(out)
