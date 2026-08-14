@@ -91,6 +91,47 @@
         </gazebo>
     </xacro:if>
 
+    <xacro:if value="$(arg enable_rslidar)">
+        <gazebo reference="rslidar">
+            <sensor type="gpu_ray" name="helios16">
+              <pose>0 0 0 0 0 0</pose>
+              <visualize>false</visualize>
+              <update_rate>10</update_rate>
+              <ray>
+                <scan>
+                  <horizontal>
+                    <samples>720</samples>
+                    <resolution>1</resolution>
+                    <min_angle>-3.14159265</min_angle>
+                    <max_angle>3.14159265</max_angle>
+                  </horizontal>
+                  <vertical>
+                    <samples>16</samples>
+                    <resolution>1</resolution>
+                    <min_angle>-0.279253</min_angle>
+                    <max_angle>0.261799</max_angle>
+                  </vertical>
+                </scan>
+                <range>
+                  <min>0.2</min>
+                  <max>80.0</max>
+                  <resolution>0.03</resolution>
+                </range>
+                <noise>
+                  <type>gaussian</type>
+                  <mean>0.0</mean>
+                  <stddev>0.01</stddev>
+                </noise>
+              </ray>
+              <plugin name="gazebo_ros_helios16" filename="libgazebo_ros_block_laser.so">
+                <robotNamespace>$(arg sensor_ns)</robotNamespace>
+                <topicName>rslidar_points_raw</topicName>
+                <frameName>$(arg frame_prefix)rslidar</frameName>
+              </plugin>
+            </sensor>
+        </gazebo>
+    </xacro:if>
+
     <xacro:if value="$(arg enable_camera)">
         <gazebo reference="camera_link">
           <sensor name="sensor_camera" type="depth">

@@ -8,6 +8,7 @@
     <arg name="frame_prefix" default=""/>
     <arg name="sensor_ns" default="/"/>
     <arg name="enable_lidar" default="false"/>
+    <arg name="enable_rslidar" default="false"/>
     <arg name="enable_camera" default="false"/>
     <arg name="wheel_contact_mu2" default="0.35"/>
     <arg name="wheel_contact_mu1" default="1.0"/>
@@ -26,6 +27,7 @@
         frame_prefix:=$(arg frame_prefix)
         sensor_ns:=$(arg sensor_ns)
         enable_lidar:=$(arg enable_lidar)
+        enable_rslidar:=$(arg enable_rslidar)
         enable_camera:=$(arg enable_camera)
         wheel_contact_mu2:=$(arg wheel_contact_mu2)
         wheel_contact_mu1:=$(arg wheel_contact_mu1)

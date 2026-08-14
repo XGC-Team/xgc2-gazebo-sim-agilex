@@ -7,6 +7,7 @@
     <arg name="paused" default="false"/>
     <arg name="enable_vrpn_server" default="false"/>
     <arg name="enable_lidar" default="false"/>
+    <arg name="enable_rslidar" default="false"/>
     <arg name="enable_camera" default="false"/>
     <arg name="wheel_contact_mu2" default="0.10"/>
     <arg name="wheel_contact_slip2" default="5.0"/>
@@ -34,6 +35,7 @@
     <arg name="ugv1_wheel_pid_d" default="$(arg wheel_pid_d)"/>
     <arg name="ugv1_angular_command_gain" default="$(arg angular_command_gain)"/>
     <arg name="ugv1_enable_lidar" default="$(arg enable_lidar)"/>
+    <arg name="ugv1_enable_rslidar" default="$(arg enable_rslidar)"/>
     <arg name="ugv1_enable_camera" default="$(arg enable_camera)"/>
 
     <arg name="ugv2_ns" default="ugv2"/>
@@ -49,6 +51,7 @@
     <arg name="ugv2_wheel_pid_d" default="$(arg wheel_pid_d)"/>
     <arg name="ugv2_angular_command_gain" default="$(arg angular_command_gain)"/>
     <arg name="ugv2_enable_lidar" default="$(arg enable_lidar)"/>
+    <arg name="ugv2_enable_rslidar" default="$(arg enable_rslidar)"/>
     <arg name="ugv2_enable_camera" default="$(arg enable_camera)"/>
 
     <include file="$(find gazebo_ros)/launch/empty_world.launch">
@@ -75,6 +78,7 @@
         <arg name="frame_prefix" value="$(arg ugv1_ns)/" />
         <arg name="sensor_ns" value="$(arg ugv1_ns)" />
         <arg name="enable_lidar" value="$(arg ugv1_enable_lidar)" />
+        <arg name="enable_rslidar" value="$(arg ugv1_enable_rslidar)" />
         <arg name="enable_camera" value="$(arg ugv1_enable_camera)" />
         <arg name="robot_state_publisher_ns" value="$(arg ugv1_ns)" />
         <arg name="wheel_contact_mu2" value="$(arg ugv1_wheel_contact_mu2)" />
@@ -105,6 +109,7 @@
         <arg name="frame_prefix" value="$(arg ugv2_ns)/" />
         <arg name="sensor_ns" value="$(arg ugv2_ns)" />
         <arg name="enable_lidar" value="$(arg ugv2_enable_lidar)" />
+        <arg name="enable_rslidar" value="$(arg ugv2_enable_rslidar)" />
         <arg name="enable_camera" value="$(arg ugv2_enable_camera)" />
         <arg name="robot_state_publisher_ns" value="$(arg ugv2_ns)" />
         <arg name="wheel_contact_mu2" value="$(arg ugv2_wheel_contact_mu2)" />

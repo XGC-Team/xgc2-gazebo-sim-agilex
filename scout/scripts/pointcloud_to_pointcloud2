@@ -1,0 +1,28 @@
+#!/usr/bin/env python3
+"""Republish sensor_msgs/PointCloud as PointCloud2 for Faster-LIO."""
+
+import rospy
+from sensor_msgs.msg import PointCloud, PointCloud2, PointField
+from sensor_msgs import point_cloud2
+
+
+def convert(msg, pub):
+    points = [(p.x, p.y, p.z) for p in msg.points]
+    fields = [
+        PointField("x", 0, PointField.FLOAT32, 1),
+        PointField("y", 4, PointField.FLOAT32, 1),
+        PointField("z", 8, PointField.FLOAT32, 1),
+    ]
+    out = point_cloud2.create_cloud(msg.header, fields, points)
+    pub.publish(out)
+
+
+def main():
+    rospy.init_node("pointcloud_to_pointcloud2")
+    pub = rospy.Publisher("~out", PointCloud2, queue_size=5)
+    rospy.Subscriber("~in", PointCloud, lambda m: convert(m, pub), queue_size=5)
+    rospy.spin()
+
+
+if __name__ == "__main__":
+    main()

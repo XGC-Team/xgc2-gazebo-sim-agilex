@@ -11,6 +11,7 @@
     <xacro:arg name="frame_prefix" default="" />
     <xacro:arg name="sensor_ns" default="/" />
     <xacro:arg name="enable_lidar" default="false" />
+    <xacro:arg name="enable_rslidar" default="false" />
     <xacro:arg name="enable_camera" default="false" />
     <xacro:arg name="wheel_contact_mu2" default="0.35" />
     <xacro:arg name="wheel_contact_mu1" default="1.0" />
@@ -161,6 +162,34 @@
         <origin xyz="0 0 0.30" rpy="0 0 0" />
         <parent link="base_link" />
         <child link="laser_link" />
+    </joint>
+
+    <link name="rslidar">
+        <inertial>
+            <origin xyz="0 0 0" rpy="0 0 0" />
+            <mass value="0.8" />
+            <inertia ixx="0.001" ixy="0" ixz="0" iyy="0.001" iyz="0" izz="0.001" />
+        </inertial>
+        <visual>
+            <origin xyz="0 0 0" rpy="0 0 0" />
+            <geometry>
+                <cylinder radius="0.05" length="0.08" />
+            </geometry>
+            <material name="helios_gray">
+                <color rgba="0.2 0.2 0.2 1" />
+            </material>
+        </visual>
+        <collision>
+            <origin xyz="0 0 0" rpy="0 0 0" />
+            <geometry>
+                <cylinder radius="0.05" length="0.08" />
+            </geometry>
+        </collision>
+    </link>
+    <joint name="rslidar_joint" type="fixed">
+        <origin xyz="0 0 0.307" rpy="0 0 0" />
+        <parent link="base_link" />
+        <child link="rslidar" />
     </joint>
 
  <link name="camera_link">

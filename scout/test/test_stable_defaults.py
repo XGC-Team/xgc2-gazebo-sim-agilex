@@ -74,11 +74,13 @@ class ScoutStableDefaultsTest(unittest.TestCase):
                 for element in root.findall("./arg")
             }
             self.assertEqual(defaults.get("enable_lidar"), "false", filename)
+            self.assertEqual(defaults.get("enable_rslidar"), "false", filename)
             self.assertEqual(defaults.get("enable_camera"), "false", filename)
 
         for filename in ("accurate.launch", "simple.launch", "spawn_accurate.launch", "spawn_simple.launch"):
             text = (PACKAGE / "launch" / filename).read_text()
             self.assertIn('name="enable_lidar" value="$(arg enable_lidar)"', text, filename)
+            self.assertIn('name="enable_rslidar" value="$(arg enable_rslidar)"', text, filename)
             self.assertIn('name="enable_camera" value="$(arg enable_camera)"', text, filename)
 
     def test_spawn_uses_explicit_stable_parameters_without_legacy_mapping(self) -> None:
