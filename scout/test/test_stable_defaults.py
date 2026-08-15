@@ -83,6 +83,16 @@ class ScoutStableDefaultsTest(unittest.TestCase):
             self.assertIn('name="enable_rslidar" value="$(arg enable_rslidar)"', text, filename)
             self.assertIn('name="enable_camera" value="$(arg enable_camera)"', text, filename)
 
+    def test_imu_matches_agilex_field_effective_rate(self) -> None:
+        # HI226 field-effective rate is 100 Hz. Do not match bag/hz ~200.
+        root = ET.parse(PACKAGE / "urdf" / "scout_mini.gazebo").getroot()
+        sensor = root.find(".//{*}sensor[@name='imu_sensor']")
+        self.assertIsNotNone(sensor)
+        self.assertEqual(sensor.findtext("{*}update_rate"), "100.0")
+        plugin = sensor.find("{*}plugin[@name='imu_plugin']")
+        self.assertIsNotNone(plugin)
+        self.assertEqual(plugin.findtext("{*}updateRateHZ"), "100.0")
+
     def test_spawn_uses_explicit_stable_parameters_without_legacy_mapping(self) -> None:
         text = (PACKAGE / "launch" / "spawn_accurate.launch").read_text()
         self.assertNotIn("effective_wheel_", text)

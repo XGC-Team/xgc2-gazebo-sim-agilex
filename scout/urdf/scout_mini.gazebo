@@ -35,15 +35,19 @@
     </xacro:if>
 
     <gazebo reference="imu_link">
+        <!-- AgileX HI226 field-effective rate is 100 Hz.
+             Do not restore 200 Hz from rostopic hz or rosbag counts; those can
+             double-count packets. Paired with serial_imu in xgc2-robot-agilex.
+             Change both together and mention the counterpart in the commit. -->
         <sensor name="imu_sensor" type="imu">
             <always_on>true</always_on>
-            <update_rate>200.0</update_rate>
+            <update_rate>100.0</update_rate>
             <visualize>false</visualize>
             <plugin name="imu_plugin" filename="libgazebo_ros_imu_sensor.so">
                 <robotNamespace>$(arg ns)</robotNamespace>
                 <topicName>imu/data_raw</topicName>
                 <frameName>$(arg frame_prefix)imu_link</frameName>
-                <updateRateHZ>200.0</updateRateHZ>
+                <updateRateHZ>100.0</updateRateHZ>
                 <gaussianNoise>0.0002</gaussianNoise>
                 <initialOrientationAsReference>false</initialOrientationAsReference>
             </plugin>
