@@ -7,7 +7,9 @@
   <!-- false: LIO owns camera_init->body->base_link. Gazebo still publishes /odom. -->
   <arg name="publish_tf" default="false"/>
 
-  <include file="$(find gazebo_sim_scout)/launch/accurate.launch">
+  <!-- Use the sibling launch so an older installed gazebo_sim_scout package
+       cannot silently win duplicate-package resolution. -->
+  <include file="$(dirname)/accurate.launch">
     <arg name="ns" value="$(arg ns)"/>
     <arg name="world_name" value="$(arg world_name)"/>
     <arg name="gui" value="$(arg gui)"/>

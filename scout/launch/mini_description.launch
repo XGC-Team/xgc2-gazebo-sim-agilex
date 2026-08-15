@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <launch>
     <arg name="ns" default="/"/>
-    <arg name="urdf_extras" default="$(find gazebo_sim_scout)/urdf/empty.urdf"/>
+    <arg name="urdf_extras" default="$(dirname)/../urdf/empty.urdf"/>
     <arg name="enable_ros_control" default="false"/>
     <arg name="use_skid_steer_plugin" default="true"/>
     <arg name="robot_description_param" default="robot_description"/>
@@ -19,7 +19,7 @@
     <arg name="wheelbase" default="0.451"/>
     <arg name="wheel_track" default="0.490"/>
 
-    <param name="$(arg robot_description_param)" command="$(find xacro)/xacro '$(find gazebo_sim_scout)/urdf/mini.xacro'
+    <param name="$(arg robot_description_param)" command="$(find xacro)/xacro '$(dirname)/../urdf/mini.xacro'
         ns:=$(arg ns)
         enable_ros_control:=$(arg enable_ros_control)
         use_skid_steer_plugin:=$(arg use_skid_steer_plugin)

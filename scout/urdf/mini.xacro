@@ -22,10 +22,10 @@
     <xacro:arg name="wheelbase" default="0.451" />
     <xacro:arg name="wheel_track" default="0.490" />
 
-    <xacro:include filename="$(find gazebo_sim_scout)/urdf/scout_mini_wheel_1.xacro" />
-    <xacro:include filename="$(find gazebo_sim_scout)/urdf/scout_mini_wheel_2.xacro" />
-    <xacro:include filename="$(find gazebo_sim_scout)/urdf/scout_mini_wheel_3.xacro" />
-    <xacro:include filename="$(find gazebo_sim_scout)/urdf/scout_mini_wheel_4.xacro" />
+    <xacro:include filename="scout_mini_wheel_1.xacro" />
+    <xacro:include filename="scout_mini_wheel_2.xacro" />
+    <xacro:include filename="scout_mini_wheel_3.xacro" />
+    <xacro:include filename="scout_mini_wheel_4.xacro" />
 
     <!-- Variables -->
     <xacro:property name="M_PI" value="3.14159"/>
@@ -321,5 +321,5 @@
     <xacro:include filename="$(arg urdf_extras)" />
 
     <!-- Gazebo definitions  -->
-    <xacro:include filename="$(find gazebo_sim_scout)/urdf/scout_mini.gazebo" />
+    <xacro:include filename="scout_mini.gazebo" />
 </robot>

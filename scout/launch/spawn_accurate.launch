@@ -40,7 +40,7 @@
     <arg name="battery_voltage" default="28.765"/>
     <arg name="publish_tf" default="true"/>
 
-    <include file="$(find gazebo_sim_scout)/launch/mini_description.launch">
+    <include file="$(dirname)/mini_description.launch">
         <arg name="ns" value="$(arg ns)" />
         <arg name="enable_ros_control" value="true" />
         <arg name="use_skid_steer_plugin" value="false" />
@@ -60,7 +60,7 @@
     </include>
 
     <group ns="$(arg ns)">
-        <rosparam file="$(find gazebo_sim_scout)/config/scout_mini_ros_control.yaml" command="load"/>
+        <rosparam file="$(dirname)/../config/scout_mini_ros_control.yaml" command="load"/>
         <param name="gazebo_ros_control/pid_gains/front_right_wheel/p" type="double" value="$(arg wheel_pid_p)"/>
         <param name="gazebo_ros_control/pid_gains/front_right_wheel/i" type="double" value="$(arg wheel_pid_i)"/>
         <param name="gazebo_ros_control/pid_gains/front_right_wheel/d" type="double" value="$(arg wheel_pid_d)"/>
