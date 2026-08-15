@@ -308,7 +308,7 @@ Experiment 启动链。
 历史默认圆轨迹 GUI：
 
 ```bash
-helper/run-ugv-tracking-sim.sh \
+scripts/run-ugv-tracking-sim.sh \
   --container xgc2-ros1-ugv-circle \
   --keep-container
 ```
@@ -316,7 +316,7 @@ helper/run-ugv-tracking-sim.sh \
 历史随机目标 GUI：
 
 ```bash
-helper/run-ugv-tracking-sim.sh \
+scripts/run-ugv-tracking-sim.sh \
   --container xgc2-ros1-ugv-random \
   --random-targets \
   --replan-period 8 \
