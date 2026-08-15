@@ -17,11 +17,11 @@
     <arg name="enable_rslidar" default="false"/>
     <arg name="enable_camera" default="false"/>
     <arg name="robot_state_publisher_ns" default="/"/>
-    <arg name="wheel_contact_mu2" default="0.10"/>
+    <arg name="wheel_contact_mu2" default="0.45"/>
     <arg name="wheel_contact_mu1" default="1.0"/>
     <arg name="wheel_contact_fdir1" default="1 0 0"/>
     <arg name="wheel_contact_slip1" default="0.0"/>
-    <arg name="wheel_contact_slip2" default="5.0"/>
+    <arg name="wheel_contact_slip2" default="0.25"/>
     <arg name="wheel_pid_p" default="2.0"/>
     <arg name="wheel_pid_i" default="0.0"/>
     <arg name="wheel_pid_d" default="0.0"/>
@@ -30,7 +30,7 @@
     <arg name="wheel_separation" default="$(arg wheel_track)"/>
     <arg name="wheel_radius" default="0.08"/>
     <arg name="command_gain" default="1.03"/>
-    <arg name="angular_command_gain" default="1.20"/>
+    <arg name="angular_command_gain" default="2.50"/>
     <arg name="enable_command_limits" default="true"/>
     <arg name="max_linear_speed" default="1.5"/>
     <arg name="max_angular_speed" default="0.5235"/>
