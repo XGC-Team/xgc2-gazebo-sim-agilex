@@ -9,8 +9,8 @@
     <arg name="enable_lidar" default="false"/>
     <arg name="enable_rslidar" default="false"/>
     <arg name="enable_camera" default="false"/>
-    <arg name="wheel_contact_mu2" default="0.10"/>
-    <arg name="wheel_contact_slip2" default="5.0"/>
+    <arg name="wheel_contact_mu2" default="0.45"/>
+    <arg name="wheel_contact_slip2" default="0.25"/>
     <arg name="wheel_pid_p" default="2.0"/>
     <arg name="wheel_pid_i" default="0.0"/>
     <arg name="wheel_pid_d" default="0.0"/>
@@ -20,7 +20,7 @@
     <arg name="wheel_radius" default="0.08"/>
     <arg name="command_gain" default="1.03"/>
     <!-- Shared base default. Per-robot args below can override this for calibration. -->
-    <arg name="angular_command_gain" default="1.20"/>
+    <arg name="angular_command_gain" default="2.50"/>
 
     <arg name="ugv1_ns" default="ugv1"/>
     <arg name="ugv1_model_name" default="$(arg ugv1_ns)"/>

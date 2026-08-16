@@ -12,10 +12,17 @@ defaults:
 jobs:
   compliance:
     runs-on: ubuntu-latest
+    container: ghcr.io/xgc-team/xgc2-images/xgc2-build-focal-full-noetic:1.0.0
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 2
+      - name: Validate source and product contracts
+        run: |
+          set -euo pipefail
+          git diff --check HEAD
+          command -v rg >/dev/null
+          .xgc2/scripts/check_package_compliance.sh
   build-debs:
     strategy:
       fail-fast: false
@@ -36,9 +43,6 @@ jobs:
         run: |
           set -euo pipefail
           git diff --check HEAD
-          if [[ -x .xgc2/scripts/check_package_compliance.sh ]]; then
-            .xgc2/scripts/check_package_compliance.sh
-          fi
 
 
       - name: Build and install-check deb packages

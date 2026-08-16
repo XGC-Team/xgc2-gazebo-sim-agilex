@@ -10,13 +10,13 @@ from pathlib import Path
 
 PACKAGE = Path(__file__).resolve().parents[1]
 EXPECTED = {
-    "wheel_contact_mu2": "0.10",
-    "wheel_contact_slip2": "5.0",
+    "wheel_contact_mu2": "0.45",
+    "wheel_contact_slip2": "0.25",
     "wheel_pid_p": "2.0",
     "wheel_pid_i": "0.0",
     "wheel_pid_d": "0.0",
     "command_gain": "1.03",
-    "angular_command_gain": "1.20",
+    "angular_command_gain": "2.50",
 }
 
 
