@@ -2,7 +2,7 @@
 set -euo pipefail
 
 grep -q '^id: xgc2-gazebo-sim-scout$' .xgc2/product.yml
-grep -q '^version: 0.4.9-33$' .xgc2/product.yml
+grep -q '^version: 0.4.9-34$' .xgc2/product.yml
 grep -q '<name>gazebo_sim_scout</name>' scout/package.xml
 grep -q 'ros-noetic-xgc2-scout-description (>= 0.4.10-14)' .xgc2/product.yml
 test -f scout/launch/mini_description.launch
