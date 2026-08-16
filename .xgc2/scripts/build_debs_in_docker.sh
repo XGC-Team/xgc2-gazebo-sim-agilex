@@ -4,7 +4,7 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
 
-DOCKER_IMAGE="${DOCKER_IMAGE:-ros:noetic-ros-base-focal}"
+DOCKER_IMAGE="${DOCKER_IMAGE:-ghcr.io/xgc-team/xgc2-images/xgc2-build-focal-full-noetic:1.0.0}"
 WORK_DIR="${WORK_DIR:-${REPO_ROOT}/.work/docker}"
 OUTPUT_DIR="${OUTPUT_DIR:-${REPO_ROOT}/debs}"
 INSTALL_CHECK="${INSTALL_CHECK:-true}"
@@ -49,8 +49,6 @@ docker run --rm \
     set -euo pipefail
 
     export DEBIAN_FRONTEND=noninteractive
-    apt-get update
-    apt-get install -y --no-install-recommends ca-certificates
     echo "deb [trusted=yes arch=$(dpkg --print-architecture)] https://xgc2.apt.xiaokang.ink focal main" \
       > /etc/apt/sources.list.d/xgc2.list
 
@@ -61,43 +59,9 @@ docker run --rm \
       fi
     apt-get update
     apt-get install -y --no-install-recommends \
-      build-essential \
-      ca-certificates \
-      cmake \
-      dpkg-dev \
-      fakeroot \
-      file \
-      gazebo11 \
-      libgazebo11-dev \
-      python3-yaml \
-      rsync \
-      ros-noetic-controller-manager \
-      ros-noetic-gazebo-msgs \
-      ros-noetic-gazebo-plugins \
-      ros-noetic-gazebo-ros \
-      ros-noetic-gazebo-ros-control \
-      ros-noetic-geometry-msgs \
-      ros-noetic-joint-state-controller \
-      ros-noetic-joint-state-publisher \
-      ros-noetic-joint-state-publisher-gui \
-      ros-noetic-nav-msgs \
-      ros-noetic-robot-state-publisher \
-      ros-noetic-roslaunch \
-      ros-noetic-roslint \
-      ros-noetic-rospack \
-      ros-noetic-rostopic \
-      ros-noetic-rviz \
       ros-noetic-scout-msgs \
-      ros-noetic-sensor-msgs \
-      ros-noetic-std-msgs \
-      ros-noetic-tf \
-      ros-noetic-tf2 \
-      ros-noetic-tf2-ros \
-      ros-noetic-urdf \
-      ros-noetic-velocity-controllers \
       ros-noetic-xgc2-gazebo-sim-worlds \
-      ros-noetic-xgc2-scout-description \
-      ros-noetic-xacro
+      ros-noetic-xgc2-scout-description
 
     rm -rf /workspace/work/src /workspace/work/build /workspace/work/devel /workspace/work/install-root
     mkdir -p /workspace/work/src
