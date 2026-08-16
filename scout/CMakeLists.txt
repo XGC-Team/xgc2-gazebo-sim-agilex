@@ -17,7 +17,7 @@ find_package(catkin REQUIRED COMPONENTS
 catkin_package(
   INCLUDE_DIRS include
 #   LIBRARIES 
-  CATKIN_DEPENDS roscpp gazebo_msgs nav_msgs scout_msgs sensor_msgs
+  CATKIN_DEPENDS roscpp gazebo_msgs nav_msgs scout_msgs sensor_msgs std_msgs
 #   DEPENDS Boost
 )
 

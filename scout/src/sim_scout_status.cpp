@@ -1,4 +1,5 @@
 #include <cmath>
+#include <cstdio>
 #include <map>
 #include <stdint.h>
 #include <string>
@@ -8,6 +9,7 @@
 #include <scout_msgs/ScoutLightCmd.h>
 #include <scout_msgs/ScoutStatus.h>
 #include <sensor_msgs/JointState.h>
+#include <std_msgs/String.h>
 
 class SimScoutStatus {
  public:
@@ -17,6 +19,11 @@ class SimScoutStatus {
                                    "joint_states");
     private_nh_.param<std::string>("status_topic", status_topic_,
                                    "scout_status");
+    private_nh_.param<std::string>("status_text_topic", status_text_topic_,
+                                   "");
+    if (status_text_topic_.empty()) {
+      status_text_topic_ = DeriveStatusTextTopic(status_topic_);
+    }
     private_nh_.param<std::string>("light_control_topic", light_control_topic_,
                                    "scout_light_control");
     private_nh_.param("publish_rate", publish_rate_, 50.0);
@@ -49,6 +56,7 @@ class SimScoutStatus {
     rear_light_custom_value_ = 0;
 
     status_pub_ = nh_.advertise<scout_msgs::ScoutStatus>(status_topic_, 10);
+    status_text_pub_ = nh_.advertise<std_msgs::String>(status_text_topic_, 10);
     odom_sub_ =
         nh_.subscribe(odom_topic_, 10, &SimScoutStatus::OdomCallback, this);
     joint_state_sub_ = nh_.subscribe(joint_states_topic_, 10,
@@ -62,12 +70,27 @@ class SimScoutStatus {
     timer_ = nh_.createTimer(ros::Duration(1.0 / publish_rate_),
                              &SimScoutStatus::PublishStatus, this);
 
-    ROS_INFO("Sim Scout status: odom=%s joint_states=%s status=%s light_cmd=%s",
+    ROS_INFO("Sim Scout status: odom=%s joint_states=%s status=%s status_text=%s light_cmd=%s",
              odom_topic_.c_str(), joint_states_topic_.c_str(),
-             status_topic_.c_str(), light_control_topic_.c_str());
+             status_topic_.c_str(), status_text_topic_.c_str(),
+             light_control_topic_.c_str());
   }
 
  private:
+  static std::string DeriveStatusTextTopic(const std::string& status_topic) {
+    const std::string suffix = "scout_status";
+    if (status_topic.size() >= suffix.size() &&
+        status_topic.compare(status_topic.size() - suffix.size(), suffix.size(),
+                             suffix) == 0) {
+      return status_topic.substr(0, status_topic.size() - suffix.size()) +
+             "scout/status_text";
+    }
+    if (!status_topic.empty() && status_topic.back() == '/') {
+      return status_topic + "scout/status_text";
+    }
+    return status_topic + "/scout/status_text";
+  }
+
   static bool EndsWith(const std::string& value, const std::string& suffix) {
     return value.size() >= suffix.size() &&
            value.compare(value.size() - suffix.size(), suffix.size(), suffix) ==
@@ -138,11 +161,26 @@ class SimScoutStatus {
     status_msg.rear_light_state.custom_value = rear_light_custom_value_;
 
     status_pub_.publish(status_msg);
+
+    char buf[160];
+    std::snprintf(
+        buf, sizeof(buf),
+        "mode=%u base=%u fault=%u batt=%.2f light_mode=%u light=%u",
+        static_cast<unsigned>(status_msg.control_mode),
+        static_cast<unsigned>(status_msg.base_state),
+        static_cast<unsigned>(status_msg.fault_code),
+        status_msg.battery_voltage,
+        static_cast<unsigned>(status_msg.front_light_state.mode),
+        static_cast<unsigned>(status_msg.front_light_state.custom_value));
+    std_msgs::String text;
+    text.data = buf;
+    status_text_pub_.publish(text);
   }
 
   ros::NodeHandle nh_;
   ros::NodeHandle private_nh_;
   ros::Publisher status_pub_;
+  ros::Publisher status_text_pub_;
   ros::Subscriber odom_sub_;
   ros::Subscriber joint_state_sub_;
   ros::Subscriber light_cmd_sub_;
@@ -151,6 +189,7 @@ class SimScoutStatus {
   std::string odom_topic_;
   std::string joint_states_topic_;
   std::string status_topic_;
+  std::string status_text_topic_;
   std::string light_control_topic_;
   double publish_rate_;
   int base_state_;
