@@ -20,7 +20,7 @@ jobs:
       - name: Validate source and product contracts
         run: |
           set -euo pipefail
-          git diff --check HEAD
+          git --git-dir="$PWD/.git" --work-tree="$PWD" diff --check HEAD
           command -v rg >/dev/null
           .xgc2/scripts/check_package_compliance.sh
   build-debs:
