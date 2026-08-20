@@ -1,5 +1,4 @@
-#include <cmath>
-#include <cstdio>
+#include <cstdint>
 #include <map>
 #include <stdint.h>
 #include <string>
@@ -9,7 +8,8 @@
 #include <scout_msgs/ScoutLightCmd.h>
 #include <scout_msgs/ScoutStatus.h>
 #include <sensor_msgs/JointState.h>
-#include <std_msgs/String.h>
+#include <std_msgs/Float32.h>
+#include <std_msgs/UInt32.h>
 
 class SimScoutStatus {
  public:
@@ -19,14 +19,22 @@ class SimScoutStatus {
                                    "joint_states");
     private_nh_.param<std::string>("status_topic", status_topic_,
                                    "scout_status");
-    private_nh_.param<std::string>("status_text_topic", status_text_topic_,
+    private_nh_.param<std::string>("battery_voltage_topic",
+                                   battery_voltage_topic_, "");
+    if (battery_voltage_topic_.empty()) {
+      battery_voltage_topic_ = DeriveBridgeTopic(status_topic_, "PowerVoltage");
+    }
+    private_nh_.param<std::string>("chassis_state_topic", chassis_state_topic_,
                                    "");
-    if (status_text_topic_.empty()) {
-      status_text_topic_ = DeriveStatusTextTopic(status_topic_);
+    if (chassis_state_topic_.empty()) {
+      chassis_state_topic_ =
+          DeriveBridgeTopic(status_topic_, "scout/chassis_state");
     }
     private_nh_.param<std::string>("light_control_topic", light_control_topic_,
                                    "scout_light_control");
     private_nh_.param("publish_rate", publish_rate_, 50.0);
+    private_nh_.param("battery_publish_rate", battery_publish_rate_, 0.5);
+    private_nh_.param("chassis_publish_rate", chassis_publish_rate_, 1.0);
     private_nh_.param("base_state", base_state_, 0);
     private_nh_.param("control_mode", control_mode_, 1);
     private_nh_.param("fault_code", fault_code_, 0);
@@ -56,7 +64,9 @@ class SimScoutStatus {
     rear_light_custom_value_ = 0;
 
     status_pub_ = nh_.advertise<scout_msgs::ScoutStatus>(status_topic_, 10);
-    status_text_pub_ = nh_.advertise<std_msgs::String>(status_text_topic_, 10);
+    battery_pub_ =
+        nh_.advertise<std_msgs::Float32>(battery_voltage_topic_, 10);
+    chassis_pub_ = nh_.advertise<std_msgs::UInt32>(chassis_state_topic_, 10);
     odom_sub_ =
         nh_.subscribe(odom_topic_, 10, &SimScoutStatus::OdomCallback, this);
     joint_state_sub_ = nh_.subscribe(joint_states_topic_, 10,
@@ -67,34 +77,54 @@ class SimScoutStatus {
     if (publish_rate_ <= 0.0) {
       publish_rate_ = 50.0;
     }
+    if (battery_publish_rate_ <= 0.0) {
+      battery_publish_rate_ = 0.5;
+    }
+    if (chassis_publish_rate_ <= 0.0) {
+      chassis_publish_rate_ = 1.0;
+    }
     timer_ = nh_.createTimer(ros::Duration(1.0 / publish_rate_),
                              &SimScoutStatus::PublishStatus, this);
+    battery_timer_ = nh_.createTimer(ros::Duration(1.0 / battery_publish_rate_),
+                                     &SimScoutStatus::PublishBattery, this);
+    chassis_timer_ = nh_.createTimer(ros::Duration(1.0 / chassis_publish_rate_),
+                                     &SimScoutStatus::PublishChassisState, this);
 
-    ROS_INFO("Sim Scout status: odom=%s joint_states=%s status=%s status_text=%s light_cmd=%s",
-             odom_topic_.c_str(), joint_states_topic_.c_str(),
-             status_topic_.c_str(), status_text_topic_.c_str(),
-             light_control_topic_.c_str());
+    ROS_INFO(
+        "Sim Scout status: odom=%s joint_states=%s status=%s battery=%s "
+        "chassis_state=%s light_cmd=%s",
+        odom_topic_.c_str(), joint_states_topic_.c_str(), status_topic_.c_str(),
+        battery_voltage_topic_.c_str(), chassis_state_topic_.c_str(),
+        light_control_topic_.c_str());
   }
 
  private:
-  static std::string DeriveStatusTextTopic(const std::string& status_topic) {
+  static std::string DeriveBridgeTopic(const std::string& status_topic,
+                                       const std::string& relative) {
     const std::string suffix = "scout_status";
     if (status_topic.size() >= suffix.size() &&
         status_topic.compare(status_topic.size() - suffix.size(), suffix.size(),
                              suffix) == 0) {
       return status_topic.substr(0, status_topic.size() - suffix.size()) +
-             "scout/status_text";
+             relative;
     }
     if (!status_topic.empty() && status_topic.back() == '/') {
-      return status_topic + "scout/status_text";
+      return status_topic + relative;
     }
-    return status_topic + "/scout/status_text";
+    return status_topic + "/" + relative;
   }
 
   static bool EndsWith(const std::string& value, const std::string& suffix) {
     return value.size() >= suffix.size() &&
            value.compare(value.size() - suffix.size(), suffix.size(), suffix) ==
                0;
+  }
+
+  static uint32_t PackChassisState(int control_mode, int base_state,
+                                   int fault_code) {
+    return (static_cast<uint32_t>(control_mode) & 0xFFu) |
+           ((static_cast<uint32_t>(base_state) & 0xFFu) << 8) |
+           ((static_cast<uint32_t>(fault_code) & 0xFFFFu) << 16);
   }
 
   int MotorIdForJoint(const std::string& joint_name) const {
@@ -161,37 +191,41 @@ class SimScoutStatus {
     status_msg.rear_light_state.custom_value = rear_light_custom_value_;
 
     status_pub_.publish(status_msg);
+  }
 
-    char buf[160];
-    std::snprintf(
-        buf, sizeof(buf),
-        "mode=%u base=%u fault=%u batt=%.2f light_mode=%u light=%u",
-        static_cast<unsigned>(status_msg.control_mode),
-        static_cast<unsigned>(status_msg.base_state),
-        static_cast<unsigned>(status_msg.fault_code),
-        status_msg.battery_voltage,
-        static_cast<unsigned>(status_msg.front_light_state.mode),
-        static_cast<unsigned>(status_msg.front_light_state.custom_value));
-    std_msgs::String text;
-    text.data = buf;
-    status_text_pub_.publish(text);
+  void PublishBattery(const ros::TimerEvent&) {
+    std_msgs::Float32 message;
+    message.data = static_cast<float>(battery_voltage_);
+    battery_pub_.publish(message);
+  }
+
+  void PublishChassisState(const ros::TimerEvent&) {
+    std_msgs::UInt32 message;
+    message.data = PackChassisState(control_mode_, base_state_, fault_code_);
+    chassis_pub_.publish(message);
   }
 
   ros::NodeHandle nh_;
   ros::NodeHandle private_nh_;
   ros::Publisher status_pub_;
-  ros::Publisher status_text_pub_;
+  ros::Publisher battery_pub_;
+  ros::Publisher chassis_pub_;
   ros::Subscriber odom_sub_;
   ros::Subscriber joint_state_sub_;
   ros::Subscriber light_cmd_sub_;
   ros::Timer timer_;
+  ros::Timer battery_timer_;
+  ros::Timer chassis_timer_;
 
   std::string odom_topic_;
   std::string joint_states_topic_;
   std::string status_topic_;
-  std::string status_text_topic_;
+  std::string battery_voltage_topic_;
+  std::string chassis_state_topic_;
   std::string light_control_topic_;
   double publish_rate_;
+  double battery_publish_rate_;
+  double chassis_publish_rate_;
   int base_state_;
   int control_mode_;
   int fault_code_;

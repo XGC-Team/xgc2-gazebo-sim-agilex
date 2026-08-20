@@ -71,6 +71,9 @@
         <param name="status_topic" type="string" value="$(arg status_topic)" />
         <param name="light_control_topic" type="string" value="$(arg light_control_topic)" />
         <param name="battery_voltage" type="double" value="$(arg battery_voltage)" />
+        <param name="battery_publish_rate" type="double" value="0.5" />
+        <param name="chassis_publish_rate" type="double" value="1.0" />
+        <param name="control_mode" type="int" value="1" />
     </node>
 
     <!-- <node name="scout_skid_steer_controller" pkg="gazebo_sim_scout" type="scout_skid_steer_controller">

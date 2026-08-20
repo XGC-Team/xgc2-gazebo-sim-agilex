@@ -43,12 +43,57 @@
             <always_on>true</always_on>
             <update_rate>100.0</update_rate>
             <visualize>false</visualize>
+            <!-- HI226 rest_0 sample std @ 100 Hz (estimator-imu-check-20260819-220847).
+                 Order-of-magnitude only; not Allan / bias random walk.
+                 Plugin gaussianNoise must stay 0 so this is not doubled. -->
+            <imu>
+                <angular_velocity>
+                    <x>
+                        <noise type="gaussian">
+                            <mean>0.0</mean>
+                            <stddev>0.0013</stddev>
+                        </noise>
+                    </x>
+                    <y>
+                        <noise type="gaussian">
+                            <mean>0.0</mean>
+                            <stddev>0.0011</stddev>
+                        </noise>
+                    </y>
+                    <z>
+                        <noise type="gaussian">
+                            <mean>0.0</mean>
+                            <stddev>0.0007</stddev>
+                        </noise>
+                    </z>
+                </angular_velocity>
+                <linear_acceleration>
+                    <x>
+                        <noise type="gaussian">
+                            <mean>0.0</mean>
+                            <stddev>0.025</stddev>
+                        </noise>
+                    </x>
+                    <y>
+                        <noise type="gaussian">
+                            <mean>0.0</mean>
+                            <stddev>0.020</stddev>
+                        </noise>
+                    </y>
+                    <z>
+                        <noise type="gaussian">
+                            <mean>0.0</mean>
+                            <stddev>0.062</stddev>
+                        </noise>
+                    </z>
+                </linear_acceleration>
+            </imu>
             <plugin name="imu_plugin" filename="libgazebo_ros_imu_sensor.so">
                 <robotNamespace>$(arg ns)</robotNamespace>
                 <topicName>imu/data_raw</topicName>
                 <frameName>$(arg frame_prefix)imu_link</frameName>
                 <updateRateHZ>100.0</updateRateHZ>
-                <gaussianNoise>0.0002</gaussianNoise>
+                <gaussianNoise>0.0</gaussianNoise>
                 <initialOrientationAsReference>false</initialOrientationAsReference>
             </plugin>
         </sensor>

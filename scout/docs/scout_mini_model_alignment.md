@@ -216,6 +216,18 @@ P2 是为了给接触非线性、调度抖动和无 effort limit 留出裕量。
 订阅了错误话题。2026-08 按现场调试把仿真频率改回 100 Hz。
 改驱动或仿真任一端频率时必须成对提交，并在 `serial_imu` 提交里写明对应仿真修改。
 
+噪声只做数量级对齐，不是完整 IMU 辨识。Gazebo 原生 `<imu>` 高斯 `stddev` 取 Xavier-40
+开环包 `estimator-imu-check-20260819-220847` 的 rest_0 样本标准差（100 Hz）：
+
+```text
+gyro  std  0.0013 / 0.0011 / 0.0007 rad/s
+accel std  0.025  / 0.020  / 0.062  m/s^2
+```
+
+插件 `gaussianNoise` 必须为 `0`，避免和 SDF 噪声叠两层、还把同一标量加到陀螺和加计。
+不要把估计器 yaml 的 `gyro_noise_std` / `accel_noise_std` 抄进仿真。静止偏置随机游走
+未辨识，SDF 里不写 `bias_*`。
+
 ### 5.2 里程计速度坐标系
 
 Gazebo `ModelStates` 提供世界坐标系中的 twist，而 `nav_msgs/Odometry.child_frame_id`

@@ -92,6 +92,33 @@ class ScoutStableDefaultsTest(unittest.TestCase):
         plugin = sensor.find("{*}plugin[@name='imu_plugin']")
         self.assertIsNotNone(plugin)
         self.assertEqual(plugin.findtext("{*}updateRateHZ"), "100.0")
+        self.assertEqual(plugin.findtext("{*}topicName"), "imu/data_raw")
+
+    def test_imu_matches_agilex_field_rest_noise(self) -> None:
+        # rest_0 sample std @ 100 Hz, bag estimator-imu-check-20260819-220847.
+        # Plugin gaussianNoise must stay 0; SDF noise is the contract.
+        root = ET.parse(PACKAGE / "urdf" / "scout_mini.gazebo").getroot()
+        sensor = root.find(".//{*}sensor[@name='imu_sensor']")
+        self.assertIsNotNone(sensor)
+        plugin = sensor.find("{*}plugin[@name='imu_plugin']")
+        self.assertIsNotNone(plugin)
+        self.assertEqual(plugin.findtext("{*}gaussianNoise"), "0.0")
+        expected = {
+            "angular_velocity": {"x": "0.0013", "y": "0.0011", "z": "0.0007"},
+            "linear_acceleration": {"x": "0.025", "y": "0.020", "z": "0.062"},
+        }
+        imu = sensor.find("{*}imu")
+        self.assertIsNotNone(imu)
+        for quantity, axes in expected.items():
+            block = imu.find("{*}%s" % quantity)
+            self.assertIsNotNone(block, quantity)
+            for axis, stddev in axes.items():
+                noise = block.find("{*}%s/{*}noise" % axis)
+                self.assertIsNotNone(noise, "%s.%s" % (quantity, axis))
+                self.assertEqual(noise.get("type"), "gaussian", "%s.%s" % (quantity, axis))
+                self.assertEqual(noise.findtext("{*}mean"), "0.0", "%s.%s mean" % (quantity, axis))
+                self.assertEqual(noise.findtext("{*}stddev"), stddev, "%s.%s stddev" % (quantity, axis))
+                self.assertIsNone(noise.find("{*}bias_mean"), "%s.%s extra bias" % (quantity, axis))
 
     def test_spawn_uses_explicit_stable_parameters_without_legacy_mapping(self) -> None:
         text = (PACKAGE / "launch" / "spawn_accurate.launch").read_text()
@@ -105,6 +132,11 @@ class ScoutStableDefaultsTest(unittest.TestCase):
             text,
         )
         self.assertEqual(text.count('value="$(arg wheel_pid_p)"'), 8)
+
+    def test_bridge_voltage_topic_matches_wheeltec_powervoltage(self) -> None:
+        text = (PACKAGE / "src" / "sim_scout_status.cpp").read_text()
+        self.assertIn('DeriveBridgeTopic(status_topic_, "PowerVoltage")', text)
+        self.assertNotIn("scout/battery_voltage", text)
 
 
 if __name__ == "__main__":
