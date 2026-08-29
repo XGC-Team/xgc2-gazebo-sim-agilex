@@ -1,7 +1,8 @@
 # SCOUT MINI Gazebo 模型与实物接口对齐记录
 
 本文记录 2026-07-10 完成的 SCOUT MINI Gazebo 模型、ROS1 接口、NMPC
-约束和参考轨迹检查，以及 2026-07-31 完成的 1000 Hz/250 Hz 物理步长回归。
+约束和参考轨迹检查、2026-07-31 完成的 1000 Hz/250 Hz 物理步长回归，以及
+2026-08-30 基于 Scout 实车开环 bag 完成的响应带对齐。
 目的不是宣称仿真已经完成严格系统辨识，而是说明本轮保留了哪些修改、为什么早期
 摩擦力和 PID 调参没有解决问题，以及当前结论的证据边界。
 
@@ -14,11 +15,14 @@
 3. 修正 IMU 话题和里程计速度坐标系。
 4. 按手册值更新轮子几何，并使轮速 P 增益与 Gazebo 物理步长匹配。
 5. 随机目标轨迹增加逐采样点硬限值检查。
+6. 将 ODE `fdir1` 固定到 wheel-local 轮轴，消除随轮角旋转的摩擦方向与周期横滑。
+7. 用显式命令延迟和一阶执行器响应逼近实车底盘带宽，不把 VRPN 内容滞后塞进物理模型。
 
 最终结果不是通过极端 PID 或继续增大地面摩擦获得的。历史 1 ms/1000 Hz 成功
 基线使用 `P=6, I=0, D=0`；2026-07-31 已重建并运行验证的 XGC accurate/process
-dev candidate 使用 `4 ms/250 Hz` 和 `P=2, I=0, D=0`。两者不能脱离物理步长
-互换，也不能把该配置外推到 simple/raw 启动链。
+dev candidate 使用 `4 ms/250 Hz` 和 `P=2, I=0, D=0`。2026-08-30 的当前候选继续
+固定该物理步长/P 组合，只修正接触坐标系、命令增益和执行器动态。两套 P 不能脱离
+物理步长互换；raw world 未被 launch 自身改写成 250 Hz，验收仍须核对实际 world timing。
 
 ## 2. 参数修改清单
 
@@ -51,24 +55,32 @@ products/ros1/simulator/gazebo-sim/agilex/scout/src/scout_skid_steer.cpp
 | `wheel_pid_p` | `10.0` | `2.0`（XGC accurate dev candidate） |
 | `wheel_pid_i` | `0.0` | `0.0` |
 | `wheel_pid_d` | `0.0` | `0.0` |
-| `command_gain` | `1.10` | `1.03` |
-| `angular_command_gain` | `0.80` | `1.20` |
+| `command_gain` | `1.03` | `1.10` |
+| `angular_command_gain` | `2.50` | `1.15` |
+| `command_delay_s` | `0` | `0.15` |
+| `command_time_constant_s` | `0` | `0.15` |
 
-`command_gain` 和 `angular_command_gain` 来自历史 1 ms/P=6 条件下的线速度、纯角
-速度和耦合输入并行校准，本轮没有重新完成一套 P2 增益辨识。`P=2` 是 4 ms 下已经
-通过阶跃与四车闭环的保守候选，并在沿用上述命令增益时复验了稳定性；历史 `P=6`
-只属于 1 ms 基线。这些值不是 SCOUT MINI 厂商参数，也不能替代实车系统辨识。
+当前增益来自 2026-08-19 Xavier-40 的非 NMPC、非手控脚本开环包：`cmd=0.5 m/s`
+时 VRPN 位置回归约 `0.52 m/s`；`cmd=0.5 rad/s` 时 VRPN/IMU/估计器深稳态约
+`0.525–0.531 rad/s`。`delay/tau=0.15/0.15 s` 只拟合 `/scout_status` 与 IMU 的宽松
+10/50/90% 响应带，不拟合 VRPN pose 的成批传输和内容表观滞后。`P=2` 仍是 4 ms 下
+通过稳定性验证的保守值，历史 `P=6` 只属于 1 ms 基线。
 
 ### 2.3 摩擦和质量
 
-当前 NMPC 场景保留：
+当前 wheel-local 接触坐标为：
 
 ```text
-wheel_contact_mu2  = 0.10
-wheel_contact_slip2 = 5.0
+wheel_contact_fdir1 = [0, 0, 1]  # 轮轴，方向 1 为横向
+wheel_contact_mu1   = 0.10
+wheel_contact_slip1 = 5.0
+wheel_contact_mu2   = 1.0        # 方向 2 为纵向
+wheel_contact_slip2 = 0.0
 ```
 
-本轮没有通过继续调整这两个参数来获得最终结果。质量和惯量也没有在缺少实车称重、
+这里的 `slip1` 是 ODE force-dependent slip（速度/力），不是无量纲轮胎滑移率。它与
+`mu1` 只作为一组有效行为参数保留，不能从单个正向开环包唯一辨识。质量和惯量没有在
+缺少实车称重、
 质心和转动惯量数据的情况下继续修改。手册给出的整车整备质量是 `23 kg`，但现有
 模型还包含上装和传感器 link，因此目前不能宣称总质量和惯量已经严格对齐。
 
@@ -193,6 +205,14 @@ linear-yaw coupled
 `P=2`。简化模型的稳定上界约为 `P<4.7`，所以不能声称 P2 是唯一稳定值；当前选择
 P2 是为了给接触非线性、调度抖动和无 effort limit 留出裕量。
 
+### 4.5 周期侧滑首先是接触坐标错误
+
+旧 `fdir1=[1,0,0]` 位于 wheel collision local frame，会随 wheel link 自转。方向 1/2
+因此相对地面周期旋转，纯偏航时出现与轮角相关的 stick-slip 和大尺度转动中心漂移。
+将 `fdir1` 改为与轮轴平行的 local `z` 后，同一 250 Hz/P2 条件下，0.5 rad/s 纯转的
+平滑 yaw-rate 标准差从约 `0.077` 降到小于 `0.002 rad/s`，5 s 平移路径从约
+`0.25 m` 降到约 `0.036 m`。这是结构修正；摩擦数值只在此后用于宽松响应校准。
+
 ## 5. ROS 接口修复
 
 ### 5.1 IMU 话题
@@ -251,7 +271,25 @@ products/ros1/controller/ugv-controller/unicycle_reference_trajectory/
 
 ## 7. 验证结果
 
-### 7.1 开环纯偏航
+### 7.1 当前 250 Hz 实车开环响应带回归
+
+实车依据是 `estimator-imu-check-20260819-220847`。该包由脚本直接发布 `/cmd_vel`，
+没有 NMPC/VRPN 位姿闭环；VRPN twist 不作为真值。当前候选在独立、无宿主端口容器中
+使用同一 30 s 命令序列，结果为：
+
+```text
+cmd v=0.5       -> pose steady 0.524 m/s, static-to-static 2.619 m
+cmd w=+/-0.5    -> pose steady +/-0.519 rad/s, settled +/-2.588 rad
+10/50/90% v     -> 0.17 / 0.26 / 0.51 s
+10/50/90% w     -> 0.21 / 0.32 / 0.57 s
+5 s pure-yaw XY -> net/radius about 0.030 m, path about 0.036 m
+```
+
+初始 yaw `0/pi/4/pi/2` 与正负旋转结果一致；pose/twist/joint state 全程有限。实车对应
+宽松门为稳态 `v=0.49–0.55 m/s`、`w=0.50–0.55 rad/s`，5 s 位移
+`2.45–2.70 m`、转角 `2.50–2.70 rad`，纯转平移不超过 `0.05 m` 且不得周期增长。
+
+### 7.2 历史 1000 Hz 开环纯偏航
 
 以下是历史 1 ms/1000 Hz、`P=6` 候选参数下的近似稳态响应：
 
@@ -265,7 +303,7 @@ products/ros1/controller/ugv-controller/unicycle_reference_trajectory/
 该结果说明低角速度仍有明显衰减，但 `0.2-0.5 rad/s` 不再完全无响应。它是
 1000 Hz 历史基线，不应直接外推到当前 250 Hz/`P=2` 配置，也不是最终实车辨识结果。
 
-### 7.2 圆轨迹 NMPC
+### 7.3 历史圆轨迹 NMPC
 
 圆轨迹参数：
 
@@ -286,7 +324,7 @@ mean radius error            = 0.055 m
 reference flags              = 0
 ```
 
-### 7.3 随机目标轨迹
+### 7.4 历史随机目标轨迹
 
 以下是历史 1 ms/1000 Hz、P=6 工作区连续四次随机重规划的结果，不是 P2/250 Hz
 重新标定数据。最大角速度分别为：
@@ -297,7 +335,7 @@ reference flags              = 0
 
 均低于 `0.5235 rad/s`，且轨迹状态 `flags=0`。
 
-### 7.4 自动测试
+### 7.5 自动测试
 
 2026-07-10 历史 1 ms/P=6 工作区测试结果：
 
@@ -347,8 +385,15 @@ gazeboRealTimeUpdateRate   = 250
 
 ```text
 wheelPidP                  = 2.0
-wheelContactMu2            = 0.10
-wheelContactSlip2          = 5.0
+wheelContactFdir1          = "0 0 1"
+wheelContactMu1            = 0.10
+wheelContactSlip1          = 5.0
+wheelContactMu2            = 1.0
+wheelContactSlip2          = 0.0
+commandGain                = 1.10
+angularCommandGain         = 1.15
+commandDelaySeconds        = 0.15
+commandTimeConstantSeconds = 0.15
 ```
 
 不能使用上述历史 helper 命令来声称复现了 P2/250 Hz 结果。
@@ -358,11 +403,13 @@ wheelContactSlip2          = 5.0
 当前仍不能称为完整 sim-to-real 模型，至少还需完成：
 
 1. 实测轴距、几何轮距、轮胎有效半径和整车质量。
-2. 使用实车同步记录的 `cmd_vel`、轮速、IMU 和位姿数据辨识有效轮距及角速度增益。
+2. 补录负向、多个速度档和不同地面/载荷的同型开环数据；当前只有单车单地面正向激励。
 3. 检查低角速度 `0.2 rad/s` 附近的静摩擦、死区和轮速控制误差。
-4. 检查随机轨迹中实际里程计角速度的瞬时过冲。测试曾观察到约 `0.566 rad/s`，虽然
+4. 在六个当前 Experiment 的真实 ProcessDefinition/Automation pin 链上完成闭环复测；
+   历史 `gazebo_sim_examples` helper 带旧参数，不能替代该门。
+5. 检查随机轨迹中实际里程计角速度的瞬时过冲。测试曾观察到约 `0.566 rad/s`，虽然
    命令严格限制在 `0.5235 rad/s` 内。
-5. 在真实地面类型和载荷条件下分别建立参数集，避免用单组摩擦参数覆盖所有场景。
+6. 在真实地面类型和载荷条件下分别建立参数集，避免用单组摩擦参数覆盖所有场景。
 
 在这些测量完成前，应把当前 dev candidate 视为“接口一致、约束一致、控制响应可用”
 的仿真基线，而不是已经精确复现实车动力学的数字孪生。

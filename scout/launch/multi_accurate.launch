@@ -9,8 +9,11 @@
     <arg name="enable_lidar" default="false"/>
     <arg name="enable_rslidar" default="false"/>
     <arg name="enable_camera" default="false"/>
-    <arg name="wheel_contact_mu2" default="0.45"/>
-    <arg name="wheel_contact_slip2" default="0.25"/>
+    <arg name="wheel_contact_mu1" default="0.10"/>
+    <arg name="wheel_contact_mu2" default="1.0"/>
+    <arg name="wheel_contact_fdir1" default="0 0 1"/>
+    <arg name="wheel_contact_slip1" default="5.0"/>
+    <arg name="wheel_contact_slip2" default="0.0"/>
     <arg name="wheel_pid_p" default="2.0"/>
     <arg name="wheel_pid_i" default="0.0"/>
     <arg name="wheel_pid_d" default="0.0"/>
@@ -18,9 +21,11 @@
     <arg name="wheel_track" default="0.490"/>
     <arg name="wheel_separation" default="$(arg wheel_track)"/>
     <arg name="wheel_radius" default="0.08"/>
-    <arg name="command_gain" default="1.03"/>
-    <!-- Shared base default. Per-robot args below can override this for calibration. -->
-    <arg name="angular_command_gain" default="2.50"/>
+    <arg name="command_gain" default="1.10"/>
+    <!-- Shared base defaults. Per-robot args below can override these for calibration. -->
+    <arg name="angular_command_gain" default="1.15"/>
+    <arg name="command_delay_s" default="0.15"/>
+    <arg name="command_time_constant_s" default="0.15"/>
 
     <arg name="ugv1_ns" default="ugv1"/>
     <arg name="ugv1_model_name" default="$(arg ugv1_ns)"/>
@@ -28,12 +33,17 @@
     <arg name="ugv1_y" default="3.0"/>
     <arg name="ugv1_z" default="0.181"/>
     <arg name="ugv1_yaw" default="0.0"/>
+    <arg name="ugv1_wheel_contact_mu1" default="$(arg wheel_contact_mu1)"/>
     <arg name="ugv1_wheel_contact_mu2" default="$(arg wheel_contact_mu2)"/>
+    <arg name="ugv1_wheel_contact_fdir1" default="$(arg wheel_contact_fdir1)"/>
+    <arg name="ugv1_wheel_contact_slip1" default="$(arg wheel_contact_slip1)"/>
     <arg name="ugv1_wheel_contact_slip2" default="$(arg wheel_contact_slip2)"/>
     <arg name="ugv1_wheel_pid_p" default="$(arg wheel_pid_p)"/>
     <arg name="ugv1_wheel_pid_i" default="$(arg wheel_pid_i)"/>
     <arg name="ugv1_wheel_pid_d" default="$(arg wheel_pid_d)"/>
     <arg name="ugv1_angular_command_gain" default="$(arg angular_command_gain)"/>
+    <arg name="ugv1_command_delay_s" default="$(arg command_delay_s)"/>
+    <arg name="ugv1_command_time_constant_s" default="$(arg command_time_constant_s)"/>
     <arg name="ugv1_enable_lidar" default="$(arg enable_lidar)"/>
     <arg name="ugv1_enable_rslidar" default="$(arg enable_rslidar)"/>
     <arg name="ugv1_enable_camera" default="$(arg enable_camera)"/>
@@ -44,12 +54,17 @@
     <arg name="ugv2_y" default="-3.0"/>
     <arg name="ugv2_z" default="0.181"/>
     <arg name="ugv2_yaw" default="0.0"/>
+    <arg name="ugv2_wheel_contact_mu1" default="$(arg wheel_contact_mu1)"/>
     <arg name="ugv2_wheel_contact_mu2" default="$(arg wheel_contact_mu2)"/>
+    <arg name="ugv2_wheel_contact_fdir1" default="$(arg wheel_contact_fdir1)"/>
+    <arg name="ugv2_wheel_contact_slip1" default="$(arg wheel_contact_slip1)"/>
     <arg name="ugv2_wheel_contact_slip2" default="$(arg wheel_contact_slip2)"/>
     <arg name="ugv2_wheel_pid_p" default="$(arg wheel_pid_p)"/>
     <arg name="ugv2_wheel_pid_i" default="$(arg wheel_pid_i)"/>
     <arg name="ugv2_wheel_pid_d" default="$(arg wheel_pid_d)"/>
     <arg name="ugv2_angular_command_gain" default="$(arg angular_command_gain)"/>
+    <arg name="ugv2_command_delay_s" default="$(arg command_delay_s)"/>
+    <arg name="ugv2_command_time_constant_s" default="$(arg command_time_constant_s)"/>
     <arg name="ugv2_enable_lidar" default="$(arg enable_lidar)"/>
     <arg name="ugv2_enable_rslidar" default="$(arg enable_rslidar)"/>
     <arg name="ugv2_enable_camera" default="$(arg enable_camera)"/>
@@ -81,7 +96,10 @@
         <arg name="enable_rslidar" value="$(arg ugv1_enable_rslidar)" />
         <arg name="enable_camera" value="$(arg ugv1_enable_camera)" />
         <arg name="robot_state_publisher_ns" value="$(arg ugv1_ns)" />
+        <arg name="wheel_contact_mu1" value="$(arg ugv1_wheel_contact_mu1)" />
         <arg name="wheel_contact_mu2" value="$(arg ugv1_wheel_contact_mu2)" />
+        <arg name="wheel_contact_fdir1" value="$(arg ugv1_wheel_contact_fdir1)" />
+        <arg name="wheel_contact_slip1" value="$(arg ugv1_wheel_contact_slip1)" />
         <arg name="wheel_contact_slip2" value="$(arg ugv1_wheel_contact_slip2)" />
         <arg name="wheel_pid_p" value="$(arg ugv1_wheel_pid_p)" />
         <arg name="wheel_pid_i" value="$(arg ugv1_wheel_pid_i)" />
@@ -92,6 +110,8 @@
         <arg name="wheel_radius" value="$(arg wheel_radius)" />
         <arg name="command_gain" value="$(arg command_gain)" />
         <arg name="angular_command_gain" value="$(arg ugv1_angular_command_gain)" />
+        <arg name="command_delay_s" value="$(arg ugv1_command_delay_s)" />
+        <arg name="command_time_constant_s" value="$(arg ugv1_command_time_constant_s)" />
     </include>
 
     <include file="$(dirname)/spawn_accurate.launch">
@@ -112,7 +132,10 @@
         <arg name="enable_rslidar" value="$(arg ugv2_enable_rslidar)" />
         <arg name="enable_camera" value="$(arg ugv2_enable_camera)" />
         <arg name="robot_state_publisher_ns" value="$(arg ugv2_ns)" />
+        <arg name="wheel_contact_mu1" value="$(arg ugv2_wheel_contact_mu1)" />
         <arg name="wheel_contact_mu2" value="$(arg ugv2_wheel_contact_mu2)" />
+        <arg name="wheel_contact_fdir1" value="$(arg ugv2_wheel_contact_fdir1)" />
+        <arg name="wheel_contact_slip1" value="$(arg ugv2_wheel_contact_slip1)" />
         <arg name="wheel_contact_slip2" value="$(arg ugv2_wheel_contact_slip2)" />
         <arg name="wheel_pid_p" value="$(arg ugv2_wheel_pid_p)" />
         <arg name="wheel_pid_i" value="$(arg ugv2_wheel_pid_i)" />
@@ -123,6 +146,8 @@
         <arg name="wheel_radius" value="$(arg wheel_radius)" />
         <arg name="command_gain" value="$(arg command_gain)" />
         <arg name="angular_command_gain" value="$(arg ugv2_angular_command_gain)" />
+        <arg name="command_delay_s" value="$(arg ugv2_command_delay_s)" />
+        <arg name="command_time_constant_s" value="$(arg ugv2_command_time_constant_s)" />
     </include>
 
     <include if="$(arg enable_vrpn_server)" file="$(find gazebo_sim_vrpn_bridge)/launch/vrpn_server.launch">

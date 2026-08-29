@@ -4,9 +4,12 @@
   <arg name="world_name" default="$(find gazebo_sim_worlds)/worlds/corridor_static/corridor_static.world"/>
   <arg name="gui" default="true"/>
   <arg name="rviz" default="false"/>
-  <arg name="wheel_contact_mu2" default="0.45"/>
-  <arg name="wheel_contact_slip2" default="0.25"/>
-  <arg name="angular_command_gain" default="2.50"/>
+  <arg name="wheel_contact_mu1" default="0.10"/>
+  <arg name="wheel_contact_mu2" default="1.0"/>
+  <arg name="wheel_contact_fdir1" default="0 0 1"/>
+  <arg name="wheel_contact_slip1" default="5.0"/>
+  <arg name="wheel_contact_slip2" default="0.0"/>
+  <arg name="angular_command_gain" default="1.15"/>
   <!-- false: LIO owns camera_init->body->base_link. Gazebo still publishes /odom. -->
   <arg name="publish_tf" default="false"/>
 
@@ -19,7 +22,10 @@
     <arg name="rviz" value="$(arg rviz)"/>
     <arg name="enable_rslidar" value="true"/>
     <arg name="publish_tf" value="$(arg publish_tf)"/>
+    <arg name="wheel_contact_mu1" value="$(arg wheel_contact_mu1)"/>
     <arg name="wheel_contact_mu2" value="$(arg wheel_contact_mu2)"/>
+    <arg name="wheel_contact_fdir1" value="$(arg wheel_contact_fdir1)"/>
+    <arg name="wheel_contact_slip1" value="$(arg wheel_contact_slip1)"/>
     <arg name="wheel_contact_slip2" value="$(arg wheel_contact_slip2)"/>
     <arg name="angular_command_gain" value="$(arg angular_command_gain)"/>
   </include>

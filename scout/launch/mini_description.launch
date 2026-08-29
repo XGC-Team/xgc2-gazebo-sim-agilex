@@ -10,11 +10,11 @@
     <arg name="enable_lidar" default="false"/>
     <arg name="enable_rslidar" default="false"/>
     <arg name="enable_camera" default="false"/>
-    <arg name="wheel_contact_mu2" default="0.35"/>
-    <arg name="wheel_contact_mu1" default="1.0"/>
-    <arg name="wheel_contact_fdir1" default="1 0 0"/>
-    <arg name="wheel_contact_slip1" default="0.0"/>
-    <arg name="wheel_contact_slip2" default="0.1"/>
+    <arg name="wheel_contact_mu1" default="0.10"/>
+    <arg name="wheel_contact_mu2" default="1.0"/>
+    <arg name="wheel_contact_fdir1" default="0 0 1"/>
+    <arg name="wheel_contact_slip1" default="5.0"/>
+    <arg name="wheel_contact_slip2" default="0.0"/>
     <arg name="skid_steer_torque" default="1000"/>
     <arg name="wheelbase" default="0.451"/>
     <arg name="wheel_track" default="0.490"/>

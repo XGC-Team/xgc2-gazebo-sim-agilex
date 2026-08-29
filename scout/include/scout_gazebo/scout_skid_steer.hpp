@@ -13,16 +13,17 @@
 #include <geometry_msgs/Twist.h>
 #include <ros/ros.h>
 
+#include <deque>
 #include <string>
 
 namespace wescore {
 class ScoutSkidSteer {
- public:
+public:
   ScoutSkidSteer(ros::NodeHandle *nh, std::string robot_name = "");
 
   void SetupSubscription();
 
- private:
+private:
   std::string robot_name_;
   std::string motor_fr_topic_;
   std::string motor_fl_topic_;
@@ -34,9 +35,23 @@ class ScoutSkidSteer {
   double wheel_radius_;
   double command_gain_;
   double angular_command_gain_;
+  double command_delay_s_;
+  double command_time_constant_s_;
   bool enable_command_limits_;
   double max_linear_speed_;
   double max_angular_speed_;
+
+  struct CommandSample {
+    ros::Time stamp;
+    double linear;
+    double angular;
+  };
+  std::deque<CommandSample> command_history_;
+  ros::Time last_update_time_;
+  double delayed_linear_velocity_;
+  double delayed_angular_velocity_;
+  double filtered_linear_velocity_;
+  double filtered_angular_velocity_;
 
   ros::NodeHandle *nh_;
 
@@ -48,9 +63,12 @@ class ScoutSkidSteer {
   ros::Subscriber cmd_sub_;
 
   void TwistCmdCallback(const geometry_msgs::Twist::ConstPtr &msg);
+  void UpdateCommandDynamics(double requested_linear, double requested_angular,
+                             const ros::Time &now, double *linear,
+                             double *angular);
   double Clamp(double value, double limit) const;
   std::string JoinTopic(const std::string &ns, const std::string &topic) const;
 };
-}  // namespace wescore
+} // namespace wescore
 
 #endif /* SCOUT_SKID_STEER_HPP */

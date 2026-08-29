@@ -13,11 +13,13 @@
     <xacro:arg name="enable_lidar" default="false" />
     <xacro:arg name="enable_rslidar" default="false" />
     <xacro:arg name="enable_camera" default="false" />
-    <xacro:arg name="wheel_contact_mu2" default="0.35" />
-    <xacro:arg name="wheel_contact_mu1" default="1.0" />
-    <xacro:arg name="wheel_contact_fdir1" default="1 0 0" />
-    <xacro:arg name="wheel_contact_slip1" default="0.0" />
-    <xacro:arg name="wheel_contact_slip2" default="0.1" />
+    <!-- fdir1 stays parallel to the wheel axle as the wheel spins. Direction 1
+         is lateral; direction 2 is longitudinal. -->
+    <xacro:arg name="wheel_contact_mu1" default="0.10" />
+    <xacro:arg name="wheel_contact_mu2" default="1.0" />
+    <xacro:arg name="wheel_contact_fdir1" default="0 0 1" />
+    <xacro:arg name="wheel_contact_slip1" default="5.0" />
+    <xacro:arg name="wheel_contact_slip2" default="0.0" />
     <xacro:arg name="skid_steer_torque" default="1000" />
     <xacro:arg name="wheelbase" default="0.451" />
     <xacro:arg name="wheel_track" default="0.490" />

@@ -52,10 +52,11 @@ mini_xacro="/opt/ros/${ROS_DISTRO}/share/gazebo_sim_scout/urdf/mini.xacro"
 empty_urdf="/opt/ros/${ROS_DISTRO}/share/gazebo_sim_scout/urdf/empty.urdf"
 expanded_urdf="/tmp/xgc2-scout-mini-expanded.urdf"
 xacro "${mini_xacro}" urdf_extras:="${empty_urdf}" > "${expanded_urdf}"
-grep -q '<mu1 value="1.0"/>' "${expanded_urdf}"
-grep -q '<mu2 value="0.35"/>' "${expanded_urdf}"
-grep -q '<slip1 value="0.0"/>' "${expanded_urdf}"
-grep -q '<slip2 value="0.1"/>' "${expanded_urdf}"
+grep -q '<mu1 value="0.10"/>' "${expanded_urdf}"
+grep -q '<mu2 value="1.0"/>' "${expanded_urdf}"
+grep -q '<fdir1 value="0 0 1"/>' "${expanded_urdf}"
+grep -q '<slip1 value="5.0"/>' "${expanded_urdf}"
+grep -q '<slip2 value="0.0"/>' "${expanded_urdf}"
 grep -q '<kp value="1000000.0"/>' "${expanded_urdf}"
 grep -q '<maxContacts value="16"/>' "${expanded_urdf}"
 grep -Eq '<wheelSeparation>0\.49(0*)?</wheelSeparation>' "${expanded_urdf}"
@@ -65,12 +66,18 @@ grep -q '<torque>1000</torque>' "${expanded_urdf}"
 log "checking tuned Scout mini URDF arguments"
 tuned_params="/tmp/xgc2-scout-spawn-accurate-tuned-params.yaml"
 xacro "${mini_xacro}" \
-  wheel_contact_mu2:=0.31 \
-  wheel_contact_slip2:=0.08 \
+  wheel_contact_mu1:=0.31 \
+  wheel_contact_mu2:=0.91 \
+  wheel_contact_fdir1:="0 1 0" \
+  wheel_contact_slip1:=0.08 \
+  wheel_contact_slip2:=0.02 \
   skid_steer_torque:=900 \
   urdf_extras:="${empty_urdf}" > "${tuned_params}"
-grep -q '<mu2 value="0.31"/>' "${tuned_params}"
-grep -q '<slip2 value="0.08"/>' "${tuned_params}"
+grep -q '<mu1 value="0.31"/>' "${tuned_params}"
+grep -q '<mu2 value="0.91"/>' "${tuned_params}"
+grep -q '<fdir1 value="0 1 0"/>' "${tuned_params}"
+grep -q '<slip1 value="0.08"/>' "${tuned_params}"
+grep -q '<slip2 value="0.02"/>' "${tuned_params}"
 grep -q '<torque>900</torque>' "${tuned_params}"
 
 log "checking installed ELF dependencies"
