@@ -5,13 +5,6 @@
 目的不是宣称仿真已经完成严格系统辨识，而是说明本轮保留了哪些修改、为什么早期
 摩擦力和 PID 调参没有解决问题，以及当前结论的证据边界。
 
-物理步长、离散轮速环稳定性、NaN 证据链和 250 Hz 闭环实证单独记录在：
-
-```text
-products/ros1/simulator/gazebo-sim/agilex/scout/docs/
-  scout_gazebo_250hz_control_tuning.md
-```
-
 ## 1. 结论摘要
 
 本轮恢复 NMPC 跟踪的主要原因按影响排序如下：
