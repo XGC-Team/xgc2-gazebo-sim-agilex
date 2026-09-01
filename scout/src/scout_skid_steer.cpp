@@ -20,7 +20,8 @@ ScoutSkidSteer::ScoutSkidSteer(ros::NodeHandle *nh, std::string robot_name)
     : robot_name_(robot_name), command_delay_s_(0.15),
       command_time_constant_s_(0.15), delayed_linear_velocity_(0.0),
       delayed_angular_velocity_(0.0), filtered_linear_velocity_(0.0),
-      filtered_angular_velocity_(0.0), nh_(nh) {
+      filtered_angular_velocity_(0.0), nh_(nh),
+      hold_gate_(xgc_chassis_hold::lastPath(robot_name)) {
   ros::NodeHandle private_nh("~");
   private_nh.param("wheel_separation", wheel_separation_, 0.490);
   private_nh.param("wheel_radius", wheel_radius_, 0.08);
@@ -60,7 +61,13 @@ ScoutSkidSteer::ScoutSkidSteer(ros::NodeHandle *nh, std::string robot_name)
       max_linear_speed_, max_angular_speed_);
 }
 
+ScoutSkidSteer::~ScoutSkidSteer() {
+  xgc_chassis_hold::Hub::instance().remove(&hold_gate_);
+}
+
 void ScoutSkidSteer::SetupSubscription() {
+  hold_gate_.setZeroThunk(&ScoutSkidSteer::HoldZeroThunk, this);
+  xgc_chassis_hold::Hub::instance().add(&hold_gate_);
   // command subscriber
   cmd_sub_ = nh_->subscribe<geometry_msgs::Twist>(
       cmd_topic_, 5, &ScoutSkidSteer::TwistCmdCallback, this);
@@ -72,8 +79,27 @@ void ScoutSkidSteer::SetupSubscription() {
   motor_rr_pub_ = nh_->advertise<std_msgs::Float64>(motor_rr_topic_, 50);
 }
 
+void ScoutSkidSteer::HoldZeroThunk(void *self) {
+  static_cast<ScoutSkidSteer *>(self)->PublishZeroMotors();
+}
+
+void ScoutSkidSteer::PublishZeroMotors() {
+  if (!motor_fr_pub_) {
+    return;
+  }
+  std_msgs::Float64 motor_cmd[4];
+  motor_fr_pub_.publish(motor_cmd[0]);
+  motor_fl_pub_.publish(motor_cmd[1]);
+  motor_rl_pub_.publish(motor_cmd[2]);
+  motor_rr_pub_.publish(motor_cmd[3]);
+}
+
 void ScoutSkidSteer::TwistCmdCallback(
     const geometry_msgs::Twist::ConstPtr &msg) {
+  if (hold_gate_.held()) {
+    PublishZeroMotors();
+    return;
+  }
   double driving_vel = msg->linear.x;
   double steering_vel = msg->angular.z;
   if (!std::isfinite(driving_vel) || !std::isfinite(steering_vel) ||

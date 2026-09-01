@@ -16,10 +16,13 @@
 #include <deque>
 #include <string>
 
+#include "xgc_chassis_hold/udp.hpp"
+
 namespace wescore {
 class ScoutSkidSteer {
 public:
   ScoutSkidSteer(ros::NodeHandle *nh, std::string robot_name = "");
+  ~ScoutSkidSteer();
 
   void SetupSubscription();
 
@@ -61,8 +64,11 @@ private:
   ros::Publisher motor_rr_pub_;
 
   ros::Subscriber cmd_sub_;
+  xgc_chassis_hold::Gate hold_gate_;
 
   void TwistCmdCallback(const geometry_msgs::Twist::ConstPtr &msg);
+  void PublishZeroMotors();
+  static void HoldZeroThunk(void *self);
   void UpdateCommandDynamics(double requested_linear, double requested_angular,
                              const ros::Time &now, double *linear,
                              double *angular);

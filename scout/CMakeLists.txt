@@ -27,11 +27,13 @@ catkin_package(
 
 include_directories(
     include
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../../include
     ${catkin_INCLUDE_DIRS}
 )
 
 add_library(scout_gazebo STATIC src/scout_skid_steer.cpp)
-target_link_libraries(scout_gazebo ${catkin_LIBRARIES})
+find_package(Threads REQUIRED)
+target_link_libraries(scout_gazebo ${catkin_LIBRARIES} Threads::Threads)
 
 add_executable(scout_skid_steer_controller src/scout_skid_steer_controller.cpp)
 target_link_libraries(scout_skid_steer_controller scout_gazebo ${catkin_LIBRARIES})
