@@ -27,7 +27,6 @@ catkin_package(
 
 include_directories(
     include
-    ${CMAKE_CURRENT_SOURCE_DIR}/../../../include
     ${catkin_INCLUDE_DIRS}
 )
 
