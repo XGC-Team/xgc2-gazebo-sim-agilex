@@ -41,7 +41,6 @@ test ! -d "/opt/ros/${ROS_DISTRO}/share/scout_description/launch"
 test ! -d "/opt/ros/${ROS_DISTRO}/share/scout_description/rviz"
 test ! -f "/opt/ros/${ROS_DISTRO}/share/scout_description/urdf/mini.xacro"
 roslaunch --files gazebo_sim_scout mini_description.launch >/tmp/xgc2-scout-description-files.txt
-roslaunch --files gazebo_sim_scout spawn_simple.launch >/tmp/xgc2-scout-spawn-files.txt
 roslaunch --files gazebo_sim_scout simple.launch rviz:=false world_name:=/tmp/xgc2-scout-empty.world >/tmp/xgc2-scout-simple-files.txt
 roslaunch --files gazebo_sim_scout accurate.launch rviz:=false enable_vrpn_server:=false world_name:=/tmp/xgc2-scout-empty.world >/tmp/xgc2-scout-accurate-files.txt
 
@@ -59,9 +58,7 @@ grep -q '<slip1 value="5.0"/>' "${expanded_urdf}"
 grep -q '<slip2 value="0.0"/>' "${expanded_urdf}"
 grep -q '<kp value="1000000.0"/>' "${expanded_urdf}"
 grep -q '<maxContacts value="16"/>' "${expanded_urdf}"
-grep -Eq '<wheelSeparation>0\.49(0*)?</wheelSeparation>' "${expanded_urdf}"
-grep -q '<wheelDiameter>0.16</wheelDiameter>' "${expanded_urdf}"
-grep -q '<torque>1000</torque>' "${expanded_urdf}"
+! grep -q '<odometryTopic>' "${expanded_urdf}"
 
 log "checking tuned Scout mini URDF arguments"
 tuned_params="/tmp/xgc2-scout-spawn-accurate-tuned-params.yaml"
@@ -71,14 +68,13 @@ xacro "${mini_xacro}" \
   wheel_contact_fdir1:="0 1 0" \
   wheel_contact_slip1:=0.08 \
   wheel_contact_slip2:=0.02 \
-  skid_steer_torque:=900 \
   urdf_extras:="${empty_urdf}" > "${tuned_params}"
 grep -q '<mu1 value="0.31"/>' "${tuned_params}"
 grep -q '<mu2 value="0.91"/>' "${tuned_params}"
 grep -q '<fdir1 value="0 1 0"/>' "${tuned_params}"
 grep -q '<slip1 value="0.08"/>' "${tuned_params}"
 grep -q '<slip2 value="0.02"/>' "${tuned_params}"
-grep -q '<torque>900</torque>' "${tuned_params}"
+! grep -q '<odometryTopic>' "${tuned_params}"
 
 log "checking installed ELF dependencies"
 check_paths=(

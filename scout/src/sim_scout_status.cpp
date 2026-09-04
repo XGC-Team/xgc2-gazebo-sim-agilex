@@ -3,7 +3,6 @@
 #include <stdint.h>
 #include <string>
 
-#include <nav_msgs/Odometry.h>
 #include <ros/ros.h>
 #include <scout_msgs/ScoutLightCmd.h>
 #include <scout_msgs/ScoutStatus.h>
@@ -12,9 +11,8 @@
 #include <std_msgs/UInt32.h>
 
 class SimScoutStatus {
- public:
-  SimScoutStatus() : private_nh_("~"), have_odom_(false) {
-    private_nh_.param<std::string>("odom_topic", odom_topic_, "odom");
+public:
+  SimScoutStatus() : private_nh_("~"), have_joints_(false) {
     private_nh_.param<std::string>("joint_states_topic", joint_states_topic_,
                                    "joint_states");
     private_nh_.param<std::string>("status_topic", status_topic_,
@@ -43,6 +41,8 @@ class SimScoutStatus {
     private_nh_.param("battery_voltage", battery_voltage_, 28.765);
     private_nh_.param("motor_current", motor_current_, 0.0);
     private_nh_.param("motor_temperature", motor_temperature_, 25.0);
+    private_nh_.param("wheel_radius", wheel_radius_, 0.08);
+    private_nh_.param("wheel_track", wheel_track_, 0.49);
 
     joint_to_motor_id_["front_right_wheel"] =
         scout_msgs::ScoutStatus::MOTOR_ID_FRONT_RIGHT;
@@ -55,6 +55,7 @@ class SimScoutStatus {
 
     for (int i = 0; i < 4; ++i) {
       motor_rpm_[i] = 0.0;
+      wheel_omega_[i] = 0.0;
     }
 
     light_control_enabled_ = false;
@@ -64,11 +65,8 @@ class SimScoutStatus {
     rear_light_custom_value_ = 0;
 
     status_pub_ = nh_.advertise<scout_msgs::ScoutStatus>(status_topic_, 10);
-    battery_pub_ =
-        nh_.advertise<std_msgs::Float32>(battery_voltage_topic_, 10);
+    battery_pub_ = nh_.advertise<std_msgs::Float32>(battery_voltage_topic_, 10);
     chassis_pub_ = nh_.advertise<std_msgs::UInt32>(chassis_state_topic_, 10);
-    odom_sub_ =
-        nh_.subscribe(odom_topic_, 10, &SimScoutStatus::OdomCallback, this);
     joint_state_sub_ = nh_.subscribe(joint_states_topic_, 10,
                                      &SimScoutStatus::JointStateCallback, this);
     light_cmd_sub_ = nh_.subscribe(light_control_topic_, 5,
@@ -87,20 +85,20 @@ class SimScoutStatus {
                              &SimScoutStatus::PublishStatus, this);
     battery_timer_ = nh_.createTimer(ros::Duration(1.0 / battery_publish_rate_),
                                      &SimScoutStatus::PublishBattery, this);
-    chassis_timer_ = nh_.createTimer(ros::Duration(1.0 / chassis_publish_rate_),
-                                     &SimScoutStatus::PublishChassisState, this);
+    chassis_timer_ =
+        nh_.createTimer(ros::Duration(1.0 / chassis_publish_rate_),
+                        &SimScoutStatus::PublishChassisState, this);
 
-    ROS_INFO(
-        "Sim Scout status: odom=%s joint_states=%s status=%s battery=%s "
-        "chassis_state=%s light_cmd=%s",
-        odom_topic_.c_str(), joint_states_topic_.c_str(), status_topic_.c_str(),
-        battery_voltage_topic_.c_str(), chassis_state_topic_.c_str(),
-        light_control_topic_.c_str());
+    ROS_INFO("Sim Scout status: joint_states=%s status=%s battery=%s "
+             "chassis_state=%s light_cmd=%s",
+             joint_states_topic_.c_str(), status_topic_.c_str(),
+             battery_voltage_topic_.c_str(), chassis_state_topic_.c_str(),
+             light_control_topic_.c_str());
   }
 
- private:
-  static std::string DeriveBridgeTopic(const std::string& status_topic,
-                                       const std::string& relative) {
+private:
+  static std::string DeriveBridgeTopic(const std::string &status_topic,
+                                       const std::string &relative) {
     const std::string suffix = "scout_status";
     if (status_topic.size() >= suffix.size() &&
         status_topic.compare(status_topic.size() - suffix.size(), suffix.size(),
@@ -114,7 +112,7 @@ class SimScoutStatus {
     return status_topic + "/" + relative;
   }
 
-  static bool EndsWith(const std::string& value, const std::string& suffix) {
+  static bool EndsWith(const std::string &value, const std::string &suffix) {
     return value.size() >= suffix.size() &&
            value.compare(value.size() - suffix.size(), suffix.size(), suffix) ==
                0;
@@ -127,7 +125,7 @@ class SimScoutStatus {
            ((static_cast<uint32_t>(fault_code) & 0xFFFFu) << 16);
   }
 
-  int MotorIdForJoint(const std::string& joint_name) const {
+  int MotorIdForJoint(const std::string &joint_name) const {
     std::map<std::string, int>::const_iterator it = joint_to_motor_id_.begin();
     for (; it != joint_to_motor_id_.end(); ++it) {
       if (joint_name == it->first || EndsWith(joint_name, "/" + it->first)) {
@@ -137,23 +135,20 @@ class SimScoutStatus {
     return -1;
   }
 
-  void OdomCallback(const nav_msgs::Odometry::ConstPtr& msg) {
-    latest_odom_ = *msg;
-    have_odom_ = true;
-  }
-
-  void JointStateCallback(const sensor_msgs::JointState::ConstPtr& msg) {
+  void JointStateCallback(const sensor_msgs::JointState::ConstPtr &msg) {
     const double rad_per_sec_to_rpm = 60.0 / (2.0 * 3.14159265358979323846);
     for (std::size_t i = 0; i < msg->name.size() && i < msg->velocity.size();
          ++i) {
       int motor_id = MotorIdForJoint(msg->name[i]);
       if (motor_id >= 0 && motor_id < 4) {
+        wheel_omega_[motor_id] = msg->velocity[i];
         motor_rpm_[motor_id] = msg->velocity[i] * rad_per_sec_to_rpm;
+        have_joints_ = true;
       }
     }
   }
 
-  void LightCmdCallback(const scout_msgs::ScoutLightCmd::ConstPtr& msg) {
+  void LightCmdCallback(const scout_msgs::ScoutLightCmd::ConstPtr &msg) {
     light_control_enabled_ = msg->enable_cmd_light_control;
     front_light_mode_ = msg->front_mode;
     front_light_custom_value_ = msg->front_custom_value;
@@ -161,17 +156,33 @@ class SimScoutStatus {
     rear_light_custom_value_ = msg->rear_custom_value;
   }
 
-  void PublishStatus(const ros::TimerEvent&) {
+  void ChassisVelocity(double *linear_velocity,
+                       double *angular_velocity) const {
+    if (!have_joints_ || wheel_radius_ <= 0.0) {
+      *linear_velocity = 0.0;
+      *angular_velocity = 0.0;
+      return;
+    }
+    const double omega_left =
+        0.5 * (wheel_omega_[scout_msgs::ScoutStatus::MOTOR_ID_FRONT_LEFT] +
+               wheel_omega_[scout_msgs::ScoutStatus::MOTOR_ID_REAR_LEFT]);
+    const double omega_right =
+        0.5 * (wheel_omega_[scout_msgs::ScoutStatus::MOTOR_ID_FRONT_RIGHT] +
+               wheel_omega_[scout_msgs::ScoutStatus::MOTOR_ID_REAR_RIGHT]);
+    *linear_velocity = wheel_radius_ * 0.5 * (omega_left + omega_right);
+    if (wheel_track_ <= 0.0) {
+      *angular_velocity = 0.0;
+      return;
+    }
+    *angular_velocity =
+        wheel_radius_ * (omega_right - omega_left) / wheel_track_;
+  }
+
+  void PublishStatus(const ros::TimerEvent &) {
     scout_msgs::ScoutStatus status_msg;
     status_msg.header.stamp = ros::Time::now();
 
-    if (have_odom_) {
-      status_msg.linear_velocity = latest_odom_.twist.twist.linear.x;
-      status_msg.angular_velocity = latest_odom_.twist.twist.angular.z;
-    } else {
-      status_msg.linear_velocity = 0.0;
-      status_msg.angular_velocity = 0.0;
-    }
+    ChassisVelocity(&status_msg.linear_velocity, &status_msg.angular_velocity);
 
     status_msg.base_state = static_cast<uint8_t>(base_state_);
     status_msg.control_mode = static_cast<uint8_t>(control_mode_);
@@ -193,13 +204,13 @@ class SimScoutStatus {
     status_pub_.publish(status_msg);
   }
 
-  void PublishBattery(const ros::TimerEvent&) {
+  void PublishBattery(const ros::TimerEvent &) {
     std_msgs::Float32 message;
     message.data = static_cast<float>(battery_voltage_);
     battery_pub_.publish(message);
   }
 
-  void PublishChassisState(const ros::TimerEvent&) {
+  void PublishChassisState(const ros::TimerEvent &) {
     std_msgs::UInt32 message;
     message.data = PackChassisState(control_mode_, base_state_, fault_code_);
     chassis_pub_.publish(message);
@@ -210,14 +221,12 @@ class SimScoutStatus {
   ros::Publisher status_pub_;
   ros::Publisher battery_pub_;
   ros::Publisher chassis_pub_;
-  ros::Subscriber odom_sub_;
   ros::Subscriber joint_state_sub_;
   ros::Subscriber light_cmd_sub_;
   ros::Timer timer_;
   ros::Timer battery_timer_;
   ros::Timer chassis_timer_;
 
-  std::string odom_topic_;
   std::string joint_states_topic_;
   std::string status_topic_;
   std::string battery_voltage_topic_;
@@ -232,10 +241,12 @@ class SimScoutStatus {
   double battery_voltage_;
   double motor_current_;
   double motor_temperature_;
+  double wheel_radius_;
+  double wheel_track_;
 
-  nav_msgs::Odometry latest_odom_;
-  bool have_odom_;
+  bool have_joints_;
   double motor_rpm_[4];
+  double wheel_omega_[4];
   std::map<std::string, int> joint_to_motor_id_;
 
   bool light_control_enabled_;
@@ -245,7 +256,7 @@ class SimScoutStatus {
   uint8_t rear_light_custom_value_;
 };
 
-int main(int argc, char** argv) {
+int main(int argc, char **argv) {
   ros::init(argc, argv, "sim_scout_status");
   SimScoutStatus node;
   ros::spin();

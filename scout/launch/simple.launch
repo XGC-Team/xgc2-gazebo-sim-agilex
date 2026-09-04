@@ -39,7 +39,6 @@ ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSI
     <arg name="wheel_contact_fdir1" default="0 0 1"/>
     <arg name="wheel_contact_slip1" default="5.0"/>
     <arg name="wheel_contact_slip2" default="0.0"/>
-    <arg name="skid_steer_torque" default="1000"/>
     <arg name="publish_scout_status" default="true"/>
     <arg name="status_topic" default="/$(arg ns)/scout_status"/>
     <arg name="light_control_topic" default="/$(arg ns)/scout_light_control"/>
@@ -54,7 +53,7 @@ ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSI
         <arg name="debug" value="false"/>
     </include>
 
-    <include file="$(dirname)/spawn_simple.launch">
+    <include file="$(dirname)/spawn_accurate.launch">
         <arg name="ns" value="$(arg ns)"/>
         <arg name="model_name" value="$(arg model_name)"/>
         <arg name="enable_lidar" value="$(arg enable_lidar)"/>
@@ -65,7 +64,6 @@ ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSI
         <arg name="wheel_contact_fdir1" value="$(arg wheel_contact_fdir1)"/>
         <arg name="wheel_contact_slip1" value="$(arg wheel_contact_slip1)"/>
         <arg name="wheel_contact_slip2" value="$(arg wheel_contact_slip2)"/>
-        <arg name="skid_steer_torque" value="$(arg skid_steer_torque)"/>
         <arg name="publish_scout_status" value="$(arg publish_scout_status)"/>
         <arg name="status_topic" value="$(arg status_topic)"/>
         <arg name="light_control_topic" value="$(arg light_control_topic)"/>

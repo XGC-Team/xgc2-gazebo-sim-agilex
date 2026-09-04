@@ -6,7 +6,6 @@ project(gazebo_sim_scout)
 find_package(catkin REQUIRED COMPONENTS    
     roscpp 
     gazebo_msgs
-    nav_msgs
     scout_msgs
     std_msgs
     sensor_msgs
@@ -17,7 +16,7 @@ find_package(catkin REQUIRED COMPONENTS
 catkin_package(
   INCLUDE_DIRS include
 #   LIBRARIES 
-  CATKIN_DEPENDS roscpp gazebo_msgs nav_msgs scout_msgs sensor_msgs std_msgs
+  CATKIN_DEPENDS roscpp gazebo_msgs scout_msgs sensor_msgs std_msgs
 #   DEPENDS Boost
 )
 
@@ -37,11 +36,8 @@ target_link_libraries(scout_gazebo ${catkin_LIBRARIES} Threads::Threads)
 add_executable(scout_skid_steer_controller src/scout_skid_steer_controller.cpp)
 target_link_libraries(scout_skid_steer_controller scout_gazebo ${catkin_LIBRARIES})
 
-add_executable(odom_to_tf src/odom_to_tf.cpp)
-target_link_libraries(odom_to_tf ${catkin_LIBRARIES})
-
-add_executable(gazebo_model_odom src/gazebo_model_odom.cpp)
-target_link_libraries(gazebo_model_odom ${catkin_LIBRARIES})
+add_executable(gazebo_model_ground_truth src/gazebo_model_ground_truth.cpp)
+target_link_libraries(gazebo_model_ground_truth ${catkin_LIBRARIES})
 
 add_executable(sim_scout_status src/sim_scout_status.cpp)
 add_dependencies(sim_scout_status ${catkin_EXPORTED_TARGETS})
@@ -62,7 +58,7 @@ if(CATKIN_ENABLE_TESTING)
 endif()
 
 install(
-  TARGETS scout_gazebo scout_skid_steer_controller odom_to_tf gazebo_model_odom sim_scout_status
+  TARGETS scout_gazebo scout_skid_steer_controller gazebo_model_ground_truth sim_scout_status
   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}

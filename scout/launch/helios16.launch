@@ -10,7 +10,7 @@
   <arg name="wheel_contact_slip1" default="5.0"/>
   <arg name="wheel_contact_slip2" default="0.0"/>
   <arg name="angular_command_gain" default="1.15"/>
-  <!-- false: LIO owns camera_init->body->base_link. Gazebo still publishes /odom. -->
+  <!-- false: LIO owns camera_init->body->base_link. Gazebo still publishes world TF. -->
   <arg name="publish_tf" default="false"/>
 
   <!-- Use the sibling launch so an older installed gazebo_sim_scout package

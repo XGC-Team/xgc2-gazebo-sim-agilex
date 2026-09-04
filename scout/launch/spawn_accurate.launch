@@ -7,8 +7,9 @@
     <arg name="ns" default="ugv1"/>
     <arg name="model_name" default="$(arg ns)"/>
     <arg name="robot_description_param" default="robot_description"/>
-    <arg name="odom_topic" default="odom"/>
-    <arg name="odom_frame" default="odom"/>
+    <arg name="pose_topic" default="/$(arg ns)/simulation/ground_truth/pose"/>
+    <arg name="twist_topic" default="/$(arg ns)/simulation/ground_truth/twist"/>
+    <arg name="world_frame" default="world"/>
     <arg name="base_frame" default="base_link"/>
     <arg name="tf_prefix" default=""/>
     <arg name="frame_prefix" default=""/>
@@ -45,7 +46,6 @@
     <include file="$(dirname)/mini_description.launch">
         <arg name="ns" value="$(arg ns)" />
         <arg name="enable_ros_control" value="true" />
-        <arg name="use_skid_steer_plugin" value="false" />
         <arg name="robot_description_param" value="$(arg robot_description_param)" />
         <arg name="frame_prefix" value="$(arg frame_prefix)" />
         <arg name="sensor_ns" value="$(arg sensor_ns)" />
@@ -115,16 +115,16 @@
         <param name="max_angular_speed" type="double" value="$(arg max_angular_speed)" />
     </node>
 
-    <node name="$(arg ns)_gazebo_model_odom" pkg="gazebo_sim_scout" type="gazebo_model_odom" output="screen">
+    <node name="$(arg ns)_gazebo_model_ground_truth" pkg="gazebo_sim_scout" type="gazebo_model_ground_truth" output="screen">
         <param name="model_name" type="string" value="$(arg model_name)" />
-        <param name="odom_topic" type="string" value="$(arg odom_topic)" />
-        <param name="odom_frame" type="string" value="$(arg odom_frame)" />
+        <param name="pose_topic" type="string" value="$(arg pose_topic)" />
+        <param name="twist_topic" type="string" value="$(arg twist_topic)" />
+        <param name="world_frame" type="string" value="$(arg world_frame)" />
         <param name="base_frame" type="string" value="$(arg base_frame)" />
         <param name="publish_tf" type="bool" value="$(arg publish_tf)" />
     </node>
 
     <node if="$(arg publish_scout_status)" name="$(arg ns)_sim_scout_status" pkg="gazebo_sim_scout" type="sim_scout_status" output="screen">
-        <param name="odom_topic" type="string" value="$(arg odom_topic)" />
         <param name="joint_states_topic" type="string" value="/$(arg ns)/joint_states" />
         <param name="status_topic" type="string" value="$(arg status_topic)" />
         <param name="light_control_topic" type="string" value="$(arg light_control_topic)" />
@@ -132,6 +132,8 @@
         <param name="battery_publish_rate" type="double" value="0.5" />
         <param name="chassis_publish_rate" type="double" value="1.0" />
         <param name="control_mode" type="int" value="1" />
+        <param name="wheel_radius" type="double" value="$(arg wheel_radius)" />
+        <param name="wheel_track" type="double" value="$(arg wheel_track)" />
     </node>
 
     <node name="$(arg ns)_robot_state_publisher" ns="$(arg robot_state_publisher_ns)" pkg="robot_state_publisher" type="robot_state_publisher">

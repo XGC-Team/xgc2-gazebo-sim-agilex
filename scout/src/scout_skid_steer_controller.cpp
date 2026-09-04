@@ -1,7 +1,5 @@
-#include <nav_msgs/Odometry.h>
 #include <ros/ros.h>
 #include <sensor_msgs/JointState.h>
-#include <tf/transform_broadcaster.h>
 
 #include <string>
 
@@ -11,7 +9,7 @@ using namespace wescore;
 
 int main(int argc, char **argv) {
   // setup ROS node
-  ros::init(argc, argv, "scout_odom");
+  ros::init(argc, argv, "scout_skid_steer_controller");
   ros::NodeHandle node(""), private_node("~");
 
   // fetch parameters

@@ -71,7 +71,6 @@ class ScoutStableDefaultsTest(unittest.TestCase):
             "multi_accurate.launch",
             "simple.launch",
             "spawn_accurate.launch",
-            "spawn_simple.launch",
         ):
             root = ET.parse(PACKAGE / "launch" / filename).getroot()
             defaults = {
@@ -82,7 +81,7 @@ class ScoutStableDefaultsTest(unittest.TestCase):
             self.assertEqual(defaults.get("enable_rslidar"), "false", filename)
             self.assertEqual(defaults.get("enable_camera"), "false", filename)
 
-        for filename in ("accurate.launch", "simple.launch", "spawn_accurate.launch", "spawn_simple.launch"):
+        for filename in ("accurate.launch", "simple.launch", "spawn_accurate.launch"):
             text = (PACKAGE / "launch" / filename).read_text()
             self.assertIn('name="enable_lidar" value="$(arg enable_lidar)"', text, filename)
             self.assertIn('name="enable_rslidar" value="$(arg enable_rslidar)"', text, filename)
@@ -170,6 +169,36 @@ class ScoutStableDefaultsTest(unittest.TestCase):
         text = (PACKAGE / "src" / "sim_scout_status.cpp").read_text()
         self.assertIn('DeriveBridgeTopic(status_topic_, "PowerVoltage")', text)
         self.assertNotIn("scout/battery_voltage", text)
+
+    def test_plant_does_not_advertise_odometry(self) -> None:
+        ground_truth = (PACKAGE / "src" / "gazebo_model_ground_truth.cpp").read_text()
+        self.assertNotIn("nav_msgs::Odometry", ground_truth)
+        self.assertNotIn("odom_topic", ground_truth)
+        self.assertIn("simulation/ground_truth/pose", ground_truth)
+        self.assertIn("simulation/ground_truth/twist", ground_truth)
+
+        status = (PACKAGE / "src" / "sim_scout_status.cpp").read_text()
+        self.assertNotIn("nav_msgs::Odometry", status)
+        self.assertNotIn("odom_topic", status)
+
+        for filename in ("spawn_accurate.launch", "multi_accurate.launch"):
+            text = (PACKAGE / "launch" / filename).read_text()
+            self.assertNotIn("odom_topic", text, filename)
+            self.assertNotIn("/odom", text, filename)
+            self.assertIn("simulation/ground_truth/pose", text, filename)
+
+        self.assertFalse((PACKAGE / "launch" / "spawn_simple.launch").exists())
+        self.assertFalse((PACKAGE / "src" / "gazebo_model_odom.cpp").exists())
+        self.assertFalse((PACKAGE / "src" / "odom_to_tf.cpp").exists())
+
+        runtime_files = [PACKAGE / "CMakeLists.txt", PACKAGE / "urdf" / "scout_mini.gazebo"]
+        runtime_files.extend((PACKAGE / "launch").glob("*.launch"))
+        runtime_files.extend((PACKAGE / "src").glob("*.cpp"))
+        for path in runtime_files:
+            text = path.read_text()
+            self.assertNotIn("gazebo_model_odom", text, path.name)
+            self.assertNotIn("odom_to_tf", text, path.name)
+            self.assertNotIn("odometryTopic", text, path.name)
 
 
 if __name__ == "__main__":
