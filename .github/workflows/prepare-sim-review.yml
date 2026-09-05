@@ -1,0 +1,50 @@
+name: Prepare isolated Scout control fix
+on:
+  push:
+    branches: [work/simulation-review-20260905]
+permissions:
+  contents: write
+jobs:
+  prepare:
+    if: github.repository == 'XGC-Team/xgc2-gazebo-sim-agilex' && github.ref == 'refs/heads/work/simulation-review-20260905'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Apply guarded edits and execute regression tests
+        run: |
+          python3 .ci/prepare_sim_review.py
+          git diff --check
+          git diff --stat
+      - name: Publish source-only Git object without updating any branch
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python3 - <<'PY'
+          import json, os, subprocess, urllib.request
+          from pathlib import Path
+          base = '15c2bffdc53bf240a2da5f84bb1d1f30b5f9990d'
+          paths = ['scout/include/xgc_chassis_hold/udp.hpp', 'scout/include/xgc_chassis_hold/gate.hpp',
+                   'scout/include/scout_gazebo/scout_skid_steer.hpp', 'scout/include/scout_gazebo/command_dynamics.hpp',
+                   'scout/src/scout_skid_steer.cpp', 'scout/launch/spawn_accurate.launch',
+                   'scout/test/hold_gate_test.cpp', 'scout/test/command_dynamics_test.cpp',
+                   'scout/test/test_control_contract.py', 'scout/docs/control_contract.md']
+          api = 'https://api.github.com/repos/' + os.environ['GITHUB_REPOSITORY'] + '/git/'
+          def post(endpoint, data):
+              request = urllib.request.Request(api + endpoint, data=json.dumps(data).encode(), headers={
+                  'Authorization': 'Bearer ' + os.environ['GH_TOKEN'], 'Content-Type': 'application/json'})
+              with urllib.request.urlopen(request, timeout=60) as response:
+                  return json.load(response)
+          entries = []
+          for path in paths:
+              original = subprocess.check_output(['git', 'ls-tree', base, '--', path], text=True)
+              mode = original.split()[0] if original else '100644'
+              entries.append({'path': path, 'mode': mode, 'type': 'blob', 'content': Path(path).read_text()})
+          tree = post('trees', {'base_tree': subprocess.check_output(['git', 'rev-parse', base + '^{tree}'], text=True).strip(), 'tree': entries})
+          commit = post('commits', {'message': 'fix(scout): execute queued stops and serialize HOLD lifecycle', 'tree': tree['sha'], 'parents': [base]})
+          print('PREPARED_COMMIT=' + commit['sha'])
+          print('PREPARED_TREE=' + tree['sha'])
+          PY
