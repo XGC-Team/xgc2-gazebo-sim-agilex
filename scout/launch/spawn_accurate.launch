@@ -93,7 +93,6 @@
               -y $(arg y)
               -z $(arg z)
               -Y $(arg yaw)
-              -unpause
               -urdf
               -param $(arg robot_description_param)
               -model $(arg model_name)" />
