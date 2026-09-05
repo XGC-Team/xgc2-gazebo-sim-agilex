@@ -18,9 +18,7 @@
 namespace wescore {
 ScoutSkidSteer::ScoutSkidSteer(ros::NodeHandle *nh, std::string robot_name)
     : robot_name_(robot_name), command_delay_s_(0.15),
-      command_time_constant_s_(0.15), delayed_linear_velocity_(0.0),
-      delayed_angular_velocity_(0.0), filtered_linear_velocity_(0.0),
-      filtered_angular_velocity_(0.0), nh_(nh),
+      command_time_constant_s_(0.15), nh_(nh),
       hold_gate_(xgc_chassis_hold::lastPath(robot_name)) {
   ros::NodeHandle private_nh("~");
   private_nh.param("wheel_separation", wheel_separation_, 0.490);
@@ -44,6 +42,13 @@ ScoutSkidSteer::ScoutSkidSteer(ros::NodeHandle *nh, std::string robot_name)
     command_time_constant_s_ = 0.0;
   }
 
+  if (!std::isfinite(wheel_radius_) || wheel_radius_ <= 0.0 ||
+      !std::isfinite(wheel_separation_) || wheel_separation_ <= 0.0 ||
+      !std::isfinite(command_gain_) || !std::isfinite(angular_command_gain_)) {
+    throw std::invalid_argument("Scout wheel geometry and command gains must be finite; geometry must be positive");
+  }
+  command_dynamics_.Configure(command_delay_s_, command_time_constant_s_);
+
   motor_fr_topic_ = JoinTopic(robot_name_, "scout_motor_fr_controller/command");
   motor_fl_topic_ = JoinTopic(robot_name_, "scout_motor_fl_controller/command");
   motor_rl_topic_ = JoinTopic(robot_name_, "scout_motor_rl_controller/command");
@@ -62,21 +67,25 @@ ScoutSkidSteer::ScoutSkidSteer(ros::NodeHandle *nh, std::string robot_name)
 }
 
 ScoutSkidSteer::~ScoutSkidSteer() {
+  control_timer_.stop();
+  cmd_sub_.shutdown();
+  // remove() drains any UDP callback before the Gate and publishers die.
   xgc_chassis_hold::Hub::instance().remove(&hold_gate_);
 }
 
 void ScoutSkidSteer::SetupSubscription() {
-  hold_gate_.setZeroThunk(&ScoutSkidSteer::HoldZeroThunk, this);
-  xgc_chassis_hold::Hub::instance().add(&hold_gate_);
-  // command subscriber
-  cmd_sub_ = nh_->subscribe<geometry_msgs::Twist>(
-      cmd_topic_, 5, &ScoutSkidSteer::TwistCmdCallback, this);
-
-  // motor command publisher
   motor_fr_pub_ = nh_->advertise<std_msgs::Float64>(motor_fr_topic_, 50);
   motor_fl_pub_ = nh_->advertise<std_msgs::Float64>(motor_fl_topic_, 50);
   motor_rl_pub_ = nh_->advertise<std_msgs::Float64>(motor_rl_topic_, 50);
   motor_rr_pub_ = nh_->advertise<std_msgs::Float64>(motor_rr_topic_, 50);
+  hold_gate_.setZeroThunk(&ScoutSkidSteer::HoldZeroThunk, this);
+  xgc_chassis_hold::Hub::instance().add(&hold_gate_);
+  cmd_sub_ = nh_->subscribe<geometry_msgs::Twist>(
+      cmd_topic_, 5, &ScoutSkidSteer::TwistCmdCallback, this);
+  // Wall scheduling survives a paused/rewound clock. The plant itself uses
+  // ROS simulation time, so wall ticks never advance paused dynamics.
+  control_timer_ = nh_->createWallTimer(
+      ros::WallDuration(0.01), &ScoutSkidSteer::ControlTick, this);
 }
 
 void ScoutSkidSteer::HoldZeroThunk(void *self) {
@@ -84,6 +93,7 @@ void ScoutSkidSteer::HoldZeroThunk(void *self) {
 }
 
 void ScoutSkidSteer::PublishZeroMotors() {
+  command_dynamics_.Reset();
   if (!motor_fr_pub_) {
     return;
   }
@@ -96,10 +106,6 @@ void ScoutSkidSteer::PublishZeroMotors() {
 
 void ScoutSkidSteer::TwistCmdCallback(
     const geometry_msgs::Twist::ConstPtr &msg) {
-  if (hold_gate_.held()) {
-    PublishZeroMotors();
-    return;
-  }
   double driving_vel = msg->linear.x;
   double steering_vel = msg->angular.z;
   if (!std::isfinite(driving_vel) || !std::isfinite(steering_vel) ||
@@ -121,69 +127,36 @@ void ScoutSkidSteer::TwistCmdCallback(
     driving_vel = limited_driving_vel;
     steering_vel = limited_steering_cmd;
   }
-  UpdateCommandDynamics(driving_vel, steering_vel, ros::Time::now(),
-                        &driving_vel, &steering_vel);
-  steering_vel *= angular_command_gain_;
-  const double half_track = wheel_separation_ * 0.5;
-
-  double left_side_velocity =
-      (driving_vel - steering_vel * half_track) / wheel_radius_;
-  double right_side_velocity =
-      (driving_vel + steering_vel * half_track) / wheel_radius_;
-
-  std_msgs::Float64 motor_cmd[4];
-  motor_cmd[0].data = right_side_velocity * command_gain_;
-  motor_cmd[1].data = left_side_velocity * command_gain_;
-  motor_cmd[2].data = left_side_velocity * command_gain_;
-  motor_cmd[3].data = right_side_velocity * command_gain_;
-
-  motor_fr_pub_.publish(motor_cmd[0]);
-  motor_fl_pub_.publish(motor_cmd[1]);
-  motor_rl_pub_.publish(motor_cmd[2]);
-  motor_rr_pub_.publish(motor_cmd[3]);
+  hold_gate_.withCommand([&](bool held) {
+    if (held) {
+      PublishZeroMotors();
+      return;
+    }
+    command_dynamics_.Push(ros::Time::now().toSec(), driving_vel, steering_vel);
+  });
 }
 
-void ScoutSkidSteer::UpdateCommandDynamics(double requested_linear,
-                                           double requested_angular,
-                                           const ros::Time &now, double *linear,
-                                           double *angular) {
-  if (last_update_time_.isZero() || now < last_update_time_) {
-    command_history_.clear();
-    delayed_linear_velocity_ = 0.0;
-    delayed_angular_velocity_ = 0.0;
-    filtered_linear_velocity_ = 0.0;
-    filtered_angular_velocity_ = 0.0;
-    last_update_time_ = now;
-  }
-
-  command_history_.push_back({now, requested_linear, requested_angular});
-  if (now.toSec() >= command_delay_s_) {
-    const ros::Time cutoff = now - ros::Duration(command_delay_s_);
-    while (!command_history_.empty() &&
-           command_history_.front().stamp <= cutoff) {
-      delayed_linear_velocity_ = command_history_.front().linear;
-      delayed_angular_velocity_ = command_history_.front().angular;
-      command_history_.pop_front();
+void ScoutSkidSteer::ControlTick(const ros::WallTimerEvent &) {
+  hold_gate_.withCommand([this](bool held) {
+    if (held) {
+      PublishZeroMotors();
+      return;
     }
-  }
-  while (command_history_.size() > 2048U) {
-    command_history_.pop_front();
-    ROS_WARN_THROTTLE(1.0, "Scout command delay queue exceeded 2048 samples");
-  }
-
-  const double dt = std::max(0.0, (now - last_update_time_).toSec());
-  double alpha = 1.0;
-  if (command_time_constant_s_ > 0.0) {
-    alpha = 1.0 - std::exp(-dt / command_time_constant_s_);
-  }
-  filtered_linear_velocity_ +=
-      alpha * (delayed_linear_velocity_ - filtered_linear_velocity_);
-  filtered_angular_velocity_ +=
-      alpha * (delayed_angular_velocity_ - filtered_angular_velocity_);
-  last_update_time_ = now;
-
-  *linear = filtered_linear_velocity_;
-  *angular = filtered_angular_velocity_;
+    const CommandVelocity command = command_dynamics_.Advance(ros::Time::now().toSec());
+    const double steering = command.angular * angular_command_gain_;
+    const double half_track = wheel_separation_ * 0.5;
+    const double left = (command.linear - steering * half_track) / wheel_radius_;
+    const double right = (command.linear + steering * half_track) / wheel_radius_;
+    std_msgs::Float64 motor_cmd[4];
+    motor_cmd[0].data = right * command_gain_;
+    motor_cmd[1].data = left * command_gain_;
+    motor_cmd[2].data = left * command_gain_;
+    motor_cmd[3].data = right * command_gain_;
+    motor_fr_pub_.publish(motor_cmd[0]);
+    motor_fl_pub_.publish(motor_cmd[1]);
+    motor_rl_pub_.publish(motor_cmd[2]);
+    motor_rr_pub_.publish(motor_cmd[3]);
+  });
 }
 
 double ScoutSkidSteer::Clamp(double value, double limit) const {

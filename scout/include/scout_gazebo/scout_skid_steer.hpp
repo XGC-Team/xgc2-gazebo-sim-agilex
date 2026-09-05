@@ -13,10 +13,10 @@
 #include <geometry_msgs/Twist.h>
 #include <ros/ros.h>
 
-#include <deque>
 #include <string>
 
 #include "xgc_chassis_hold/udp.hpp"
+#include "scout_gazebo/command_dynamics.hpp"
 
 namespace wescore {
 class ScoutSkidSteer {
@@ -44,17 +44,7 @@ private:
   double max_linear_speed_;
   double max_angular_speed_;
 
-  struct CommandSample {
-    ros::Time stamp;
-    double linear;
-    double angular;
-  };
-  std::deque<CommandSample> command_history_;
-  ros::Time last_update_time_;
-  double delayed_linear_velocity_;
-  double delayed_angular_velocity_;
-  double filtered_linear_velocity_;
-  double filtered_angular_velocity_;
+  CommandDynamics command_dynamics_;
 
   ros::NodeHandle *nh_;
 
@@ -64,14 +54,13 @@ private:
   ros::Publisher motor_rr_pub_;
 
   ros::Subscriber cmd_sub_;
+  ros::WallTimer control_timer_;
   xgc_chassis_hold::Gate hold_gate_;
 
   void TwistCmdCallback(const geometry_msgs::Twist::ConstPtr &msg);
   void PublishZeroMotors();
   static void HoldZeroThunk(void *self);
-  void UpdateCommandDynamics(double requested_linear, double requested_angular,
-                             const ros::Time &now, double *linear,
-                             double *angular);
+  void ControlTick(const ros::WallTimerEvent &event);
   double Clamp(double value, double limit) const;
   std::string JoinTopic(const std::string &ns, const std::string &topic) const;
 };
