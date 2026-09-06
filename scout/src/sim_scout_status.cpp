@@ -42,7 +42,7 @@ public:
     private_nh_.param("motor_current", motor_current_, 0.0);
     private_nh_.param("motor_temperature", motor_temperature_, 25.0);
     private_nh_.param("wheel_radius", wheel_radius_, 0.08);
-    private_nh_.param("wheel_track", wheel_track_, 0.49);
+    private_nh_.param("wheel_track", wheel_track_, 0.416503);
 
     joint_to_motor_id_["front_right_wheel"] =
         scout_msgs::ScoutStatus::MOTOR_ID_FRONT_RIGHT;

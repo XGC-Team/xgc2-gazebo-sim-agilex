@@ -10,6 +10,7 @@ from pathlib import Path
 
 PACKAGE = Path(__file__).resolve().parents[1]
 EXPECTED = {
+    "wheel_track": "0.416503",
     "wheel_contact_mu1": "0.10",
     "wheel_contact_mu2": "1.0",
     "wheel_contact_fdir1": "0 0 1",

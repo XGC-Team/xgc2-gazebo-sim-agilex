@@ -21,7 +21,7 @@
     <arg name="wheel_pid_i_clamp" default="2.0"/>
     <arg name="wheel_pid_antiwindup" default="true"/>
     <arg name="wheelbase" default="0.451"/>
-    <arg name="wheel_track" default="0.490"/>
+    <arg name="wheel_track" default="0.416503"/>
     <arg name="wheel_separation" default="$(arg wheel_track)"/>
     <arg name="wheel_radius" default="0.08"/>
     <arg name="wheel_effort_limit" default="3.0"/>

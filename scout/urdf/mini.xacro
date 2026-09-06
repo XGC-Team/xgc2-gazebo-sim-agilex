@@ -20,7 +20,8 @@
     <xacro:arg name="wheel_contact_slip1" default="5.0" />
     <xacro:arg name="wheel_contact_slip2" default="0.0" />
     <xacro:arg name="wheelbase" default="0.451" />
-    <xacro:arg name="wheel_track" default="0.490" />
+    <!-- Wheel mesh centers in scout_visual.urdf: y = +/-0.2082515 m. -->
+    <xacro:arg name="wheel_track" default="0.416503" />
 
     <xacro:arg name="wheel_effort_limit" default="3.0" />
     <xacro:arg name="wheel_velocity_limit" default="24.0" />

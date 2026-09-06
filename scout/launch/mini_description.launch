@@ -15,7 +15,7 @@
     <arg name="wheel_contact_slip1" default="5.0"/>
     <arg name="wheel_contact_slip2" default="0.0"/>
     <arg name="wheelbase" default="0.451"/>
-    <arg name="wheel_track" default="0.490"/>
+    <arg name="wheel_track" default="0.416503"/>
 
     <arg name="wheel_effort_limit" default="3.0"/>
     <arg name="wheel_velocity_limit" default="24.0"/>
