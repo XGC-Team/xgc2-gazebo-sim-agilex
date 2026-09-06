@@ -49,4 +49,7 @@
 
   <export>
   </export>
+  <test_depend>rostest</test_depend>
+  <test_depend>gazebo_sim_mecanum</test_depend>
+  <test_depend>std_srvs</test_depend>
 </package>

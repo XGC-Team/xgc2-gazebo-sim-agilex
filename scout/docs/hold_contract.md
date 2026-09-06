@@ -14,3 +14,16 @@ An occupied port (including a hash collision or duplicate robot ID) fails
 registration explicitly; choose a distinct ID instead of sharing an endpoint.
 Sender and simulator updates must be delivered together. This local simulator
 control protocol is not an authenticated remote control interface.
+
+## Runtime acceptance
+
+In a disposable Noetic/Gazebo 11 workspace containing both Scout and Mecanum
+packages and their descriptions, run `rostest gazebo_sim_scout scout_runtime.test`.
+It verifies two Scout spawns plus Mecanum remain paused until explicit unpause,
+one-shot zero input reaches both zero motor targets and physical rest, and three
+HOLD/release cycles reject continued commands without affecting another ID.
+Supported Focal full Noetic 1.0.1 builds passed this test normally and with
+`-fsanitize=address,undefined -fno-omit-frame-pointer` on package C++ targets.
+Gazebo requires libasan preloaded before loading instrumented plugins. The
+sanitizer run disables leak detection for third-party ROS/Gazebo shutdown and
+halts on address/undefined-behavior errors; this is not a TSan result.
