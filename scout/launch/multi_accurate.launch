@@ -15,17 +15,21 @@
     <arg name="wheel_contact_slip1" default="5.0"/>
     <arg name="wheel_contact_slip2" default="0.0"/>
     <arg name="wheel_pid_p" default="2.0"/>
-    <arg name="wheel_pid_i" default="0.0"/>
+    <arg name="wheel_pid_i" default="8.0"/>
     <arg name="wheel_pid_d" default="0.0"/>
+    <arg name="wheel_pid_i_clamp" default="2.0"/>
+    <arg name="wheel_pid_antiwindup" default="true"/>
     <arg name="wheelbase" default="0.451"/>
     <arg name="wheel_track" default="0.490"/>
     <arg name="wheel_separation" default="$(arg wheel_track)"/>
     <arg name="wheel_radius" default="0.08"/>
-    <arg name="command_gain" default="1.10"/>
+    <arg name="wheel_effort_limit" default="3.0"/>
+    <arg name="wheel_velocity_limit" default="24.0"/>
+    <arg name="command_gain" default="1.04"/>
     <!-- Shared base defaults. Per-robot args below can override these for calibration. -->
-    <arg name="angular_command_gain" default="1.15"/>
-    <arg name="command_delay_s" default="0.15"/>
-    <arg name="command_time_constant_s" default="0.15"/>
+    <arg name="angular_command_gain" default="0.80"/>
+    <arg name="command_delay_s" default="0.005"/>
+    <arg name="command_time_constant_s" default="0.010"/>
 
     <arg name="ugv1_ns" default="ugv1"/>
     <arg name="ugv1_model_name" default="$(arg ugv1_ns)"/>
@@ -41,6 +45,11 @@
     <arg name="ugv1_wheel_pid_p" default="$(arg wheel_pid_p)"/>
     <arg name="ugv1_wheel_pid_i" default="$(arg wheel_pid_i)"/>
     <arg name="ugv1_wheel_pid_d" default="$(arg wheel_pid_d)"/>
+    <arg name="ugv1_wheel_pid_i_clamp" default="$(arg wheel_pid_i_clamp)"/>
+    <arg name="ugv1_wheel_pid_antiwindup" default="$(arg wheel_pid_antiwindup)"/>
+    <arg name="ugv1_wheel_effort_limit" default="$(arg wheel_effort_limit)"/>
+    <arg name="ugv1_wheel_velocity_limit" default="$(arg wheel_velocity_limit)"/>
+    <arg name="ugv1_command_gain" default="$(arg command_gain)"/>
     <arg name="ugv1_angular_command_gain" default="$(arg angular_command_gain)"/>
     <arg name="ugv1_command_delay_s" default="$(arg command_delay_s)"/>
     <arg name="ugv1_command_time_constant_s" default="$(arg command_time_constant_s)"/>
@@ -62,6 +71,11 @@
     <arg name="ugv2_wheel_pid_p" default="$(arg wheel_pid_p)"/>
     <arg name="ugv2_wheel_pid_i" default="$(arg wheel_pid_i)"/>
     <arg name="ugv2_wheel_pid_d" default="$(arg wheel_pid_d)"/>
+    <arg name="ugv2_wheel_pid_i_clamp" default="$(arg wheel_pid_i_clamp)"/>
+    <arg name="ugv2_wheel_pid_antiwindup" default="$(arg wheel_pid_antiwindup)"/>
+    <arg name="ugv2_wheel_effort_limit" default="$(arg wheel_effort_limit)"/>
+    <arg name="ugv2_wheel_velocity_limit" default="$(arg wheel_velocity_limit)"/>
+    <arg name="ugv2_command_gain" default="$(arg command_gain)"/>
     <arg name="ugv2_angular_command_gain" default="$(arg angular_command_gain)"/>
     <arg name="ugv2_command_delay_s" default="$(arg command_delay_s)"/>
     <arg name="ugv2_command_time_constant_s" default="$(arg command_time_constant_s)"/>
@@ -105,11 +119,15 @@
         <arg name="wheel_pid_p" value="$(arg ugv1_wheel_pid_p)" />
         <arg name="wheel_pid_i" value="$(arg ugv1_wheel_pid_i)" />
         <arg name="wheel_pid_d" value="$(arg ugv1_wheel_pid_d)" />
+        <arg name="wheel_pid_i_clamp" value="$(arg ugv1_wheel_pid_i_clamp)" />
+        <arg name="wheel_pid_antiwindup" value="$(arg ugv1_wheel_pid_antiwindup)" />
         <arg name="wheelbase" value="$(arg wheelbase)" />
         <arg name="wheel_track" value="$(arg wheel_track)" />
         <arg name="wheel_separation" value="$(arg wheel_separation)" />
         <arg name="wheel_radius" value="$(arg wheel_radius)" />
-        <arg name="command_gain" value="$(arg command_gain)" />
+        <arg name="wheel_effort_limit" value="$(arg ugv1_wheel_effort_limit)" />
+        <arg name="wheel_velocity_limit" value="$(arg ugv1_wheel_velocity_limit)" />
+        <arg name="command_gain" value="$(arg ugv1_command_gain)" />
         <arg name="angular_command_gain" value="$(arg ugv1_angular_command_gain)" />
         <arg name="command_delay_s" value="$(arg ugv1_command_delay_s)" />
         <arg name="command_time_constant_s" value="$(arg ugv1_command_time_constant_s)" />
@@ -142,11 +160,15 @@
         <arg name="wheel_pid_p" value="$(arg ugv2_wheel_pid_p)" />
         <arg name="wheel_pid_i" value="$(arg ugv2_wheel_pid_i)" />
         <arg name="wheel_pid_d" value="$(arg ugv2_wheel_pid_d)" />
+        <arg name="wheel_pid_i_clamp" value="$(arg ugv2_wheel_pid_i_clamp)" />
+        <arg name="wheel_pid_antiwindup" value="$(arg ugv2_wheel_pid_antiwindup)" />
         <arg name="wheelbase" value="$(arg wheelbase)" />
         <arg name="wheel_track" value="$(arg wheel_track)" />
         <arg name="wheel_separation" value="$(arg wheel_separation)" />
         <arg name="wheel_radius" value="$(arg wheel_radius)" />
-        <arg name="command_gain" value="$(arg command_gain)" />
+        <arg name="wheel_effort_limit" value="$(arg ugv2_wheel_effort_limit)" />
+        <arg name="wheel_velocity_limit" value="$(arg ugv2_wheel_velocity_limit)" />
+        <arg name="command_gain" value="$(arg ugv2_command_gain)" />
         <arg name="angular_command_gain" value="$(arg ugv2_angular_command_gain)" />
         <arg name="command_delay_s" value="$(arg ugv2_command_delay_s)" />
         <arg name="command_time_constant_s" value="$(arg ugv2_command_time_constant_s)" />

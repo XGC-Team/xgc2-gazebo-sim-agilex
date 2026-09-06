@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Lock the Scout launch defaults to the validated finite-response baseline."""
+"""Lock the Scout launch defaults to the bounded PI development defaults (plant validation is separate)."""
 
 from __future__ import annotations
 
@@ -16,12 +16,31 @@ EXPECTED = {
     "wheel_contact_slip1": "5.0",
     "wheel_contact_slip2": "0.0",
     "wheel_pid_p": "2.0",
-    "wheel_pid_i": "0.0",
+    "wheel_pid_i": "8.0",
     "wheel_pid_d": "0.0",
-    "command_gain": "1.10",
-    "angular_command_gain": "1.15",
-    "command_delay_s": "0.15",
-    "command_time_constant_s": "0.15",
+    "wheel_pid_i_clamp": "2.0",
+    "wheel_pid_antiwindup": "true",
+    "wheel_effort_limit": "3.0",
+    "wheel_velocity_limit": "24.0",
+    "command_gain": "1.04",
+    "angular_command_gain": "0.80",
+    "command_delay_s": "0.005",
+    "command_time_constant_s": "0.010",
+}
+
+PI_CANDIDATE = {
+    name: EXPECTED[name]
+    for name in (
+        "wheel_pid_p",
+        "wheel_pid_i",
+        "wheel_pid_d",
+        "wheel_pid_i_clamp",
+        "wheel_pid_antiwindup",
+        "wheel_effort_limit",
+        "wheel_velocity_limit",
+        "command_gain",
+        "angular_command_gain",
+    )
 }
 
 
@@ -59,11 +78,92 @@ class ScoutStableDefaultsTest(unittest.TestCase):
             for name, expected in EXPECTED.items():
                 self.assertEqual(defaults.get(name), expected, f"{filename}: {name}")
 
-    def test_controller_yaml_uses_stable_proportional_gain(self) -> None:
+    def test_helios_exposes_and_forwards_pi_candidate(self) -> None:
+        root = ET.parse(PACKAGE / "launch" / "helios16.launch").getroot()
+        defaults = {
+            element.attrib["name"]: element.attrib.get("default")
+            for element in root.findall("./arg")
+        }
+        for name, expected in PI_CANDIDATE.items():
+            self.assertEqual(defaults.get(name), expected, f"helios16.launch: {name}")
+
+        include = root.find("./include[@file='$(dirname)/accurate.launch']")
+        self.assertIsNotNone(include)
+        forwarded = {
+            element.attrib["name"]: element.attrib.get("value")
+            for element in include.findall("./arg")
+        }
+        for name in PI_CANDIDATE:
+            self.assertEqual(forwarded.get(name), f"$(arg {name})", name)
+
+    def test_controller_yaml_uses_pi_and_symmetric_antiwindup(self) -> None:
         text = (PACKAGE / "config" / "scout_mini_ros_control.yaml").read_text()
         self.assertEqual(text.count("p: 2.0"), 8)
+        self.assertEqual(text.count("i: 8.0"), 8)
+        self.assertEqual(text.count("d: 0.0"), 8)
+        self.assertEqual(text.count("i_clamp_max: 2.0"), 8)
+        self.assertEqual(text.count("i_clamp_min: -2.0"), 8)
+        self.assertEqual(text.count("antiwindup: true"), 8)
         self.assertNotIn("p: 6.0", text)
         self.assertNotIn("p: 9.0", text)
+
+    def test_pi_candidate_is_forwarded_through_single_robot_chain(self) -> None:
+        root = ET.parse(PACKAGE / "launch" / "accurate.launch").getroot()
+        include = root.find("./include[@file='$(dirname)/spawn_accurate.launch']")
+        self.assertIsNotNone(include)
+        forwarded = {
+            element.attrib["name"]: element.attrib.get("value")
+            for element in include.findall("./arg")
+        }
+        for name in PI_CANDIDATE:
+            self.assertEqual(forwarded.get(name), f"$(arg {name})", name)
+
+    def test_multi_accurate_has_per_robot_pi_candidate_overrides(self) -> None:
+        root = ET.parse(PACKAGE / "launch" / "multi_accurate.launch").getroot()
+        defaults = {
+            element.attrib["name"]: element.attrib.get("default")
+            for element in root.findall("./arg")
+        }
+        includes = [
+            element
+            for element in root.findall("./include")
+            if element.attrib.get("file") == "$(dirname)/spawn_accurate.launch"
+        ]
+        self.assertEqual(len(includes), 2)
+
+        for index, include in enumerate(includes, start=1):
+            prefix = f"ugv{index}_"
+            forwarded = {
+                element.attrib["name"]: element.attrib.get("value")
+                for element in include.findall("./arg")
+            }
+            for name in PI_CANDIDATE:
+                robot_name = prefix + name
+                self.assertEqual(defaults.get(robot_name), f"$(arg {name})", robot_name)
+                self.assertEqual(forwarded.get(name), f"$(arg {robot_name})", robot_name)
+
+    def test_description_forwards_finite_wheel_limits(self) -> None:
+        root = ET.parse(PACKAGE / "launch" / "mini_description.launch").getroot()
+        defaults = {
+            element.attrib["name"]: element.attrib.get("default")
+            for element in root.findall("./arg")
+        }
+        self.assertEqual(defaults.get("wheel_effort_limit"), "3.0")
+        self.assertEqual(defaults.get("wheel_velocity_limit"), "24.0")
+
+        command = root.find("./param[@name='$(arg robot_description_param)']").attrib["command"]
+        self.assertIn("wheel_effort_limit:=$(arg wheel_effort_limit)", command)
+        self.assertIn("wheel_velocity_limit:=$(arg wheel_velocity_limit)", command)
+
+        model = (PACKAGE / "urdf" / "mini.xacro").read_text()
+        self.assertIn('<xacro:arg name="wheel_effort_limit" default="3.0"', model)
+        self.assertIn('<xacro:arg name="wheel_velocity_limit" default="24.0"', model)
+        for number in range(1, 5):
+            wheel = (PACKAGE / "urdf" / f"scout_mini_wheel_{number}.xacro").read_text()
+            self.assertIn(
+                '<limit effort="$(arg wheel_effort_limit)" velocity="$(arg wheel_velocity_limit)"/>',
+                wheel,
+            )
 
     def test_sensor_simulation_is_opt_in_on_every_launch_path(self) -> None:
         for filename in (
@@ -148,6 +248,11 @@ class ScoutStableDefaultsTest(unittest.TestCase):
             text,
         )
         self.assertEqual(text.count('value="$(arg wheel_pid_p)"'), 8)
+        self.assertEqual(text.count('value="$(arg wheel_pid_i)"'), 8)
+        self.assertEqual(text.count('value="$(arg wheel_pid_d)"'), 8)
+        self.assertEqual(text.count('value="$(arg wheel_pid_i_clamp)"'), 8)
+        self.assertEqual(text.count('value="-$(arg wheel_pid_i_clamp)"'), 8)
+        self.assertEqual(text.count('value="$(arg wheel_pid_antiwindup)"'), 8)
         self.assertIn(
             'name="command_delay_s" type="double" value="$(arg command_delay_s)"',
             text,

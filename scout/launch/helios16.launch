@@ -9,7 +9,17 @@
   <arg name="wheel_contact_fdir1" default="0 0 1"/>
   <arg name="wheel_contact_slip1" default="5.0"/>
   <arg name="wheel_contact_slip2" default="0.0"/>
-  <arg name="angular_command_gain" default="1.15"/>
+  <arg name="wheel_pid_p" default="2.0"/>
+  <arg name="wheel_pid_i" default="8.0"/>
+  <arg name="wheel_pid_d" default="0.0"/>
+  <arg name="wheel_pid_i_clamp" default="2.0"/>
+  <arg name="wheel_pid_antiwindup" default="true"/>
+  <arg name="wheel_effort_limit" default="3.0"/>
+  <arg name="wheel_velocity_limit" default="24.0"/>
+  <arg name="command_gain" default="1.04"/>
+  <arg name="command_delay_s" default="0.005"/>
+  <arg name="command_time_constant_s" default="0.010"/>
+  <arg name="angular_command_gain" default="0.80"/>
   <!-- false: LIO owns camera_init->body->base_link. Gazebo still publishes world TF. -->
   <arg name="publish_tf" default="false"/>
 
@@ -27,7 +37,17 @@
     <arg name="wheel_contact_fdir1" value="$(arg wheel_contact_fdir1)"/>
     <arg name="wheel_contact_slip1" value="$(arg wheel_contact_slip1)"/>
     <arg name="wheel_contact_slip2" value="$(arg wheel_contact_slip2)"/>
-    <arg name="angular_command_gain" value="$(arg angular_command_gain)"/>
+    <arg name="wheel_pid_p" value="$(arg wheel_pid_p)"/>
+    <arg name="wheel_pid_i" value="$(arg wheel_pid_i)"/>
+    <arg name="wheel_pid_d" value="$(arg wheel_pid_d)"/>
+    <arg name="wheel_pid_i_clamp" value="$(arg wheel_pid_i_clamp)"/>
+    <arg name="wheel_pid_antiwindup" value="$(arg wheel_pid_antiwindup)"/>
+    <arg name="wheel_effort_limit" value="$(arg wheel_effort_limit)"/>
+    <arg name="wheel_velocity_limit" value="$(arg wheel_velocity_limit)"/>
+    <arg name="command_gain" value="$(arg command_gain)"/>
+    <arg name="command_delay_s" value="$(arg command_delay_s)"/>
+    <arg name="command_time_constant_s" value="$(arg command_time_constant_s)"/>
+  <arg name="angular_command_gain" value="$(arg angular_command_gain)"/>
   </include>
 
   <node name="rslidar_points_pc2" pkg="gazebo_sim_scout" type="pointcloud_to_pointcloud2" output="screen">

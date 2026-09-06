@@ -22,6 +22,9 @@
     <xacro:arg name="wheelbase" default="0.451" />
     <xacro:arg name="wheel_track" default="0.490" />
 
+    <xacro:arg name="wheel_effort_limit" default="3.0" />
+    <xacro:arg name="wheel_velocity_limit" default="24.0" />
+
     <xacro:include filename="scout_mini_wheel_1.xacro" />
     <xacro:include filename="scout_mini_wheel_2.xacro" />
     <xacro:include filename="scout_mini_wheel_3.xacro" />

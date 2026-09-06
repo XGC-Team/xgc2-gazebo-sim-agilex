@@ -17,16 +17,16 @@
 
 namespace wescore {
 ScoutSkidSteer::ScoutSkidSteer(ros::NodeHandle *nh, std::string robot_name)
-    : robot_name_(robot_name), command_delay_s_(0.15),
-      command_time_constant_s_(0.15), nh_(nh),
+    : robot_name_(robot_name), command_delay_s_(0.005),
+      command_time_constant_s_(0.010), nh_(nh),
       hold_gate_(xgc_chassis_hold::lastPath(robot_name)) {
   ros::NodeHandle private_nh("~");
   private_nh.param("wheel_separation", wheel_separation_, 0.490);
   private_nh.param("wheel_radius", wheel_radius_, 0.08);
   private_nh.param("command_gain", command_gain_, 1.0);
   private_nh.param("angular_command_gain", angular_command_gain_, 1.0);
-  private_nh.param("command_delay_s", command_delay_s_, 0.15);
-  private_nh.param("command_time_constant_s", command_time_constant_s_, 0.15);
+  private_nh.param("command_delay_s", command_delay_s_, 0.005);
+  private_nh.param("command_time_constant_s", command_time_constant_s_, 0.010);
   private_nh.param("enable_command_limits", enable_command_limits_, true);
   private_nh.param("max_linear_speed", max_linear_speed_, 1.5);
   private_nh.param("max_angular_speed", max_angular_speed_, 0.5235);

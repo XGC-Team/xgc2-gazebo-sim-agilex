@@ -17,6 +17,9 @@
     <arg name="wheelbase" default="0.451"/>
     <arg name="wheel_track" default="0.490"/>
 
+    <arg name="wheel_effort_limit" default="3.0"/>
+    <arg name="wheel_velocity_limit" default="24.0"/>
+
     <param name="$(arg robot_description_param)" command="$(find xacro)/xacro '$(dirname)/../urdf/mini.xacro'
         ns:=$(arg ns)
         enable_ros_control:=$(arg enable_ros_control)
@@ -33,5 +36,7 @@
         wheel_contact_slip2:=$(arg wheel_contact_slip2)
         wheelbase:=$(arg wheelbase)
         wheel_track:=$(arg wheel_track)
+        wheel_effort_limit:=$(arg wheel_effort_limit)
+        wheel_velocity_limit:=$(arg wheel_velocity_limit)
         urdf_extras:=$(arg urdf_extras)" />
 </launch>

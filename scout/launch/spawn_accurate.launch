@@ -24,16 +24,20 @@
     <arg name="wheel_contact_slip1" default="5.0"/>
     <arg name="wheel_contact_slip2" default="0.0"/>
     <arg name="wheel_pid_p" default="2.0"/>
-    <arg name="wheel_pid_i" default="0.0"/>
+    <arg name="wheel_pid_i" default="8.0"/>
     <arg name="wheel_pid_d" default="0.0"/>
+    <arg name="wheel_pid_i_clamp" default="2.0"/>
+    <arg name="wheel_pid_antiwindup" default="true"/>
     <arg name="wheelbase" default="0.451"/>
     <arg name="wheel_track" default="0.490"/>
     <arg name="wheel_separation" default="$(arg wheel_track)"/>
     <arg name="wheel_radius" default="0.08"/>
-    <arg name="command_gain" default="1.10"/>
-    <arg name="angular_command_gain" default="1.15"/>
-    <arg name="command_delay_s" default="0.15"/>
-    <arg name="command_time_constant_s" default="0.15"/>
+    <arg name="wheel_effort_limit" default="3.0"/>
+    <arg name="wheel_velocity_limit" default="24.0"/>
+    <arg name="command_gain" default="1.04"/>
+    <arg name="angular_command_gain" default="0.80"/>
+    <arg name="command_delay_s" default="0.005"/>
+    <arg name="command_time_constant_s" default="0.010"/>
     <arg name="enable_command_limits" default="true"/>
     <arg name="max_linear_speed" default="1.5"/>
     <arg name="max_angular_speed" default="0.5235"/>
@@ -59,6 +63,8 @@
         <arg name="wheel_contact_slip2" value="$(arg wheel_contact_slip2)" />
         <arg name="wheelbase" value="$(arg wheelbase)" />
         <arg name="wheel_track" value="$(arg wheel_track)" />
+        <arg name="wheel_effort_limit" value="$(arg wheel_effort_limit)" />
+        <arg name="wheel_velocity_limit" value="$(arg wheel_velocity_limit)" />
     </include>
 
     <group ns="$(arg ns)">
@@ -66,27 +72,51 @@
         <param name="gazebo_ros_control/pid_gains/front_right_wheel/p" type="double" value="$(arg wheel_pid_p)"/>
         <param name="gazebo_ros_control/pid_gains/front_right_wheel/i" type="double" value="$(arg wheel_pid_i)"/>
         <param name="gazebo_ros_control/pid_gains/front_right_wheel/d" type="double" value="$(arg wheel_pid_d)"/>
+        <param name="gazebo_ros_control/pid_gains/front_right_wheel/i_clamp_max" type="double" value="$(arg wheel_pid_i_clamp)"/>
+        <param name="gazebo_ros_control/pid_gains/front_right_wheel/i_clamp_min" type="double" value="-$(arg wheel_pid_i_clamp)"/>
+        <param name="gazebo_ros_control/pid_gains/front_right_wheel/antiwindup" type="bool" value="$(arg wheel_pid_antiwindup)"/>
         <param name="gazebo_ros_control/pid_gains/front_left_wheel/p" type="double" value="$(arg wheel_pid_p)"/>
         <param name="gazebo_ros_control/pid_gains/front_left_wheel/i" type="double" value="$(arg wheel_pid_i)"/>
         <param name="gazebo_ros_control/pid_gains/front_left_wheel/d" type="double" value="$(arg wheel_pid_d)"/>
+        <param name="gazebo_ros_control/pid_gains/front_left_wheel/i_clamp_max" type="double" value="$(arg wheel_pid_i_clamp)"/>
+        <param name="gazebo_ros_control/pid_gains/front_left_wheel/i_clamp_min" type="double" value="-$(arg wheel_pid_i_clamp)"/>
+        <param name="gazebo_ros_control/pid_gains/front_left_wheel/antiwindup" type="bool" value="$(arg wheel_pid_antiwindup)"/>
         <param name="gazebo_ros_control/pid_gains/rear_left_wheel/p" type="double" value="$(arg wheel_pid_p)"/>
         <param name="gazebo_ros_control/pid_gains/rear_left_wheel/i" type="double" value="$(arg wheel_pid_i)"/>
         <param name="gazebo_ros_control/pid_gains/rear_left_wheel/d" type="double" value="$(arg wheel_pid_d)"/>
+        <param name="gazebo_ros_control/pid_gains/rear_left_wheel/i_clamp_max" type="double" value="$(arg wheel_pid_i_clamp)"/>
+        <param name="gazebo_ros_control/pid_gains/rear_left_wheel/i_clamp_min" type="double" value="-$(arg wheel_pid_i_clamp)"/>
+        <param name="gazebo_ros_control/pid_gains/rear_left_wheel/antiwindup" type="bool" value="$(arg wheel_pid_antiwindup)"/>
         <param name="gazebo_ros_control/pid_gains/rear_right_wheel/p" type="double" value="$(arg wheel_pid_p)"/>
         <param name="gazebo_ros_control/pid_gains/rear_right_wheel/i" type="double" value="$(arg wheel_pid_i)"/>
         <param name="gazebo_ros_control/pid_gains/rear_right_wheel/d" type="double" value="$(arg wheel_pid_d)"/>
+        <param name="gazebo_ros_control/pid_gains/rear_right_wheel/i_clamp_max" type="double" value="$(arg wheel_pid_i_clamp)"/>
+        <param name="gazebo_ros_control/pid_gains/rear_right_wheel/i_clamp_min" type="double" value="-$(arg wheel_pid_i_clamp)"/>
+        <param name="gazebo_ros_control/pid_gains/rear_right_wheel/antiwindup" type="bool" value="$(arg wheel_pid_antiwindup)"/>
         <param name="scout_motor_fr_controller/pid/p" type="double" value="$(arg wheel_pid_p)"/>
         <param name="scout_motor_fr_controller/pid/i" type="double" value="$(arg wheel_pid_i)"/>
         <param name="scout_motor_fr_controller/pid/d" type="double" value="$(arg wheel_pid_d)"/>
+        <param name="scout_motor_fr_controller/pid/i_clamp_max" type="double" value="$(arg wheel_pid_i_clamp)"/>
+        <param name="scout_motor_fr_controller/pid/i_clamp_min" type="double" value="-$(arg wheel_pid_i_clamp)"/>
+        <param name="scout_motor_fr_controller/pid/antiwindup" type="bool" value="$(arg wheel_pid_antiwindup)"/>
         <param name="scout_motor_fl_controller/pid/p" type="double" value="$(arg wheel_pid_p)"/>
         <param name="scout_motor_fl_controller/pid/i" type="double" value="$(arg wheel_pid_i)"/>
         <param name="scout_motor_fl_controller/pid/d" type="double" value="$(arg wheel_pid_d)"/>
+        <param name="scout_motor_fl_controller/pid/i_clamp_max" type="double" value="$(arg wheel_pid_i_clamp)"/>
+        <param name="scout_motor_fl_controller/pid/i_clamp_min" type="double" value="-$(arg wheel_pid_i_clamp)"/>
+        <param name="scout_motor_fl_controller/pid/antiwindup" type="bool" value="$(arg wheel_pid_antiwindup)"/>
         <param name="scout_motor_rl_controller/pid/p" type="double" value="$(arg wheel_pid_p)"/>
         <param name="scout_motor_rl_controller/pid/i" type="double" value="$(arg wheel_pid_i)"/>
         <param name="scout_motor_rl_controller/pid/d" type="double" value="$(arg wheel_pid_d)"/>
+        <param name="scout_motor_rl_controller/pid/i_clamp_max" type="double" value="$(arg wheel_pid_i_clamp)"/>
+        <param name="scout_motor_rl_controller/pid/i_clamp_min" type="double" value="-$(arg wheel_pid_i_clamp)"/>
+        <param name="scout_motor_rl_controller/pid/antiwindup" type="bool" value="$(arg wheel_pid_antiwindup)"/>
         <param name="scout_motor_rr_controller/pid/p" type="double" value="$(arg wheel_pid_p)"/>
         <param name="scout_motor_rr_controller/pid/i" type="double" value="$(arg wheel_pid_i)"/>
         <param name="scout_motor_rr_controller/pid/d" type="double" value="$(arg wheel_pid_d)"/>
+        <param name="scout_motor_rr_controller/pid/i_clamp_max" type="double" value="$(arg wheel_pid_i_clamp)"/>
+        <param name="scout_motor_rr_controller/pid/i_clamp_min" type="double" value="-$(arg wheel_pid_i_clamp)"/>
+        <param name="scout_motor_rr_controller/pid/antiwindup" type="bool" value="$(arg wheel_pid_antiwindup)"/>
     </group>
 
     <node name="$(arg ns)_spawn_scout_model" pkg="gazebo_ros" type="spawn_model" args="-x $(arg x)
