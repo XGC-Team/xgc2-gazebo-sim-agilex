@@ -18,4 +18,10 @@ if rg -n '\$\(find scout_description\)/(launch|rviz|urdf)' scout/launch scout/ur
 fi
 
 python3 -m unittest discover -s scout/test -v
+# This boundary needs the versioned ROS/Gazebo build image; the separate
+# control-core job intentionally runs its deterministic tests without ROS.
+set +u
+source /opt/ros/noetic/setup.bash
+set -u
+python3 scout/test/gazebo_surface_contract.py
 echo "Package compliance checks passed."
