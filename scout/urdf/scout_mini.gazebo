@@ -7,8 +7,18 @@
             <mu1 value="$(arg wheel_contact_mu1)"/>
             <mu2 value="$(arg wheel_contact_mu2)"/>
             <fdir1 value="$(arg wheel_contact_fdir1)"/>
-            <slip1 value="$(arg wheel_contact_slip1)"/>
-            <slip2 value="$(arg wheel_contact_slip2)"/>
+            <!-- Unlike mu1/mu2, slip is not a link-level URDF extension.
+                 Insert it into the existing collision's SDF contact surface. -->
+            <collision>
+                <surface>
+                    <friction>
+                        <ode>
+                            <slip1>$(arg wheel_contact_slip1)</slip1>
+                            <slip2>$(arg wheel_contact_slip2)</slip2>
+                        </ode>
+                    </friction>
+                </surface>
+            </collision>
             <kp value="1000000.0"/>
             <kd value="1.0"/>
             <minDepth value="0.001"/>
