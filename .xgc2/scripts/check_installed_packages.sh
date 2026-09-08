@@ -54,11 +54,30 @@ xacro "${mini_xacro}" urdf_extras:="${empty_urdf}" > "${expanded_urdf}"
 grep -q '<mu1 value="0.10"/>' "${expanded_urdf}"
 grep -q '<mu2 value="1.0"/>' "${expanded_urdf}"
 grep -q '<fdir1 value="0 0 1"/>' "${expanded_urdf}"
-grep -q '<slip1 value="5.0"/>' "${expanded_urdf}"
-grep -q '<slip2 value="0.0"/>' "${expanded_urdf}"
+grep -q '<slip1>5.0</slip1>' "${expanded_urdf}"
+grep -q '<slip2>0.0</slip2>' "${expanded_urdf}"
 grep -q '<kp value="1000000.0"/>' "${expanded_urdf}"
 grep -q '<maxContacts value="16"/>' "${expanded_urdf}"
 ! grep -q '<odometryTopic>' "${expanded_urdf}"
+
+log "checking installed wheel contact surfaces after SDFormat conversion"
+expanded_sdf="/tmp/xgc2-scout-mini-expanded.sdf"
+gz sdf -p "${expanded_urdf}" > "${expanded_sdf}"
+python3 - "${expanded_sdf}" <<'PY'
+import sys
+import xml.etree.ElementTree as ET
+root = ET.parse(sys.argv[1]).getroot()
+wheels = [link for link in root.findall('.//link') if link.get('name', '').endswith('_wheel_link')]
+assert len(wheels) == 4, 'Expected four wheel links in installed Scout model'
+for wheel in wheels:
+    collisions = wheel.findall('collision')
+    assert len(collisions) == 1, wheel.get('name')
+    ode = collisions[0].find('surface/friction/ode')
+    assert ode is not None, wheel.get('name')
+    for name, expected in {'mu': .1, 'mu2': 1., 'slip1': 5., 'slip2': 0.}.items():
+        value = ode.findtext(name)
+        assert value is not None and abs(float(value) - expected) < 1e-9, (wheel.get('name'), name, value)
+PY
 
 log "checking tuned Scout mini URDF arguments"
 tuned_params="/tmp/xgc2-scout-spawn-accurate-tuned-params.yaml"
@@ -72,8 +91,8 @@ xacro "${mini_xacro}" \
 grep -q '<mu1 value="0.31"/>' "${tuned_params}"
 grep -q '<mu2 value="0.91"/>' "${tuned_params}"
 grep -q '<fdir1 value="0 1 0"/>' "${tuned_params}"
-grep -q '<slip1 value="0.08"/>' "${tuned_params}"
-grep -q '<slip2 value="0.02"/>' "${tuned_params}"
+grep -q '<slip1>0.08</slip1>' "${tuned_params}"
+grep -q '<slip2>0.02</slip2>' "${tuned_params}"
 ! grep -q '<odometryTopic>' "${tuned_params}"
 
 log "checking installed ELF dependencies"
