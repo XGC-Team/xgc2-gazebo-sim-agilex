@@ -3,6 +3,7 @@
 import time
 import socket
 import struct
+import math
 import unittest
 import rospy
 import rostest
@@ -44,6 +45,24 @@ class ScoutRuntime(unittest.TestCase):
         self.assertGreater(len(targets),50)
         self.assertLess(abs(targets[-1]),1e-3)
         self.assertLess(abs(state('scout1','world').twist.linear.x),.04)
+        # A sustained arc must not build up uncontrolled lateral momentum.
+        command.angular.z=.4
+        end=rospy.Time.now().to_sec()+10
+        while rospy.Time.now().to_sec()<end:
+            pub.publish(command)
+            rospy.sleep(.05)
+        turning=state('scout1','world')
+        pub.publish(Twist())
+        rospy.sleep(2)
+        stopped=state('scout1','world').twist.linear
+        q=turning.pose.orientation
+        yaw=math.atan2(2*(q.w*q.z+q.x*q.y),1-2*(q.y*q.y+q.z*q.z))
+        velocity=turning.twist.linear
+        lateral=-math.sin(yaw)*velocity.x+math.cos(yaw)*velocity.y
+        self.assertLess(abs(lateral),.2)
+        self.assertGreater(turning.twist.angular.z,.15)
+        self.assertLess(math.hypot(stopped.x,stopped.y),.04)
+        command.angular.z=0
         def hold(robot, value, sequence):
             digest=2166136261
             for byte in robot.encode(): digest=((digest ^ byte)*16777619)&0xffffffff

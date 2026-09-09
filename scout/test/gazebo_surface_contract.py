@@ -30,7 +30,7 @@ class ScoutSurfaceTest(unittest.TestCase):
                     self.assertEqual(len(collisions), 1, wheel.get('name'))
                     ode = collisions[0].find('surface/friction/ode')
                     self.assertIsNotNone(ode)
-                    expected = {'mu': .1, 'mu2': 1., 'slip1': 5., 'slip2': 0.}
+                    expected = {'mu': .1, 'mu2': 1., 'slip1': 0., 'slip2': 0.}
                     for name in ('slip1', 'slip2'):
                         expected[name] = float(overrides.get('wheel_contact_' + name, expected[name]))
                     for name, value in expected.items():

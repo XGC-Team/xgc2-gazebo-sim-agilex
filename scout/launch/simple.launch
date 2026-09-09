@@ -37,7 +37,7 @@ ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSI
     <arg name="wheel_contact_mu1" default="0.10"/>
     <arg name="wheel_contact_mu2" default="1.0"/>
     <arg name="wheel_contact_fdir1" default="0 0 1"/>
-    <arg name="wheel_contact_slip1" default="5.0"/>
+    <arg name="wheel_contact_slip1" default="0.0"/>
     <arg name="wheel_contact_slip2" default="0.0"/>
     <arg name="publish_scout_status" default="true"/>
     <arg name="status_topic" default="/$(arg ns)/scout_status"/>

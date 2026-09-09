@@ -54,7 +54,7 @@ xacro "${mini_xacro}" urdf_extras:="${empty_urdf}" > "${expanded_urdf}"
 grep -q '<mu1 value="0.10"/>' "${expanded_urdf}"
 grep -q '<mu2 value="1.0"/>' "${expanded_urdf}"
 grep -q '<fdir1 value="0 0 1"/>' "${expanded_urdf}"
-grep -q '<slip1>5.0</slip1>' "${expanded_urdf}"
+grep -q '<slip1>0.0</slip1>' "${expanded_urdf}"
 grep -q '<slip2>0.0</slip2>' "${expanded_urdf}"
 grep -q '<kp value="1000000.0"/>' "${expanded_urdf}"
 grep -q '<maxContacts value="16"/>' "${expanded_urdf}"
@@ -74,7 +74,7 @@ for wheel in wheels:
     assert len(collisions) == 1, wheel.get('name')
     ode = collisions[0].find('surface/friction/ode')
     assert ode is not None, wheel.get('name')
-    for name, expected in {'mu': .1, 'mu2': 1., 'slip1': 5., 'slip2': 0.}.items():
+    for name, expected in {'mu': .1, 'mu2': 1., 'slip1': 0., 'slip2': 0.}.items():
         value = ode.findtext(name)
         assert value is not None and abs(float(value) - expected) < 1e-9, (wheel.get('name'), name, value)
 PY

@@ -14,7 +14,7 @@ EXPECTED = {
     "wheel_contact_mu1": "0.10",
     "wheel_contact_mu2": "1.0",
     "wheel_contact_fdir1": "0 0 1",
-    "wheel_contact_slip1": "5.0",
+    "wheel_contact_slip1": "0.0",
     "wheel_contact_slip2": "0.0",
     "wheel_pid_p": "2.0",
     "wheel_pid_i": "8.0",
