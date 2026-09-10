@@ -10,7 +10,6 @@
     <arg name="pose_topic" default="/$(arg ns)/simulation/ground_truth/pose"/>
     <arg name="twist_topic" default="/$(arg ns)/simulation/ground_truth/twist"/>
     <arg name="world_frame" default="world"/>
-    <arg name="base_frame" default="base_link"/>
     <arg name="tf_prefix" default=""/>
     <arg name="frame_prefix" default=""/>
     <arg name="sensor_ns" default="/"/>
@@ -45,7 +44,6 @@
     <arg name="status_topic" default="/$(arg ns)/scout_status"/>
     <arg name="light_control_topic" default="/$(arg ns)/scout_light_control"/>
     <arg name="battery_voltage" default="28.765"/>
-    <arg name="publish_tf" default="true"/>
 
     <include file="$(dirname)/mini_description.launch">
         <arg name="ns" value="$(arg ns)" />
@@ -149,8 +147,6 @@
         <param name="pose_topic" type="string" value="$(arg pose_topic)" />
         <param name="twist_topic" type="string" value="$(arg twist_topic)" />
         <param name="world_frame" type="string" value="$(arg world_frame)" />
-        <param name="base_frame" type="string" value="$(arg base_frame)" />
-        <param name="publish_tf" type="bool" value="$(arg publish_tf)" />
     </node>
 
     <node if="$(arg publish_scout_status)" name="$(arg ns)_sim_scout_status" pkg="gazebo_sim_scout" type="sim_scout_status" output="screen">

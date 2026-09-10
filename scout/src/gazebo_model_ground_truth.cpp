@@ -1,9 +1,7 @@
 #include <gazebo_msgs/ModelStates.h>
 #include <geometry_msgs/PoseStamped.h>
-#include <geometry_msgs/TransformStamped.h>
 #include <geometry_msgs/TwistStamped.h>
 #include <ros/ros.h>
-#include <tf2_ros/transform_broadcaster.h>
 
 #include <string>
 
@@ -14,14 +12,12 @@ public:
   explicit GazeboModelGroundTruth(ros::NodeHandle &private_nh) {
     private_nh.param<std::string>("model_name", model_name_, "scout");
     private_nh.param<std::string>("world_frame", world_frame_, "world");
-    private_nh.param<std::string>("base_frame", base_frame_, "base_link");
     private_nh.param<std::string>("model_states_topic", model_states_topic_,
                                   "/gazebo/model_states");
     private_nh.param<std::string>("pose_topic", pose_topic_,
                                   "simulation/ground_truth/pose");
     private_nh.param<std::string>("twist_topic", twist_topic_,
                                   "simulation/ground_truth/twist");
-    private_nh.param("publish_tf", publish_tf_, true);
 
     pose_pub_ = nh_.advertise<geometry_msgs::PoseStamped>(pose_topic_, 10);
     twist_pub_ = nh_.advertise<geometry_msgs::TwistStamped>(twist_topic_, 10);
@@ -54,16 +50,6 @@ private:
       twist.twist = msg->twist[i];
       twist_pub_.publish(twist);
 
-      if (publish_tf_) {
-        geometry_msgs::TransformStamped tf_msg;
-        tf_msg.header = pose.header;
-        tf_msg.child_frame_id = base_frame_;
-        tf_msg.transform.translation.x = msg->pose[i].position.x;
-        tf_msg.transform.translation.y = msg->pose[i].position.y;
-        tf_msg.transform.translation.z = msg->pose[i].position.z;
-        tf_msg.transform.rotation = msg->pose[i].orientation;
-        broadcaster_.sendTransform(tf_msg);
-      }
       return;
     }
 
@@ -75,15 +61,12 @@ private:
   ros::Subscriber model_states_sub_;
   ros::Publisher pose_pub_;
   ros::Publisher twist_pub_;
-  tf2_ros::TransformBroadcaster broadcaster_;
   std::string model_name_;
   std::string world_frame_;
-  std::string base_frame_;
   std::string model_states_topic_;
   std::string pose_topic_;
   std::string twist_topic_;
   ros::Time last_stamp_;
-  bool publish_tf_;
 };
 
 int main(int argc, char **argv) {

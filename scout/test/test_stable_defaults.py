@@ -282,6 +282,11 @@ class ScoutStableDefaultsTest(unittest.TestCase):
         self.assertNotIn("odom_topic", ground_truth)
         self.assertIn("simulation/ground_truth/pose", ground_truth)
         self.assertIn("simulation/ground_truth/twist", ground_truth)
+        self.assertNotIn("TransformBroadcaster", ground_truth)
+        self.assertNotIn("sendTransform", ground_truth)
+        for launch in (PACKAGE / "launch").glob("*.launch"):
+            self.assertNotIn('name="publish_tf"', launch.read_text())
+            self.assertNotIn('name="base_frame"', launch.read_text())
 
         status = (PACKAGE / "src" / "sim_scout_status.cpp").read_text()
         self.assertNotIn("nav_msgs::Odometry", status)

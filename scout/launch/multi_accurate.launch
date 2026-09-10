@@ -103,7 +103,6 @@
         <arg name="pose_topic" value="/$(arg ugv1_ns)/simulation/ground_truth/pose" />
         <arg name="twist_topic" value="/$(arg ugv1_ns)/simulation/ground_truth/twist" />
         <arg name="world_frame" value="world" />
-        <arg name="base_frame" value="$(arg ugv1_ns)/base_link" />
         <arg name="tf_prefix" value="$(arg ugv1_ns)" />
         <arg name="frame_prefix" value="$(arg ugv1_ns)/" />
         <arg name="sensor_ns" value="$(arg ugv1_ns)" />
@@ -144,7 +143,6 @@
         <arg name="pose_topic" value="/$(arg ugv2_ns)/simulation/ground_truth/pose" />
         <arg name="twist_topic" value="/$(arg ugv2_ns)/simulation/ground_truth/twist" />
         <arg name="world_frame" value="world" />
-        <arg name="base_frame" value="$(arg ugv2_ns)/base_link" />
         <arg name="tf_prefix" value="$(arg ugv2_ns)" />
         <arg name="frame_prefix" value="$(arg ugv2_ns)/" />
         <arg name="sensor_ns" value="$(arg ugv2_ns)" />

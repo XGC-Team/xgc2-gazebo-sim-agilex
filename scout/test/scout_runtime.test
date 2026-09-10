@@ -1,7 +1,7 @@
 <launch>
 <include file="$(find gazebo_ros)/launch/empty_world.launch"><arg name="paused" value="true"/><arg name="gui" value="false"/></include>
-<include file="$(find gazebo_sim_scout)/launch/spawn_accurate.launch"><arg name="ns" value="scout1"/><arg name="robot_state_publisher_ns" value="/scout1"/><arg name="robot_description_param" value="/scout1/robot_description"/><arg name="y" value="0"/><arg name="publish_tf" value="false"/></include>
-<include file="$(find gazebo_sim_scout)/launch/spawn_accurate.launch"><arg name="ns" value="scout2"/><arg name="robot_state_publisher_ns" value="/scout2"/><arg name="robot_description_param" value="/scout2/robot_description"/><arg name="y" value="3"/><arg name="publish_tf" value="false"/></include>
+<include file="$(find gazebo_sim_scout)/launch/spawn_accurate.launch"><arg name="ns" value="scout1"/><arg name="robot_state_publisher_ns" value="/scout1"/><arg name="robot_description_param" value="/scout1/robot_description"/><arg name="y" value="0"/></include>
+<include file="$(find gazebo_sim_scout)/launch/spawn_accurate.launch"><arg name="ns" value="scout2"/><arg name="robot_state_publisher_ns" value="/scout2"/><arg name="robot_description_param" value="/scout2/robot_description"/><arg name="y" value="3"/></include>
 <include file="$(find gazebo_sim_mecanum)/launch/spawn.launch"><arg name="ns" value="mecanum1"/><arg name="y" value="6"/></include>
 <test test-name="scout_runtime" pkg="gazebo_sim_scout" type="scout_runtime.py" time-limit="100"/>
 </launch>
