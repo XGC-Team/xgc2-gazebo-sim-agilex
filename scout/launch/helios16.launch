@@ -18,7 +18,6 @@
   <arg name="wheel_velocity_limit" default="24.0"/>
   <arg name="command_gain" default="1.04"/>
   <arg name="command_delay_s" default="0.005"/>
-  <arg name="command_time_constant_s" default="0.010"/>
   <arg name="angular_command_gain" default="0.80"/>
   <!-- false: LIO owns camera_init->body->base_link. Gazebo still publishes world TF. -->
 
@@ -44,7 +43,6 @@
     <arg name="wheel_velocity_limit" value="$(arg wheel_velocity_limit)"/>
     <arg name="command_gain" value="$(arg command_gain)"/>
     <arg name="command_delay_s" value="$(arg command_delay_s)"/>
-    <arg name="command_time_constant_s" value="$(arg command_time_constant_s)"/>
   <arg name="angular_command_gain" value="$(arg angular_command_gain)"/>
   </include>
 

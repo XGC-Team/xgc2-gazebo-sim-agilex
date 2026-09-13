@@ -3,7 +3,7 @@ on:
   pull_request:
     paths:
       - 'scout/src/scout_skid_steer.cpp'
-      - 'scout/include/scout_gazebo/command_dynamics.hpp'
+      - 'scout/include/scout_gazebo/command_delay.hpp'
       - 'scout/test/test_inner_loop_delay.py'
       - '.github/workflows/inner-loop-delay.yml'
 permissions:

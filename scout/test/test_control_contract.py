@@ -22,11 +22,11 @@ class ControlContractTest(unittest.TestCase):
             'double ScoutSkidSteer::Clamp(', 1)[0]
         self.assertIn('hold_gate_.withCommand', receive)
         self.assertIn('hold_gate_.withCommand', tick)
-        self.assertIn('command_dynamics_.Push', receive)
+        self.assertIn('command_delay_.Push', receive)
         self.assertNotIn('motor_fr_pub_.publish', receive)
-        self.assertIn('command_dynamics_.Advance(ros::Time::now().toSec())', tick)
+        self.assertIn('command_delay_.Advance(ros::Time::now().toSec())', tick)
         self.assertIn('createWallTimer', text)
-        self.assertIn('command_dynamics_.Reset()', text)
+        self.assertIn('command_delay_.Reset()', text)
 
     def test_shutdown_drains_producers_before_unregistering(self):
         text = (ROOT / 'src/scout_skid_steer.cpp').read_text().split(

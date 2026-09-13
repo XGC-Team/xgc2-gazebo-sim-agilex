@@ -29,7 +29,6 @@
     <!-- Shared base defaults. Per-robot args below can override these for calibration. -->
     <arg name="angular_command_gain" default="0.80"/>
     <arg name="command_delay_s" default="0.005"/>
-    <arg name="command_time_constant_s" default="0.010"/>
 
     <arg name="ugv1_ns" default="ugv1"/>
     <arg name="ugv1_model_name" default="$(arg ugv1_ns)"/>
@@ -52,7 +51,6 @@
     <arg name="ugv1_command_gain" default="$(arg command_gain)"/>
     <arg name="ugv1_angular_command_gain" default="$(arg angular_command_gain)"/>
     <arg name="ugv1_command_delay_s" default="$(arg command_delay_s)"/>
-    <arg name="ugv1_command_time_constant_s" default="$(arg command_time_constant_s)"/>
     <arg name="ugv1_enable_lidar" default="$(arg enable_lidar)"/>
     <arg name="ugv1_enable_rslidar" default="$(arg enable_rslidar)"/>
     <arg name="ugv1_enable_camera" default="$(arg enable_camera)"/>
@@ -78,7 +76,6 @@
     <arg name="ugv2_command_gain" default="$(arg command_gain)"/>
     <arg name="ugv2_angular_command_gain" default="$(arg angular_command_gain)"/>
     <arg name="ugv2_command_delay_s" default="$(arg command_delay_s)"/>
-    <arg name="ugv2_command_time_constant_s" default="$(arg command_time_constant_s)"/>
     <arg name="ugv2_enable_lidar" default="$(arg enable_lidar)"/>
     <arg name="ugv2_enable_rslidar" default="$(arg enable_rslidar)"/>
     <arg name="ugv2_enable_camera" default="$(arg enable_camera)"/>
@@ -129,7 +126,6 @@
         <arg name="command_gain" value="$(arg ugv1_command_gain)" />
         <arg name="angular_command_gain" value="$(arg ugv1_angular_command_gain)" />
         <arg name="command_delay_s" value="$(arg ugv1_command_delay_s)" />
-        <arg name="command_time_constant_s" value="$(arg ugv1_command_time_constant_s)" />
     </include>
 
     <include file="$(dirname)/spawn_accurate.launch">
@@ -169,7 +165,6 @@
         <arg name="command_gain" value="$(arg ugv2_command_gain)" />
         <arg name="angular_command_gain" value="$(arg ugv2_angular_command_gain)" />
         <arg name="command_delay_s" value="$(arg ugv2_command_delay_s)" />
-        <arg name="command_time_constant_s" value="$(arg ugv2_command_time_constant_s)" />
     </include>
 
     <include if="$(arg enable_vrpn_server)" file="$(find gazebo_sim_vrpn_bridge)/launch/vrpn_server.launch">

@@ -1,6 +1,5 @@
 #pragma once
 
-#include <algorithm>
 #include <cmath>
 #include <deque>
 #include <stdexcept>
@@ -14,22 +13,19 @@ struct CommandVelocity {
 
 // Receipt and execution are separate. Advance() must be called by the control
 // scheduler even when no new command arrives. Its time argument is ROS/sim time.
-class CommandDynamics {
+class CommandDelay {
  public:
-  void Configure(double delay, double time_constant) {
-    if (!std::isfinite(delay) || delay < 0.0 ||
-        !std::isfinite(time_constant) || time_constant < 0.0) {
-      throw std::invalid_argument("command delay and time constant must be finite and nonnegative");
+  void Configure(double delay) {
+    if (!std::isfinite(delay) || delay < 0.0) {
+      throw std::invalid_argument("command delay must be finite and nonnegative");
     }
     delay_ = delay;
-    time_constant_ = time_constant;
     Reset();
   }
 
   void Reset() {
     history_.clear();
     delayed_ = {0.0, 0.0};
-    filtered_ = {0.0, 0.0};
     initialized_ = false;
     last_time_ = 0.0;
   }
@@ -55,34 +51,23 @@ class CommandDynamics {
       initialized_ = true;
       last_time_ = now;
     }
-    // Split integration at each delayed input transition. This makes response
-    // independent of the arrival/timer sampling frequency, including long gaps.
+    // Consume every due command, retaining the last one. This is a pure
+    // transport delay and zero-order hold, without an actuator response model.
     while (!history_.empty() && history_.front().due <= now) {
       const Command next = history_.front();
-      const double transition = std::max(last_time_, next.due);
-      Integrate(transition - last_time_);
       delayed_ = {next.linear, next.angular};
-      last_time_ = transition;
       history_.pop_front();
     }
-    Integrate(now - last_time_);
     last_time_ = now;
-    return filtered_;
+    return delayed_;
   }
 
  private:
   struct Command { double due; double linear; double angular; };
-  void Integrate(double dt) {
-    const double alpha = time_constant_ > 0.0 ? -std::expm1(-dt / time_constant_) : 1.0;
-    filtered_.linear += alpha * (delayed_.linear - filtered_.linear);
-    filtered_.angular += alpha * (delayed_.angular - filtered_.angular);
-  }
 
   std::deque<Command> history_;
   CommandVelocity delayed_{0.0, 0.0};
-  CommandVelocity filtered_{0.0, 0.0};
-  double delay_ = 0.15;
-  double time_constant_ = 0.15;
+  double delay_ = 0.0;
   double last_time_ = 0.0;
   bool initialized_ = false;
 };

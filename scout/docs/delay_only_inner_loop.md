@@ -2,7 +2,7 @@
 
 `command_delay_s` configures the transport delay in seconds. The node holds the last delayed command between updates.
 
-The wheel-PI path has no additional first-order speed filter. `command_time_constant_s` is a deprecated compatibility parameter: nonzero values produce a warning and are ignored. The startup summary reports its effective value as zero.
+The command path is a transport delay followed by a zero-order hold. Wheel PI, wheel inertia, and contact physics determine the dynamic response. There is no additional first-order filter or time-constant parameter.
 
 Wheel PI, torque saturation, joint damping, inertia and wheel-ground contact remain active. Normal zero commands pass through the transport delay; emergency hold uses its separate queue-reset path.
 

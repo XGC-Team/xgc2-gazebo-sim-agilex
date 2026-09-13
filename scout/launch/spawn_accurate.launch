@@ -37,7 +37,6 @@
     <arg name="command_gain" default="1.04"/>
     <arg name="angular_command_gain" default="0.80"/>
     <arg name="command_delay_s" default="0.005"/>
-    <arg name="command_time_constant_s" default="0.010"/>
     <arg name="enable_command_limits" default="true"/>
     <arg name="max_linear_speed" default="1.5"/>
     <arg name="max_angular_speed" default="0.5235"/>
@@ -137,7 +136,6 @@
         <param name="command_gain" type="double" value="$(arg command_gain)" />
         <param name="angular_command_gain" type="double" value="$(arg angular_command_gain)" />
         <param name="command_delay_s" type="double" value="$(arg command_delay_s)" />
-        <param name="command_time_constant_s" type="double" value="$(arg command_time_constant_s)" />
         <param name="enable_command_limits" type="bool" value="$(arg enable_command_limits)" />
         <param name="max_linear_speed" type="double" value="$(arg max_linear_speed)" />
         <param name="max_angular_speed" type="double" value="$(arg max_angular_speed)" />

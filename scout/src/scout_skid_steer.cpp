@@ -17,8 +17,7 @@
 
 namespace wescore {
 ScoutSkidSteer::ScoutSkidSteer(ros::NodeHandle *nh, std::string robot_name)
-    : robot_name_(robot_name), command_delay_s_(0.005),
-      command_time_constant_s_(0.0), nh_(nh),
+    : robot_name_(robot_name), command_delay_s_(0.005), nh_(nh),
       hold_gate_(xgc_chassis_hold::lastPath(robot_name)) {
   ros::NodeHandle private_nh("~");
   private_nh.param("wheel_separation", wheel_separation_, 0.416503);
@@ -26,7 +25,6 @@ ScoutSkidSteer::ScoutSkidSteer(ros::NodeHandle *nh, std::string robot_name)
   private_nh.param("command_gain", command_gain_, 1.0);
   private_nh.param("angular_command_gain", angular_command_gain_, 1.0);
   private_nh.param("command_delay_s", command_delay_s_, 0.005);
-  private_nh.param("command_time_constant_s", command_time_constant_s_, 0.0);
   private_nh.param("enable_command_limits", enable_command_limits_, true);
   private_nh.param("max_linear_speed", max_linear_speed_, 1.5);
   private_nh.param("max_angular_speed", max_angular_speed_, 0.5235);
@@ -35,28 +33,13 @@ ScoutSkidSteer::ScoutSkidSteer(ros::NodeHandle *nh, std::string robot_name)
     ROS_WARN("Invalid Scout command_delay_s %.6f; using 0", command_delay_s_);
     command_delay_s_ = 0.0;
   }
-  if (!std::isfinite(command_time_constant_s_) ||
-      command_time_constant_s_ < 0.0) {
-    ROS_WARN("Invalid Scout command_time_constant_s %.6f; using 0",
-             command_time_constant_s_);
-    command_time_constant_s_ = 0.0;
-  }
 
   if (!std::isfinite(wheel_radius_) || wheel_radius_ <= 0.0 ||
       !std::isfinite(wheel_separation_) || wheel_separation_ <= 0.0 ||
       !std::isfinite(command_gain_) || !std::isfinite(angular_command_gain_)) {
     throw std::invalid_argument("Scout wheel geometry and command gains must be finite; geometry must be positive");
   }
-  // The physical wheel PI, inertia and contact already provide actuator
-  // dynamics. Preserve transport delay, but do not cascade a second speed lag.
-  // Old frozen launch snapshots can still carry the deprecated parameter.
-  if (command_time_constant_s_ != 0.0) {
-    ROS_WARN("Scout command_time_constant_s=%.6f is disabled for the wheel-PI plant; "
-             "using zero added lag and retaining command_delay_s=%.6f",
-             command_time_constant_s_, command_delay_s_);
-  }
-  command_time_constant_s_ = 0.0;
-  command_dynamics_.Configure(command_delay_s_, 0.0);
+  command_delay_.Configure(command_delay_s_);
 
   motor_fr_topic_ = JoinTopic(robot_name_, "scout_motor_fr_controller/command");
   motor_fl_topic_ = JoinTopic(robot_name_, "scout_motor_fl_controller/command");
@@ -67,11 +50,11 @@ ScoutSkidSteer::ScoutSkidSteer(ros::NodeHandle *nh, std::string robot_name)
   ROS_INFO(
       "Scout skid steer: cmd=%s fr=%s fl=%s rl=%s rr=%s wheel_separation=%.6f "
       "wheel_radius=%.6f gain=%.3f angular_gain=%.3f command_delay=%.3f "
-      "command_tau=%.3f limits=%s max_linear=%.4f max_angular=%.4f",
+      "limits=%s max_linear=%.4f max_angular=%.4f",
       cmd_topic_.c_str(), motor_fr_topic_.c_str(), motor_fl_topic_.c_str(),
       motor_rl_topic_.c_str(), motor_rr_topic_.c_str(), wheel_separation_,
       wheel_radius_, command_gain_, angular_command_gain_, command_delay_s_,
-      command_time_constant_s_, enable_command_limits_ ? "true" : "false",
+      enable_command_limits_ ? "true" : "false",
       max_linear_speed_, max_angular_speed_);
 }
 
@@ -102,7 +85,7 @@ void ScoutSkidSteer::HoldZeroThunk(void *self) {
 }
 
 void ScoutSkidSteer::PublishZeroMotors() {
-  command_dynamics_.Reset();
+  command_delay_.Reset();
   if (!motor_fr_pub_) {
     return;
   }
@@ -141,7 +124,7 @@ void ScoutSkidSteer::TwistCmdCallback(
       PublishZeroMotors();
       return;
     }
-    command_dynamics_.Push(ros::Time::now().toSec(), driving_vel, steering_vel);
+    command_delay_.Push(ros::Time::now().toSec(), driving_vel, steering_vel);
   });
 }
 
@@ -151,7 +134,7 @@ void ScoutSkidSteer::ControlTick(const ros::WallTimerEvent &) {
       PublishZeroMotors();
       return;
     }
-    const CommandVelocity command = command_dynamics_.Advance(ros::Time::now().toSec());
+    const CommandVelocity command = command_delay_.Advance(ros::Time::now().toSec());
     const double steering = command.angular * angular_command_gain_;
     const double half_track = wheel_separation_ * 0.5;
     const double left = (command.linear - steering * half_track) / wheel_radius_;

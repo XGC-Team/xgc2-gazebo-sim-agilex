@@ -1,4 +1,4 @@
-#include "scout_gazebo/command_dynamics.hpp"
+#include "scout_gazebo/command_delay.hpp"
 
 #include <cmath>
 #include <iostream>
@@ -14,8 +14,8 @@ void Near(double actual, double expected) {
 }
 
 void FinalZeroExecutesWithoutFurtherInput() {
-  wescore::CommandDynamics dynamics;
-  dynamics.Configure(0.15, 0.15);
+  wescore::CommandDelay dynamics;
+  dynamics.Configure(0.15);
   dynamics.Push(10.0, 1.0, -0.4);
   Check(dynamics.Advance(12.0).linear > 0.99, "initial drive must become active");
   dynamics.Push(12.0, 0.0, 0.0);
@@ -26,9 +26,9 @@ void FinalZeroExecutesWithoutFurtherInput() {
 }
 
 void SamplingDoesNotChangeThePlant() {
-  wescore::CommandDynamics sparse, frequent;
-  sparse.Configure(0.15, 0.15);
-  frequent.Configure(0.15, 0.15);
+  wescore::CommandDelay sparse, frequent;
+  sparse.Configure(0.15);
+  frequent.Configure(0.15);
   sparse.Push(10.0, 1.0, 0.3);
   frequent.Push(10.0, 1.0, 0.3);
   for (int i = 1; i <= 100; ++i) frequent.Advance(10.0 + i * 0.01);
@@ -42,14 +42,14 @@ void SamplingDoesNotChangeThePlant() {
 }
 
 void PauseResetAndInstantResponse() {
-  wescore::CommandDynamics dynamics;
-  dynamics.Configure(0.15, 0.15);
+  wescore::CommandDelay dynamics;
+  dynamics.Configure(0.15);
   dynamics.Push(10.0, 1.0, 0.2);
   const auto value = dynamics.Advance(10.5);
   for (int i = 0; i < 20; ++i) Near(dynamics.Advance(10.5).linear, value.linear);
   Near(dynamics.Advance(1.0).linear, 0.0);
   Near(dynamics.Advance(20.0).linear, 0.0);
-  dynamics.Configure(0.0, 0.0);
+  dynamics.Configure(0.0);
   dynamics.Push(20.0, 0.6, -0.3);
   Near(dynamics.Advance(20.0).linear, 0.6);
   dynamics.Push(21.0, 0.0, 0.0);
@@ -60,8 +60,8 @@ void PauseResetAndInstantResponse() {
 }
 
 void DelayedStepAndInvalidInput() {
-  wescore::CommandDynamics dynamics;
-  dynamics.Configure(0.5, 0.0);
+  wescore::CommandDelay dynamics;
+  dynamics.Configure(0.5);
   dynamics.Push(0.0, 1.0, 0.2);
   Near(dynamics.Advance(0.49).linear, 0.0);
   Near(dynamics.Advance(0.5).linear, 1.0);
@@ -69,7 +69,7 @@ void DelayedStepAndInvalidInput() {
   Near(dynamics.Advance(0.99).linear, 1.0);
   Near(dynamics.Advance(1.0).linear, 0.0);
   bool rejected = false;
-  try { dynamics.Configure(-1.0, 0.0); }
+  try { dynamics.Configure(-1.0); }
   catch (const std::invalid_argument&) { rejected = true; }
   Check(rejected, "negative delay must be rejected");
   rejected = false;
@@ -84,5 +84,5 @@ int main() {
   SamplingDoesNotChangeThePlant();
   PauseResetAndInstantResponse();
   DelayedStepAndInvalidInput();
-  std::cout << "Command dynamics: 4 scenario groups passed\n";
+  std::cout << "Command delay: 4 scenario groups passed\n";
 }

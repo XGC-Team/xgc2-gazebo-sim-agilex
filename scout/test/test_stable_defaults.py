@@ -26,7 +26,6 @@ EXPECTED = {
     "command_gain": "1.04",
     "angular_command_gain": "0.80",
     "command_delay_s": "0.005",
-    "command_time_constant_s": "0.010",
 }
 
 PI_CANDIDATE = {
@@ -258,10 +257,7 @@ class ScoutStableDefaultsTest(unittest.TestCase):
             'name="command_delay_s" type="double" value="$(arg command_delay_s)"',
             text,
         )
-        self.assertIn(
-            'name="command_time_constant_s" type="double" value="$(arg command_time_constant_s)"',
-            text,
-        )
+        self.assertNotIn("command_time_constant", text)
 
     def test_wheel_friction_direction_is_fixed_to_the_axle(self) -> None:
         # Wheel-local z is the joint axis. Unlike local x, it does not rotate
