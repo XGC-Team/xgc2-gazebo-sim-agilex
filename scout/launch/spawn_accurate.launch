@@ -37,7 +37,6 @@
     <arg name="command_gain" default="1.04"/>
     <arg name="angular_command_gain" default="0.80"/>
     <arg name="command_delay_s" default="0.005"/>
-    <arg name="command_time_constant_s" default="0.010"/>
     <arg name="enable_command_limits" default="true"/>
     <arg name="max_linear_speed" default="1.5"/>
     <arg name="max_angular_speed" default="0.5235"/>
@@ -92,30 +91,6 @@
         <param name="gazebo_ros_control/pid_gains/rear_right_wheel/i_clamp_max" type="double" value="$(arg wheel_pid_i_clamp)"/>
         <param name="gazebo_ros_control/pid_gains/rear_right_wheel/i_clamp_min" type="double" value="-$(arg wheel_pid_i_clamp)"/>
         <param name="gazebo_ros_control/pid_gains/rear_right_wheel/antiwindup" type="bool" value="$(arg wheel_pid_antiwindup)"/>
-        <param name="scout_motor_fr_controller/pid/p" type="double" value="$(arg wheel_pid_p)"/>
-        <param name="scout_motor_fr_controller/pid/i" type="double" value="$(arg wheel_pid_i)"/>
-        <param name="scout_motor_fr_controller/pid/d" type="double" value="$(arg wheel_pid_d)"/>
-        <param name="scout_motor_fr_controller/pid/i_clamp_max" type="double" value="$(arg wheel_pid_i_clamp)"/>
-        <param name="scout_motor_fr_controller/pid/i_clamp_min" type="double" value="-$(arg wheel_pid_i_clamp)"/>
-        <param name="scout_motor_fr_controller/pid/antiwindup" type="bool" value="$(arg wheel_pid_antiwindup)"/>
-        <param name="scout_motor_fl_controller/pid/p" type="double" value="$(arg wheel_pid_p)"/>
-        <param name="scout_motor_fl_controller/pid/i" type="double" value="$(arg wheel_pid_i)"/>
-        <param name="scout_motor_fl_controller/pid/d" type="double" value="$(arg wheel_pid_d)"/>
-        <param name="scout_motor_fl_controller/pid/i_clamp_max" type="double" value="$(arg wheel_pid_i_clamp)"/>
-        <param name="scout_motor_fl_controller/pid/i_clamp_min" type="double" value="-$(arg wheel_pid_i_clamp)"/>
-        <param name="scout_motor_fl_controller/pid/antiwindup" type="bool" value="$(arg wheel_pid_antiwindup)"/>
-        <param name="scout_motor_rl_controller/pid/p" type="double" value="$(arg wheel_pid_p)"/>
-        <param name="scout_motor_rl_controller/pid/i" type="double" value="$(arg wheel_pid_i)"/>
-        <param name="scout_motor_rl_controller/pid/d" type="double" value="$(arg wheel_pid_d)"/>
-        <param name="scout_motor_rl_controller/pid/i_clamp_max" type="double" value="$(arg wheel_pid_i_clamp)"/>
-        <param name="scout_motor_rl_controller/pid/i_clamp_min" type="double" value="-$(arg wheel_pid_i_clamp)"/>
-        <param name="scout_motor_rl_controller/pid/antiwindup" type="bool" value="$(arg wheel_pid_antiwindup)"/>
-        <param name="scout_motor_rr_controller/pid/p" type="double" value="$(arg wheel_pid_p)"/>
-        <param name="scout_motor_rr_controller/pid/i" type="double" value="$(arg wheel_pid_i)"/>
-        <param name="scout_motor_rr_controller/pid/d" type="double" value="$(arg wheel_pid_d)"/>
-        <param name="scout_motor_rr_controller/pid/i_clamp_max" type="double" value="$(arg wheel_pid_i_clamp)"/>
-        <param name="scout_motor_rr_controller/pid/i_clamp_min" type="double" value="-$(arg wheel_pid_i_clamp)"/>
-        <param name="scout_motor_rr_controller/pid/antiwindup" type="bool" value="$(arg wheel_pid_antiwindup)"/>
     </group>
 
     <node name="$(arg ns)_spawn_scout_model" pkg="gazebo_ros" type="spawn_model" args="-x $(arg x)
@@ -137,7 +112,6 @@
         <param name="command_gain" type="double" value="$(arg command_gain)" />
         <param name="angular_command_gain" type="double" value="$(arg angular_command_gain)" />
         <param name="command_delay_s" type="double" value="$(arg command_delay_s)" />
-        <param name="command_time_constant_s" type="double" value="$(arg command_time_constant_s)" />
         <param name="enable_command_limits" type="bool" value="$(arg enable_command_limits)" />
         <param name="max_linear_speed" type="double" value="$(arg max_linear_speed)" />
         <param name="max_angular_speed" type="double" value="$(arg max_angular_speed)" />

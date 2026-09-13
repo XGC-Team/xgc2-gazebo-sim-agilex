@@ -40,7 +40,7 @@ ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSI
             <visual>
                 <origin xyz="0 0.000996 0" rpy="0 0 0" />
                 <geometry>
-                    <mesh filename="package://scout_description/meshes/visual/wheel.dae" />
+                    <mesh filename="package://scout_description/meshes/lod10k/wheel.dae" />
                 </geometry>
             </visual>-->
             <inertial>
@@ -55,20 +55,10 @@ ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSI
             <visual>
                 <origin xyz="0 0 0" rpy="0 0 0" />
                 <geometry>
-                    <mesh filename="package://scout_description/meshes/visual/wheel.dae" />
+                    <mesh filename="package://scout_description/meshes/lod10k/wheel.dae" />
                 </geometry>
             </visual>
-            <collision>
-              <origin
-                xyz="0 0 0"
-                rpy="0 0 0" />
-              <geometry>
-                <!-- <mesh
-                  filename="package://scout_description/meshes/visual/wheel.dae" /> -->
-                  <cylinder radius="0.08" length="0.084"/>
-
-              </geometry>
-            </collision>
+            <xacro:scout_mini_wheel_collision radius="${wheel_radius}" width="${wheel_width}"/>
         </link>
 
         <joint name="${wheel_prefix}_wheel" type="continuous">

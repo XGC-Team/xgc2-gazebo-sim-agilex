@@ -20,12 +20,14 @@
     <xacro:arg name="wheel_contact_slip1" default="0.0" />
     <xacro:arg name="wheel_contact_slip2" default="0.0" />
     <xacro:arg name="wheelbase" default="0.451" />
-    <!-- Wheel mesh centers in scout_visual.urdf: y = +/-0.2082515 m. -->
+    <!-- Mounting joint separation, matching scout_visual.urdf. The retained
+         mesh's tire midpoint is offset outwards along each local wheel axis. -->
     <xacro:arg name="wheel_track" default="0.416503" />
 
     <xacro:arg name="wheel_effort_limit" default="3.0" />
     <xacro:arg name="wheel_velocity_limit" default="24.0" />
 
+    <xacro:include filename="scout_mini_wheel_collision.xacro" />
     <xacro:include filename="scout_mini_wheel_1.xacro" />
     <xacro:include filename="scout_mini_wheel_2.xacro" />
     <xacro:include filename="scout_mini_wheel_3.xacro" />
@@ -69,7 +71,7 @@
                     xyz="0 0 0.0"
                     rpy="1.57 0 -1.57" />
             <geometry>
-                <mesh filename="package://scout_description/meshes/visual/body.dae" />
+                <mesh filename="package://scout_description/meshes/lod10k/body.dae" />
             </geometry>
         </visual>
         <collision>
@@ -78,7 +80,7 @@
                     rpy="0 0 0" />
           <geometry>
             <!-- <mesh
-              filename="package://scout_description/meshes/visual/body.dae" /> -->
+              filename="package://scout_description/meshes/lod10k/body.dae" /> -->
               <box size="0.4 0.4 0.05"/>
           </geometry>
         </collision>
@@ -104,7 +106,7 @@
                     xyz="0.0 0.0 0.0"
                     rpy="0.0 0.0 3.14" />
             <geometry>
-                <mesh filename="package://scout_description/meshes/visual/payload.dae" />
+                <mesh filename="package://scout_description/meshes/lod10k/payload.dae" />
             </geometry>
         </visual>
         <collision>
@@ -259,25 +261,25 @@
     <!--<origin
             xyz="0 0 0"
             rpy="0 0 0" />-->
-        <origin xyz="${wheelbase/2} ${track/2} ${wheel_vertical_offset}" rpy="-1.57 0 0" />
+        <origin xyz="${wheelbase/2} ${track/2} ${wheel_vertical_offset}" rpy="${-pi/2} 0 0" />
     </xacro:scout_mini_wheel_1>
     <xacro:scout_mini_wheel_2 wheel_prefix="rear_left" wheel_diameter="${wheel_diameter}" wheel_width="${wheel_width}">
     <!--<origin
             xyz="0 0 0"
             rpy="0 0 0" />-->
-        <origin xyz="${-wheelbase/2} ${track/2} ${wheel_vertical_offset}" rpy="-1.57 0 0" />
+        <origin xyz="${-wheelbase/2} ${track/2} ${wheel_vertical_offset}" rpy="${-pi/2} 0 0" />
     </xacro:scout_mini_wheel_2>
     <xacro:scout_mini_wheel_3 wheel_prefix="front_right" wheel_diameter="${wheel_diameter}" wheel_width="${wheel_width}">
     <!--<origin
             xyz="0 0 0"
             rpy="0 0 0" />-->
-        <origin xyz="${wheelbase/2} ${-track/2} ${wheel_vertical_offset}" rpy="1.57 0 0" />
+        <origin xyz="${wheelbase/2} ${-track/2} ${wheel_vertical_offset}" rpy="${pi/2} 0 0" />
     </xacro:scout_mini_wheel_3>
     <xacro:scout_mini_wheel_4 wheel_prefix="rear_right" wheel_diameter="${wheel_diameter}" wheel_width="${wheel_width}">
     <!--<origin
            xyz="0 0 0"
            rpy="0 0 0" />-->
-        <origin xyz="${-wheelbase/2} ${-track/2} ${wheel_vertical_offset}" rpy="1.57 0 0" />
+        <origin xyz="${-wheelbase/2} ${-track/2} ${wheel_vertical_offset}" rpy="${pi/2} 0 0" />
     </xacro:scout_mini_wheel_4>
 
     <!-- Additional definitions -->

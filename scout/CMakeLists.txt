@@ -60,6 +60,11 @@ if(CATKIN_ENABLE_TESTING)
     COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/test/test_source_rsp_clock.py
   )
   set_tests_properties(scout_source_rsp_clock PROPERTIES TIMEOUT 90)
+  add_test(
+    NAME scout_surface_contract
+    COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/test/gazebo_surface_contract.py
+  )
+  set_tests_properties(scout_surface_contract PROPERTIES TIMEOUT 30)
 endif()
 
 install(

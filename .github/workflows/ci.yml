@@ -17,7 +17,18 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 2
+      - name: Read pinned retained wheel CAD for the geometry contract
+        uses: actions/checkout@v4
+        with:
+          repository: XGC-Team/xgc2-scout-description
+          ref: 22fdff9c6d426b75637168bc0ca8888df184f9a4
+          path: .ci/scout-description
+          persist-credentials: false
+          sparse-checkout: meshes/wheel.dae
+          sparse-checkout-cone-mode: false
       - name: Validate source and product contracts
+        env:
+          SCOUT_WHEEL_MESH: ${{ github.workspace }}/.ci/scout-description/meshes/wheel.dae
         run: |
           set -euo pipefail
           git --git-dir="$PWD/.git" --work-tree="$PWD" diff --check HEAD

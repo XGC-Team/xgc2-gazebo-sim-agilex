@@ -16,7 +16,7 @@
 #include <string>
 
 #include "xgc_chassis_hold/udp.hpp"
-#include "scout_gazebo/command_dynamics.hpp"
+#include "scout_gazebo/command_delay.hpp"
 
 namespace wescore {
 class ScoutSkidSteer {
@@ -39,12 +39,11 @@ private:
   double command_gain_;
   double angular_command_gain_;
   double command_delay_s_;
-  double command_time_constant_s_;
   bool enable_command_limits_;
   double max_linear_speed_;
   double max_angular_speed_;
 
-  CommandDynamics command_dynamics_;
+  CommandDelay command_delay_;
 
   ros::NodeHandle *nh_;
 

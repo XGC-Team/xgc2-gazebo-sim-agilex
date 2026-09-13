@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://ros.org/wiki/xacro">
+  <xacro:macro name="scout_mini_wheel_collision" params="radius width">
+    <!-- The retained wheel.dae is referenced at the mounting joint, not at the
+         tire midpoint. Its tire (geometry4) spans local z = -0.002217962 to
+         +0.08149465 m. Both wheel mount rotations map +z outwards.
+         Preserve the mounting/visual frames and align the collision axially.
+         This cylinder remains an approximation of the crowned tire surface. -->
+    <collision>
+      <origin xyz="0 0 0.039638344" rpy="0 0 0"/>
+      <geometry>
+        <cylinder radius="${radius}" length="${width}"/>
+      </geometry>
+    </collision>
+  </xacro:macro>
+</robot>
