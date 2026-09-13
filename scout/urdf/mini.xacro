@@ -300,25 +300,25 @@
     <!--<origin
             xyz="0 0 0"
             rpy="0 0 0" />-->
-        <origin xyz="${wheelbase/2} ${track/2} ${wheel_vertical_offset}" rpy="-1.57 0 0" />
+        <origin xyz="${wheelbase/2} ${track/2} ${wheel_vertical_offset}" rpy="${-pi/2} 0 0" />
     </xacro:scout_mini_wheel_1>
     <xacro:scout_mini_wheel_2 wheel_prefix="rear_left" wheel_diameter="${wheel_diameter}" wheel_width="${wheel_width}">
     <!--<origin
             xyz="0 0 0"
             rpy="0 0 0" />-->
-        <origin xyz="${-wheelbase/2} ${track/2} ${wheel_vertical_offset}" rpy="-1.57 0 0" />
+        <origin xyz="${-wheelbase/2} ${track/2} ${wheel_vertical_offset}" rpy="${-pi/2} 0 0" />
     </xacro:scout_mini_wheel_2>
     <xacro:scout_mini_wheel_3 wheel_prefix="front_right" wheel_diameter="${wheel_diameter}" wheel_width="${wheel_width}">
     <!--<origin
             xyz="0 0 0"
             rpy="0 0 0" />-->
-        <origin xyz="${wheelbase/2} ${-track/2} ${wheel_vertical_offset}" rpy="1.57 0 0" />
+        <origin xyz="${wheelbase/2} ${-track/2} ${wheel_vertical_offset}" rpy="${pi/2} 0 0" />
     </xacro:scout_mini_wheel_3>
     <xacro:scout_mini_wheel_4 wheel_prefix="rear_right" wheel_diameter="${wheel_diameter}" wheel_width="${wheel_width}">
     <!--<origin
            xyz="0 0 0"
            rpy="0 0 0" />-->
-        <origin xyz="${-wheelbase/2} ${-track/2} ${wheel_vertical_offset}" rpy="1.57 0 0" />
+        <origin xyz="${-wheelbase/2} ${-track/2} ${wheel_vertical_offset}" rpy="${pi/2} 0 0" />
     </xacro:scout_mini_wheel_4>
 
     <!-- Additional definitions -->

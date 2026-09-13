@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Check the actual xacro -> SDFormat boundary, including parameter overrides."""
 from pathlib import Path
+import math
 import shutil
 import subprocess
 import tempfile
@@ -20,6 +21,20 @@ class ScoutSurfaceTest(unittest.TestCase):
                     'xacro', str(PACKAGE / 'urdf/mini.xacro'),
                     *[name + ':=' + value for name, value in overrides.items()],
                 ], text=True)
+                robot = ET.fromstring(urdf)
+                joints = [joint for joint in robot.findall('joint')
+                          if joint.get('name', '').endswith('_wheel')]
+                self.assertEqual(len(joints), 4)
+                for joint in joints:
+                    # Positive rotation must be about body +Y, without camber.
+                    roll, pitch, yaw = map(float, joint.find('origin').get('rpy').split())
+                    axis = list(map(float, joint.find('axis').get('xyz').split()))
+                    self.assertAlmostEqual(pitch, 0., places=12)
+                    self.assertAlmostEqual(yaw, 0., places=12)
+                    self.assertAlmostEqual(axis[0], 0., places=12)
+                    self.assertAlmostEqual(axis[1], 0., places=12)
+                    self.assertAlmostEqual(-math.sin(roll)*axis[2], 1., places=12)
+                    self.assertAlmostEqual(math.cos(roll)*axis[2], 0., places=12)
                 path = Path(directory) / 'scout.urdf'
                 path.write_text(urdf)
                 sdf = ET.fromstring(subprocess.check_output(['gz', 'sdf', '-p', str(path)], text=True))
