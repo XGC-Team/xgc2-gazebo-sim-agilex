@@ -13,3 +13,5 @@ python3 scout/test/test_inner_loop_delay.py
 ```
 
 The test requires Python 3 and a C++17 compiler. It checks the command-dynamics header and the node's configuration call, not Gazebo contact dynamics.
+
+Wheel commands use `velocity_controllers/JointVelocityController`, a forwarding controller. The wheel PI gains are loaded only under `gazebo_ros_control/pid_gains/<joint>`; the forwarding controller has no PID gain parameters.

@@ -98,12 +98,12 @@ class ScoutStableDefaultsTest(unittest.TestCase):
 
     def test_controller_yaml_uses_pi_and_symmetric_antiwindup(self) -> None:
         text = (PACKAGE / "config" / "scout_mini_ros_control.yaml").read_text()
-        self.assertEqual(text.count("p: 2.0"), 8)
-        self.assertEqual(text.count("i: 8.0"), 8)
-        self.assertEqual(text.count("d: 0.0"), 8)
-        self.assertEqual(text.count("i_clamp_max: 2.0"), 8)
-        self.assertEqual(text.count("i_clamp_min: -2.0"), 8)
-        self.assertEqual(text.count("antiwindup: true"), 8)
+        self.assertEqual(text.count("p: 2.0"), 4)
+        self.assertEqual(text.count("i: 8.0"), 4)
+        self.assertEqual(text.count("d: 0.0"), 4)
+        self.assertEqual(text.count("i_clamp_max: 2.0"), 4)
+        self.assertEqual(text.count("i_clamp_min: -2.0"), 4)
+        self.assertEqual(text.count("antiwindup: true"), 4)
         self.assertNotIn("p: 6.0", text)
         self.assertNotIn("p: 9.0", text)
 
@@ -247,12 +247,12 @@ class ScoutStableDefaultsTest(unittest.TestCase):
             'name="wheel_contact_slip2" value="$(arg wheel_contact_slip2)"',
             text,
         )
-        self.assertEqual(text.count('value="$(arg wheel_pid_p)"'), 8)
-        self.assertEqual(text.count('value="$(arg wheel_pid_i)"'), 8)
-        self.assertEqual(text.count('value="$(arg wheel_pid_d)"'), 8)
-        self.assertEqual(text.count('value="$(arg wheel_pid_i_clamp)"'), 8)
-        self.assertEqual(text.count('value="-$(arg wheel_pid_i_clamp)"'), 8)
-        self.assertEqual(text.count('value="$(arg wheel_pid_antiwindup)"'), 8)
+        self.assertEqual(text.count('value="$(arg wheel_pid_p)"'), 4)
+        self.assertEqual(text.count('value="$(arg wheel_pid_i)"'), 4)
+        self.assertEqual(text.count('value="$(arg wheel_pid_d)"'), 4)
+        self.assertEqual(text.count('value="$(arg wheel_pid_i_clamp)"'), 4)
+        self.assertEqual(text.count('value="-$(arg wheel_pid_i_clamp)"'), 4)
+        self.assertEqual(text.count('value="$(arg wheel_pid_antiwindup)"'), 4)
         self.assertIn(
             'name="command_delay_s" type="double" value="$(arg command_delay_s)"',
             text,
