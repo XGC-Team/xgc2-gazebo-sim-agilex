@@ -69,7 +69,7 @@
                     xyz="0 0 0.0"
                     rpy="1.57 0 -1.57" />
             <geometry>
-                <mesh filename="package://scout_description/meshes/scout_mini_base_link2.dae" />
+                <mesh filename="package://scout_description/meshes/visual/body.dae" />
             </geometry>
         </visual>
         <collision>
@@ -78,7 +78,7 @@
                     rpy="0 0 0" />
           <geometry>
             <!-- <mesh
-              filename="package://scout_description/meshes/scout_mini_base_link2.dae" /> -->
+              filename="package://scout_description/meshes/visual/body.dae" /> -->
               <box size="0.4 0.4 0.05"/>
           </geometry>
         </collision>
@@ -104,11 +104,8 @@
                     xyz="0.0 0.0 0.0"
                     rpy="0.0 0.0 3.14" />
             <geometry>
-                <mesh filename="package://scout_description/meshes/box_link.STL" />
+                <mesh filename="package://scout_description/meshes/visual/payload.dae" />
             </geometry>
-            <material name = "red">
-            <color rgba="1 1 1 1" />
-            </material>
         </visual>
         <collision>
             <origin
@@ -141,17 +138,7 @@
                 iyz="-6.9288E-06"
                 izz="0.01219" />
         </inertial>
-        <visual>
-            <origin
-                    xyz="0.0 0.0 0.0"
-                    rpy="0.0 0.0 0.0" />
-            <geometry>
-                    <cylinder radius="0.01" length="0.01"/>
-            </geometry>
-            <material name = "red">
-            <color rgba="1 1 1 1" />
-            </material>
-        </visual>
+
         <collision>
             <origin
                     xyz="0 0 0.31"
@@ -174,15 +161,7 @@
             <mass value="0.8" />
             <inertia ixx="0.001" ixy="0" ixz="0" iyy="0.001" iyz="0" izz="0.001" />
         </inertial>
-        <visual>
-            <origin xyz="0 0 0" rpy="0 0 0" />
-            <geometry>
-                <cylinder radius="0.05" length="0.08" />
-            </geometry>
-            <material name="helios_gray">
-                <color rgba="0.2 0.2 0.2 1" />
-            </material>
-        </visual>
+
         <collision>
             <origin xyz="0 0 0" rpy="0 0 0" />
             <geometry>
@@ -211,17 +190,6 @@
                 iyz="-6.9288E-06"
                 izz="0.01219" />
         </inertial>
-        <visual>
-            <origin
-                    xyz="0.0 0.0 0.0"
-                    rpy="0.0 0.0 0.0" />
-            <geometry>
-                    <box size="0.01 0.01 0.01"/>
-            </geometry>
-            <material name = "red">
-            <color rgba="1 1 1 1" />
-            </material>
-        </visual>
         <collision>
             <origin
                     xyz="0 0 0.31"
@@ -247,15 +215,6 @@
                 iyy="0.000001" iyz="0"
                 izz="0.000001" />
         </inertial>
-        <visual>
-            <origin xyz="0.0 0.0 0.0" rpy="0 0 0" />
-            <geometry>
-                <box size="0.03 0.02 0.01"/>
-            </geometry>
-            <material name="imu_blue">
-                <color rgba="0.1 0.2 0.8 1.0" />
-            </material>
-        </visual>
         <collision>
             <origin xyz="0.0 0.0 0.0" rpy="0 0 0" />
             <geometry>
