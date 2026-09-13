@@ -18,7 +18,7 @@
 namespace wescore {
 ScoutSkidSteer::ScoutSkidSteer(ros::NodeHandle *nh, std::string robot_name)
     : robot_name_(robot_name), command_delay_s_(0.005),
-      command_time_constant_s_(0.010), nh_(nh),
+      command_time_constant_s_(0.0), nh_(nh),
       hold_gate_(xgc_chassis_hold::lastPath(robot_name)) {
   ros::NodeHandle private_nh("~");
   private_nh.param("wheel_separation", wheel_separation_, 0.416503);
@@ -26,7 +26,7 @@ ScoutSkidSteer::ScoutSkidSteer(ros::NodeHandle *nh, std::string robot_name)
   private_nh.param("command_gain", command_gain_, 1.0);
   private_nh.param("angular_command_gain", angular_command_gain_, 1.0);
   private_nh.param("command_delay_s", command_delay_s_, 0.005);
-  private_nh.param("command_time_constant_s", command_time_constant_s_, 0.010);
+  private_nh.param("command_time_constant_s", command_time_constant_s_, 0.0);
   private_nh.param("enable_command_limits", enable_command_limits_, true);
   private_nh.param("max_linear_speed", max_linear_speed_, 1.5);
   private_nh.param("max_angular_speed", max_angular_speed_, 0.5235);
@@ -47,7 +47,16 @@ ScoutSkidSteer::ScoutSkidSteer(ros::NodeHandle *nh, std::string robot_name)
       !std::isfinite(command_gain_) || !std::isfinite(angular_command_gain_)) {
     throw std::invalid_argument("Scout wheel geometry and command gains must be finite; geometry must be positive");
   }
-  command_dynamics_.Configure(command_delay_s_, command_time_constant_s_);
+  // The physical wheel PI, inertia and contact already provide actuator
+  // dynamics. Preserve transport delay, but do not cascade a second speed lag.
+  // Old frozen launch snapshots can still carry the deprecated parameter.
+  if (command_time_constant_s_ != 0.0) {
+    ROS_WARN("Scout command_time_constant_s=%.6f is disabled for the wheel-PI plant; "
+             "using zero added lag and retaining command_delay_s=%.6f",
+             command_time_constant_s_, command_delay_s_);
+  }
+  command_time_constant_s_ = 0.0;
+  command_dynamics_.Configure(command_delay_s_, 0.0);
 
   motor_fr_topic_ = JoinTopic(robot_name_, "scout_motor_fr_controller/command");
   motor_fl_topic_ = JoinTopic(robot_name_, "scout_motor_fl_controller/command");
