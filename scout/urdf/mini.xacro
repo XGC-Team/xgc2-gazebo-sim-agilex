@@ -20,12 +20,14 @@
     <xacro:arg name="wheel_contact_slip1" default="0.0" />
     <xacro:arg name="wheel_contact_slip2" default="0.0" />
     <xacro:arg name="wheelbase" default="0.451" />
-    <!-- Wheel mesh centers in scout_visual.urdf: y = +/-0.2082515 m. -->
+    <!-- Mounting joint separation, matching scout_visual.urdf. The retained
+         mesh's tire midpoint is offset outwards along each local wheel axis. -->
     <xacro:arg name="wheel_track" default="0.416503" />
 
     <xacro:arg name="wheel_effort_limit" default="3.0" />
     <xacro:arg name="wheel_velocity_limit" default="24.0" />
 
+    <xacro:include filename="scout_mini_wheel_collision.xacro" />
     <xacro:include filename="scout_mini_wheel_1.xacro" />
     <xacro:include filename="scout_mini_wheel_2.xacro" />
     <xacro:include filename="scout_mini_wheel_3.xacro" />
