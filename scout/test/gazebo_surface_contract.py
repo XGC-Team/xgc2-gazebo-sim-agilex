@@ -3,6 +3,7 @@
 from pathlib import Path
 import hashlib
 import math
+import os
 import shutil
 import subprocess
 import tempfile
@@ -16,9 +17,12 @@ class ScoutSurfaceTest(unittest.TestCase):
     def test_collision_matches_retained_tire_geometry(self):
         # Compare actual expanded collision placement with the retained CAD,
         # rather than assuming a URDF joint frame is the tire midpoint.
-        description = Path(subprocess.check_output(
-            ['rospack', 'find', 'scout_description'], text=True).strip())
-        mesh = description / 'meshes/wheel.dae'
+        if os.environ.get('SCOUT_WHEEL_MESH'):
+            mesh = Path(os.environ['SCOUT_WHEEL_MESH'])
+        else:
+            description = Path(subprocess.check_output(
+                ['rospack', 'find', 'scout_description'], text=True).strip())
+            mesh = description / 'meshes/wheel.dae'
         self.assertEqual(hashlib.sha256(mesh.read_bytes()).hexdigest(),
                          'c64ae34e44118f07d718d54199107ce430a006d1cd9fd96bb80968954b5a8ce7',
                          'Retained CAD changed; review tire geometry before updating this contract')
