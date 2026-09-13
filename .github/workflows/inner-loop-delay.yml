@@ -1,0 +1,16 @@
+name: Wheel PI transport-delay regression
+on:
+  pull_request:
+    paths:
+      - 'scout/src/scout_skid_steer.cpp'
+      - 'scout/include/scout_gazebo/command_dynamics.hpp'
+      - 'scout/test/test_inner_loop_delay.py'
+      - '.github/workflows/inner-loop-delay.yml'
+permissions:
+  contents: read
+jobs:
+  delay-only:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 scout/test/test_inner_loop_delay.py
