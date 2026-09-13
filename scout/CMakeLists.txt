@@ -65,6 +65,11 @@ if(CATKIN_ENABLE_TESTING)
     COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/test/gazebo_surface_contract.py
   )
   set_tests_properties(scout_surface_contract PROPERTIES TIMEOUT 30)
+  add_test(
+    NAME scout_ground_truth
+    COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/test/test_ground_truth.py
+  )
+  set_tests_properties(scout_ground_truth PROPERTIES TIMEOUT 90)
 endif()
 
 install(
