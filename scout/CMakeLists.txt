@@ -55,6 +55,11 @@ if(CATKIN_ENABLE_TESTING)
     NAME scout_stable_defaults
     COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/test/test_stable_defaults.py
   )
+  add_test(
+    NAME scout_source_rsp_clock
+    COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/test/test_source_rsp_clock.py
+  )
+  set_tests_properties(scout_source_rsp_clock PROPERTIES TIMEOUT 90)
 endif()
 
 install(

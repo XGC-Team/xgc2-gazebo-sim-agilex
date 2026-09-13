@@ -17,6 +17,7 @@
     <arg name="enable_rslidar" default="false"/>
     <arg name="enable_camera" default="false"/>
     <arg name="robot_state_publisher_ns" default="/"/>
+    <arg name="run_mode" default="simulation"/>
     <arg name="wheel_contact_mu1" default="0.10"/>
     <arg name="wheel_contact_mu2" default="1.0"/>
     <arg name="wheel_contact_fdir1" default="0 0 1"/>
@@ -161,9 +162,11 @@
         <param name="wheel_track" type="double" value="$(arg wheel_track)" />
     </node>
 
-    <node name="$(arg ns)_robot_state_publisher" ns="$(arg robot_state_publisher_ns)" pkg="robot_state_publisher" type="robot_state_publisher">
-        <param name="tf_prefix" type="string" value="$(arg tf_prefix)" />
-        <param name="frame_prefix" type="string" value="$(arg frame_prefix)" />
-        <remap from="joint_states" to="/$(arg ns)/joint_states"/>
-    </node>
+    <include file="$(dirname)/source_robot_state_publisher.launch">
+        <arg name="ns" value="$(arg ns)" />
+        <arg name="robot_state_publisher_ns" value="$(arg robot_state_publisher_ns)" />
+        <arg name="tf_prefix" value="$(arg tf_prefix)" />
+        <arg name="frame_prefix" value="$(arg frame_prefix)" />
+        <arg name="run_mode" value="$(arg run_mode)" />
+    </include>
 </launch>

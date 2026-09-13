@@ -1,0 +1,22 @@
+<?xml version="1.0"?>
+<launch>
+    <arg name="ns" default="ugv1"/>
+    <arg name="robot_state_publisher_ns" default="/"/>
+    <arg name="tf_prefix" default=""/>
+    <arg name="frame_prefix" default=""/>
+    <arg name="run_mode" default="simulation"/>
+    <arg name="source_clock_topic" value="$(eval {'simulation': '/clock', 'hybrid': '/xgc/source/gazebo/clock'}[arg('run_mode')])"/>
+
+    <!-- JointState stamps come from Gazebo World::SimTime in both modes.
+         Keep the upstream RSP (including sensor static TF) in that source
+         domain. This private clock does not change the hybrid graph clock,
+         restamp joint samples, or provide the /xgc/tf display tree. -->
+    <node name="$(arg ns)_robot_state_publisher" ns="$(arg robot_state_publisher_ns)" pkg="robot_state_publisher" type="robot_state_publisher">
+        <param name="tf_prefix" type="string" value="$(arg tf_prefix)"/>
+        <param name="frame_prefix" type="string" value="$(arg frame_prefix)"/>
+        <param name="use_sim_time" type="bool" value="true"/>
+        <remap from="/use_sim_time" to="~use_sim_time"/>
+        <remap from="/clock" to="$(arg source_clock_topic)"/>
+        <remap from="joint_states" to="/$(arg ns)/joint_states"/>
+    </node>
+</launch>
