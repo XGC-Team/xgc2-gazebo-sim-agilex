@@ -25,8 +25,15 @@ class ControlContractTest(unittest.TestCase):
         self.assertIn('command_delay_.Push', receive)
         self.assertNotIn('motor_fr_pub_.publish', receive)
         self.assertIn('command_delay_.Advance(ros::Time::now().toSec())', tick)
-        self.assertIn('createWallTimer', text)
+        self.assertIn('createTimer', text)
+        self.assertNotIn('createWallTimer', text)
         self.assertIn('command_delay_.Reset()', text)
+        # A paused simulation clock stops the ordinary command timer. The
+        # independent hold callback must still command zero immediately.
+        self.assertIn('hold_gate_.setZeroThunk(&ScoutSkidSteer::HoldZeroThunk, this)', text)
+        hold_zero = text.split('void ScoutSkidSteer::HoldZeroThunk(', 1)[1].split(
+            'void ScoutSkidSteer::PublishZeroMotors()', 1)[0]
+        self.assertIn('PublishZeroMotors()', hold_zero)
 
     def test_shutdown_drains_producers_before_unregistering(self):
         text = (ROOT / 'src/scout_skid_steer.cpp').read_text().split(
