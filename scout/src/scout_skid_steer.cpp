@@ -74,10 +74,15 @@ void ScoutSkidSteer::SetupSubscription() {
   xgc_chassis_hold::Hub::instance().add(&hold_gate_);
   cmd_sub_ = nh_->subscribe<geometry_msgs::Twist>(
       cmd_topic_, 5, &ScoutSkidSteer::TwistCmdCallback, this);
-  // Wall scheduling survives a paused/rewound clock. The plant itself uses
-  // ROS simulation time, so wall ticks never advance paused dynamics.
-  control_timer_ = nh_->createWallTimer(
-      ros::WallDuration(0.01), &ScoutSkidSteer::ControlTick, this);
+  // The deadline and its scheduler must use the same ROS/simulation clock.
+  // A 10 ms WALL timer adds an RTF-dependent delay to a 5 ms SIM deadline.
+  // A 1 ms ROS timer checks maturity at the available /clock resolution; it
+  // does not interpolate physics or add actuator inertia. At a 4 ms physics
+  // step, a command received on a tick can first mature 8 ms later, not 5 ms.
+  // Paused simulation does not advance this timer. The independent UDP hold
+  // callback still publishes an immediate zero while the clock is paused.
+  control_timer_ = nh_->createTimer(
+      ros::Duration(0.001), &ScoutSkidSteer::ControlTick, this);
 }
 
 void ScoutSkidSteer::HoldZeroThunk(void *self) {
@@ -128,7 +133,7 @@ void ScoutSkidSteer::TwistCmdCallback(
   });
 }
 
-void ScoutSkidSteer::ControlTick(const ros::WallTimerEvent &) {
+void ScoutSkidSteer::ControlTick(const ros::TimerEvent &) {
   hold_gate_.withCommand([this](bool held) {
     if (held) {
       PublishZeroMotors();
