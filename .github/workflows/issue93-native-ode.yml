@@ -1,0 +1,38 @@
+name: Scout native ODE reference
+on:
+  push:
+    branches: ['issue93/sim-time-command-release']
+    paths: ['scout/tools/model_validation/**', '.github/workflows/issue93-native-ode.yml']
+  pull_request:
+    paths: ['scout/tools/model_validation/**', '.github/workflows/issue93-native-ode.yml']
+permissions:
+  contents: read
+jobs:
+  native-ode:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: scout-source
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          repository: gazebosim/gazebo-classic
+          ref: b22c6e15e52299865b31093b8feebc9ca19e26e8
+          path: gazebo-source
+          persist-credentials: false
+          sparse-checkout: |
+            deps
+            cmake
+      - name: Install native build dependencies, no ROS
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends cmake g++ pkg-config libboost-thread-dev libboost-system-dev libccd-dev
+      - name: Locate actual cone implementation
+        run: |
+          grep -Rn 'dxConeFrictionModel\|dWorldSetQuickStepFrictionModel' gazebo-source/deps/opende/src gazebo-source/deps/opende/include
+      - name: Build and exercise the pinned ODE contact source
+        run: |
+          bash scout-source/scout/tools/model_validation/build_native_ode.sh "$PWD/gazebo-source" "$RUNNER_TEMP/issue93-native-ode"
+          "$RUNNER_TEMP/issue93-native-ode/build/contact_oracle"
