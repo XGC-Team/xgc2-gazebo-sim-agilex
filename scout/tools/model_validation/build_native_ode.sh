@@ -48,10 +48,12 @@ pkg_check_modules(CCD REQUIRED ccd)
 set(HAVE_LIBCCD TRUE)
 include_directories("${CMAKE_SOURCE_DIR}" "${CMAKE_BINARY_DIR}")
 add_subdirectory(deps/opende)
-add_executable(contact_oracle "${SCOUT_VALIDATION_DIR}/contact_oracle.cpp")
-target_compile_definitions(contact_oracle PRIVATE dDOUBLE)
-target_include_directories(contact_oracle PRIVATE "${CMAKE_SOURCE_DIR}/deps/opende/include")
-target_link_libraries(contact_oracle PRIVATE gazebo_ode Threads::Threads)
+foreach(reference_program contact_oracle scout_native)
+  add_executable(${reference_program} "${SCOUT_VALIDATION_DIR}/${reference_program}.cpp")
+  target_compile_definitions(${reference_program} PRIVATE dDOUBLE BOOST_BIND_GLOBAL_PLACEHOLDERS)
+  target_include_directories(${reference_program} PRIVATE "${CMAKE_SOURCE_DIR}/deps/opende/include" ${Boost_INCLUDE_DIRS})
+  target_link_libraries(${reference_program} PRIVATE gazebo_ode Threads::Threads)
+endforeach()
 enable_testing()
 add_test(NAME contact_oracle COMMAND contact_oracle)
 EOF
@@ -65,5 +67,5 @@ ctest --test-dir "$output_dir/build" --output-on-failure
   echo 'optional_features=ROS:none,Gazebo_GUI:none,DART:none,Bullet:none,HDF5:none,SSE_override:none'
   cmake --version | head -n1
   c++ --version | head -n1
-  sha256sum "$output_dir/build/contact_oracle"
+  sha256sum "$output_dir/build/contact_oracle" "$output_dir/build/scout_native"
 } | tee "$output_dir/build-receipt.txt"
