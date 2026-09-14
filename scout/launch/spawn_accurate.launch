@@ -108,6 +108,7 @@
     <node name="$(arg ns)_scout_skid_steer_controller" pkg="gazebo_sim_scout" type="scout_skid_steer_controller" output="screen">
         <param name="ns" type="string" value="$(arg ns)" />
         <param name="wheel_separation" type="double" value="$(arg wheel_separation)" />
+        <param name="wheel_velocity_limit" type="double" value="$(arg wheel_velocity_limit)" />
         <param name="wheel_radius" type="double" value="$(arg wheel_radius)" />
         <param name="command_gain" type="double" value="$(arg command_gain)" />
         <param name="angular_command_gain" type="double" value="$(arg angular_command_gain)" />

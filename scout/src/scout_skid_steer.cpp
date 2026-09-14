@@ -8,6 +8,7 @@
  */
 
 #include "scout_gazebo/scout_skid_steer.hpp"
+#include "scout_gazebo/wheel_allocation.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -22,6 +23,7 @@ ScoutSkidSteer::ScoutSkidSteer(ros::NodeHandle *nh, std::string robot_name)
   ros::NodeHandle private_nh("~");
   private_nh.param("wheel_separation", wheel_separation_, 0.416503);
   private_nh.param("wheel_radius", wheel_radius_, 0.08);
+  private_nh.param("wheel_velocity_limit", wheel_velocity_limit_, 24.0);
   private_nh.param("command_gain", command_gain_, 1.0);
   private_nh.param("angular_command_gain", angular_command_gain_, 1.0);
   private_nh.param("command_delay_s", command_delay_s_, 0.005);
@@ -30,14 +32,15 @@ ScoutSkidSteer::ScoutSkidSteer(ros::NodeHandle *nh, std::string robot_name)
   private_nh.param("max_angular_speed", max_angular_speed_, 0.5235);
 
   if (!std::isfinite(command_delay_s_) || command_delay_s_ < 0.0) {
-    ROS_WARN("Invalid Scout command_delay_s %.6f; using 0", command_delay_s_);
-    command_delay_s_ = 0.0;
+    throw std::invalid_argument("Scout command_delay_s must be finite and nonnegative");
   }
 
-  if (!std::isfinite(wheel_radius_) || wheel_radius_ <= 0.0 ||
-      !std::isfinite(wheel_separation_) || wheel_separation_ <= 0.0 ||
-      !std::isfinite(command_gain_) || !std::isfinite(angular_command_gain_)) {
-    throw std::invalid_argument("Scout wheel geometry and command gains must be finite; geometry must be positive");
+  ValidateAllocation({wheel_radius_, wheel_separation_, command_gain_,
+            angular_command_gain_, wheel_velocity_limit_});
+  if (enable_command_limits_ &&
+      (!std::isfinite(max_linear_speed_) || max_linear_speed_ <= 0.0 ||
+       !std::isfinite(max_angular_speed_) || max_angular_speed_ <= 0.0)) {
+    throw std::invalid_argument("enabled Scout command limits must be finite and positive");
   }
   command_delay_.Configure(command_delay_s_);
 
@@ -74,10 +77,12 @@ void ScoutSkidSteer::SetupSubscription() {
   xgc_chassis_hold::Hub::instance().add(&hold_gate_);
   cmd_sub_ = nh_->subscribe<geometry_msgs::Twist>(
       cmd_topic_, 5, &ScoutSkidSteer::TwistCmdCallback, this);
-  // Wall scheduling survives a paused/rewound clock. The plant itself uses
-  // ROS simulation time, so wall ticks never advance paused dynamics.
-  control_timer_ = nh_->createWallTimer(
-      ros::WallDuration(0.01), &ScoutSkidSteer::ControlTick, this);
+  // Sample the pure-delay queue in the same ROS time base as its deadlines.
+  // A wall timer changes the simulated sampling interval with real-time factor.
+  // This 10 ms sampling/hold is distinct from the configured 5 ms transport delay.
+  // The independent emergency-hold thunk still clears/publishes zero while paused.
+  control_timer_ = nh_->createTimer(
+      ros::Duration(0.01), &ScoutSkidSteer::ControlTick, this);
 }
 
 void ScoutSkidSteer::HoldZeroThunk(void *self) {
@@ -128,22 +133,28 @@ void ScoutSkidSteer::TwistCmdCallback(
   });
 }
 
-void ScoutSkidSteer::ControlTick(const ros::WallTimerEvent &) {
+void ScoutSkidSteer::ControlTick(const ros::TimerEvent &) {
   hold_gate_.withCommand([this](bool held) {
     if (held) {
       PublishZeroMotors();
       return;
     }
     const CommandVelocity command = command_delay_.Advance(ros::Time::now().toSec());
-    const double steering = command.angular * angular_command_gain_;
-    const double half_track = wheel_separation_ * 0.5;
-    const double left = (command.linear - steering * half_track) / wheel_radius_;
-    const double right = (command.linear + steering * half_track) / wheel_radius_;
+    WheelTargets targets;
+    try {
+      targets = AllocateWheelTargets(
+          command.linear, command.angular,
+          {wheel_radius_, wheel_separation_, command_gain_,
+           angular_command_gain_, wheel_velocity_limit_});
+    } catch (const std::exception &error) {
+      ROS_ERROR_THROTTLE(1.0, "Invalid Scout wheel allocation: %s", error.what());
+      PublishZeroMotors();
+      return;
+    }
     std_msgs::Float64 motor_cmd[4];
-    motor_cmd[0].data = right * command_gain_;
-    motor_cmd[1].data = left * command_gain_;
-    motor_cmd[2].data = left * command_gain_;
-    motor_cmd[3].data = right * command_gain_;
+    for (std::size_t index = 0; index < 4; ++index) {
+      motor_cmd[index].data = targets.radians_per_second[index];
+    }
     motor_fr_pub_.publish(motor_cmd[0]);
     motor_fl_pub_.publish(motor_cmd[1]);
     motor_rl_pub_.publish(motor_cmd[2]);
