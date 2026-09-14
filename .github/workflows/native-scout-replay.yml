@@ -1,0 +1,38 @@
+name: Native Scout physics replay build
+on:
+  push:
+    branches: [fix/93-sim-time-command-dispatch]
+    paths:
+      - scout/tools/native_replay/**
+      - .github/workflows/native-scout-replay.yml
+  pull_request:
+    paths:
+      - scout/tools/native_replay/**
+      - .github/workflows/native-scout-replay.yml
+permissions:
+  contents: read
+jobs:
+  native-build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    env:
+      GIT_LFS_SKIP_SMUDGE: '1'
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          lfs: false
+          submodules: false
+          persist-credentials: false
+      - name: Build pinned physics tool without ROS
+        run: docker build -f scout/tools/native_replay/Dockerfile -t scout93-native .
+      - name: Check the actual binary argument contract
+        run: |
+          set -eu
+          set +e
+          docker run --rm --network none scout93-native > /tmp/usage.log 2>&1
+          result=$?
+          set -e
+          cat /tmp/usage.log
+          test "$result" = 2
+          grep -F 'Usage: scout_native_replay frozen.yaml' /tmp/usage.log
+          docker run --rm --network none --entrypoint cat scout93-native /build/binary-sha256.txt
