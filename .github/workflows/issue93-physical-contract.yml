@@ -18,7 +18,7 @@ permissions:
 jobs:
   physical-contract:
     runs-on: ubuntu-24.04
-    container: ghcr.io/xgc-team/xgc2-images/xgc2-build-focal-full-noetic:1.0.0
+    container: ghcr.io/xgc-team/xgc2-images/xgc2-build-focal-full-noetic@sha256:2d0ab240a669e59dc6e86e41806041a7f5d46751c787b5cbb225b10e1faed39b
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
@@ -32,11 +32,11 @@ jobs:
           source /opt/ros/noetic/setup.bash
           python3 -c 'import xacro; print(xacro.__file__)'
           dpkg-query -W gazebo11 libgazebo11 ros-noetic-gazebo-ros-control ros-noetic-control-toolbox ros-noetic-xacro
-          git rev-parse HEAD
+          git -c safe.directory="$PWD" rev-parse HEAD
       - name: Expand actual source and verify non-default physical parameters
         shell: bash
         run: |
           set -euo pipefail
           source /opt/ros/noetic/setup.bash
           python3 scout/test/test_physical_wheel_contract.py
-          git diff --check
+          git -c safe.directory="$PWD" diff --check
