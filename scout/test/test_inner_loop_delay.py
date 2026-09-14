@@ -35,6 +35,14 @@ int main(){
  eq(d.Advance(.1).linear,0); // rewind invalidates queued/held motion
  d.Configure(0);d.Push(1,.2,-.1);eq(d.Advance(1).linear,.2);
  d.Reset();eq(d.Advance(2).linear,0);
+ // Dispatch only new output, including equal values and entries matured by Push.
+ d.Configure(.125);d.Push(0,.5,0);d.Advance(0);
+ auto sequence=d.OutputSequence();d.Advance(.1);eq(d.OutputSequence(),sequence);
+ d.Push(.25,.5,0);eq(d.Advance(.25).linear,.5);
+ eq(d.OutputSequence(),sequence+1);sequence=d.OutputSequence();
+ d.Advance(.375);eq(d.OutputSequence(),sequence+1);sequence=d.OutputSequence();
+ d.Advance(.4);eq(d.OutputSequence(),sequence);
+ d.Push(.5,0,0);d.Advance(.625);eq(d.OutputSequence(),sequence+1);
  std::cout<<"6 pure-delay/stop/reverse/clock regression scenarios passed\n";
 }
 '''

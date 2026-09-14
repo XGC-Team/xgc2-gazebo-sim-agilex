@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cmath>
+#include <cstdint>
 #include <deque>
 #include <stdexcept>
 
@@ -28,7 +29,12 @@ class CommandDelay {
     delayed_ = {0.0, 0.0};
     initialized_ = false;
     last_time_ = 0.0;
+    ++output_sequence_;
   }
+
+  // Changes when a command matures or the held output is reset. Push may
+  // mature older entries too; the dispatcher must not lose that notification.
+  std::uint64_t OutputSequence() const { return output_sequence_; }
 
   void Push(double now, double linear, double angular) {
     if (!std::isfinite(now) || !std::isfinite(now + delay_) ||
@@ -56,6 +62,7 @@ class CommandDelay {
     while (!history_.empty() && history_.front().due <= now) {
       const Command next = history_.front();
       delayed_ = {next.linear, next.angular};
+      ++output_sequence_;
       history_.pop_front();
     }
     last_time_ = now;
@@ -70,6 +77,7 @@ class CommandDelay {
   double delay_ = 0.0;
   double last_time_ = 0.0;
   bool initialized_ = false;
+  std::uint64_t output_sequence_ = 0;
 };
 
 }  // namespace wescore

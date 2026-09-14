@@ -25,7 +25,7 @@ class ControlContractTest(unittest.TestCase):
         self.assertIn('command_delay_.Push', receive)
         self.assertNotIn('motor_fr_pub_.publish', receive)
         self.assertIn('command_delay_.Advance(ros::Time::now().toSec())', tick)
-        self.assertIn('createWallTimer', text)
+        self.assertIn('createTimer', text)
         self.assertIn('command_delay_.Reset()', text)
 
     def test_shutdown_drains_producers_before_unregistering(self):

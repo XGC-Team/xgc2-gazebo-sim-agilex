@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://ros.org/wiki/xacro">
+  <!-- Uniform-cylinder approximation about its configured mass centre.
+       SI units: kg, m, kg m^2. The mass centre is NOT inferred from a
+       tire visual; the default offset is 0 m. -->
+  <xacro:macro name="scout_mini_wheel_inertial" params="radius width">
+    <xacro:property name="wheel_mass_si" value="${float('$(arg wheel_mass)')}"/>
+    <inertial>
+      <origin xyz="0 0 $(arg wheel_inertial_axial_offset)" rpy="0 0 0"/>
+      <mass value="${wheel_mass_si}"/>
+      <inertia ixx="${wheel_mass_si * (3*radius*radius + width*width)/12}" ixy="0" ixz="0"
+               iyy="${wheel_mass_si * (3*radius*radius + width*width)/12}" iyz="0"
+               izz="${wheel_mass_si * radius*radius/2}"/>
+    </inertial>
+  </xacro:macro>
+</robot>

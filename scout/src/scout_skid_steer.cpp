@@ -74,10 +74,11 @@ void ScoutSkidSteer::SetupSubscription() {
   xgc_chassis_hold::Hub::instance().add(&hold_gate_);
   cmd_sub_ = nh_->subscribe<geometry_msgs::Twist>(
       cmd_topic_, 5, &ScoutSkidSteer::TwistCmdCallback, this);
-  // Wall scheduling survives a paused/rewound clock. The plant itself uses
-  // ROS simulation time, so wall ticks never advance paused dynamics.
-  control_timer_ = nh_->createWallTimer(
-      ros::WallDuration(0.01), &ScoutSkidSteer::ControlTick, this);
+  // Use the queue's ROS clock so release latency does not scale with RTF.
+  // /clock and the physics step still quantize actual wheel actuation.
+  // UDP Hold publishes zero independently, including while time is paused.
+  control_timer_ = nh_->createTimer(
+      ros::Duration(0.001), &ScoutSkidSteer::ControlTick, this);
 }
 
 void ScoutSkidSteer::HoldZeroThunk(void *self) {
@@ -86,6 +87,7 @@ void ScoutSkidSteer::HoldZeroThunk(void *self) {
 
 void ScoutSkidSteer::PublishZeroMotors() {
   command_delay_.Reset();
+  published_sequence_ = command_delay_.OutputSequence();
   if (!motor_fr_pub_) {
     return;
   }
@@ -128,13 +130,16 @@ void ScoutSkidSteer::TwistCmdCallback(
   });
 }
 
-void ScoutSkidSteer::ControlTick(const ros::WallTimerEvent &) {
+void ScoutSkidSteer::ControlTick(const ros::TimerEvent &) {
   hold_gate_.withCommand([this](bool held) {
     if (held) {
-      PublishZeroMotors();
+      // The Hold transition already clears the queue and publishes zero.
       return;
     }
     const CommandVelocity command = command_delay_.Advance(ros::Time::now().toSec());
+    if (published_sequence_ == command_delay_.OutputSequence()) return;
+    published_sequence_ = command_delay_.OutputSequence();
+    // The wheel controllers retain their target between matured commands.
     const double steering = command.angular * angular_command_gain_;
     const double half_track = wheel_separation_ * 0.5;
     const double left = (command.linear - steering * half_track) / wheel_radius_;
