@@ -1,0 +1,16 @@
+name: Scout allocation and clock contract
+on:
+  pull_request:
+    branches: [xgc2-noetic]
+    paths:
+      - 'scout/**'
+      - '.github/workflows/allocation-clock.yml'
+permissions:
+  contents: read
+jobs:
+  numerical:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 scout/test/test_allocation_clock.py
