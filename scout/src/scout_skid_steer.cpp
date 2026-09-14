@@ -74,10 +74,15 @@ void ScoutSkidSteer::SetupSubscription() {
   xgc_chassis_hold::Hub::instance().add(&hold_gate_);
   cmd_sub_ = nh_->subscribe<geometry_msgs::Twist>(
       cmd_topic_, 5, &ScoutSkidSteer::TwistCmdCallback, this);
-  // Wall scheduling survives a paused/rewound clock. The plant itself uses
-  // ROS simulation time, so wall ticks never advance paused dynamics.
-  control_timer_ = nh_->createWallTimer(
-      ros::WallDuration(0.01), &ScoutSkidSteer::ControlTick, this);
+  // The delay is in plant (ROS) time. A 10 ms WallTimer added an execution
+  // phase proportional to real-time factor, even with the same /clock input.
+  // Poll on ROS time at the smallest supported validation physics step (1 ms).
+  // With /use_sim_time this advances only when /clock advances; callback and
+  // physics-step quantization still exist and must be measured, not re-labelled
+  // as the configured 5 ms transport delay. HoldZeroThunk remains independent
+  // of this timer, including while simulation time is paused.
+  control_timer_ = nh_->createTimer(
+      ros::Duration(0.001), &ScoutSkidSteer::ControlTick, this);
 }
 
 void ScoutSkidSteer::HoldZeroThunk(void *self) {
@@ -128,7 +133,7 @@ void ScoutSkidSteer::TwistCmdCallback(
   });
 }
 
-void ScoutSkidSteer::ControlTick(const ros::WallTimerEvent &) {
+void ScoutSkidSteer::ControlTick(const ros::TimerEvent &) {
   hold_gate_.withCommand([this](bool held) {
     if (held) {
       PublishZeroMotors();
