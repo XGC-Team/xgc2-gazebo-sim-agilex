@@ -21,14 +21,21 @@ jobs:
     timeout-minutes: 15
     env:
       GIT_LFS_SKIP_SMUDGE: '1'
+      BUILD_IMAGE: ghcr.io/xgc-team/xgc2-images/xgc2-build-focal-ros-noetic:1.0.0
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
           lfs: false
           submodules: false
-      - name: Test the production delay header without ROS
-        run: python3 scout/test/test_inner_loop_delay.py
+          persist-credentials: false
+      - name: Compile and execute the real delay core in the approved build image
+        run: |
+          set -euo pipefail
+          docker pull "$BUILD_IMAGE"
+          docker image inspect --format '{{json .RepoDigests}}' "$BUILD_IMAGE"
+          docker run --rm --network none -v "$PWD:/work:ro" -w /work "$BUILD_IMAGE" \
+            bash -lc 'python3 scout/test/test_inner_loop_delay.py'
       - name: Compile the changed production translation unit against ROS Noetic
         run: |
-          docker run --rm -v "$PWD:/work:ro" -w /work ros:noetic-ros-base-focal \
+          docker run --rm --network none -v "$PWD:/work:ro" -w /work "$BUILD_IMAGE" \
             bash -lc 'source /opt/ros/noetic/setup.bash; g++ -std=c++17 -Wall -Wextra -Iscout/include -I/opt/ros/noetic/include -c scout/src/scout_skid_steer.cpp -o /tmp/scout_skid_steer.o'
