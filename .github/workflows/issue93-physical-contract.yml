@@ -2,165 +2,41 @@ name: Issue 93 physical wheel contract
 on:
   push:
     branches: [issue93/physical-wheel-contract]
-    paths: [.github/workflows/issue93-physical-contract.yml]
+    paths:
+      - .github/workflows/issue93-physical-contract.yml
+      - scout/urdf/**
+      - scout/launch/**
+      - scout/test/test_physical_wheel_contract.py
+  pull_request:
+    paths:
+      - .github/workflows/issue93-physical-contract.yml
+      - scout/urdf/**
+      - scout/launch/**
+      - scout/test/test_physical_wheel_contract.py
 permissions:
-  contents: write
+  contents: read
 jobs:
-  repair-and-test:
+  physical-contract:
     runs-on: ubuntu-24.04
+    container: ghcr.io/xgc-team/xgc2-images/xgc2-build-focal-full-noetic:1.0.0
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
+          persist-credentials: false
           lfs: false
-      - name: Repair the physical radius and inner-loop parameter chain
+      - name: Record installed source interfaces and require xacro
+        shell: bash
         run: |
-          python3 - <<'PY'
-          from pathlib import Path
-          import re
-          root=Path('scout')
-          args={'wheel_radius':'0.08','wheel_mass':'3.0','wheel_width':'0.084','wheel_joint_damping':'0.1','wheel_inertial_axial_offset':'0.0'}
-          def replace(path,old,new,count=1):
-            p=root/path;s=p.read_text();assert s.count(old)==count,(path,old,s.count(old));p.write_text(s.replace(old,new))
-          for name in ['accurate.launch','spawn_accurate.launch','mini_description.launch']:
-            p=root/'launch'/name;s=p.read_text()
-            anchor='    <arg name="wheel_effort_limit" default="3.0"/>'
-            assert anchor in s
-            new=''.join(f'    <arg name="{k}" default="{v}"/>\n' for k,v in args.items() if f'<arg name="{k}" default=' not in s)
-            s=s.replace(anchor,new+anchor)
-            if name!='mini_description.launch':
-              anchor='        <arg name="wheel_track" value="$(arg wheel_track)" />'
-              assert s.count(anchor)==1
-              extra=''.join(f'\n        <arg name="{k}" value="$(arg {k})" />' for k in args if f'<arg name="{k}" value=' not in s)
-              s=s.replace(anchor,anchor+extra)
-            else:
-              anchor='        wheel_track:=$(arg wheel_track)'
-              assert s.count(anchor)==1
-              s=s.replace(anchor,anchor+''.join(f'\n        {k}:=$(arg {k})' for k in args))
-            p.write_text(s)
-          p=root/'urdf/mini.xacro';s=p.read_text();anchor='    <xacro:arg name="wheel_effort_limit" default="3.0" />'
-          assert s.count(anchor)==1
-          s=s.replace(anchor,''.join(f'    <xacro:arg name="{k}" default="{v}" />\n' for k,v in args.items())+anchor)
-          s=s.replace('    <xacro:property name="wheel_diameter" value="0.16" />','    <xacro:property name="wheel_diameter" value="${2.0 * float(\'$(arg wheel_radius)\')}" />')
-          s=s.replace('    <xacro:property name="wheel_width" value="0.084" />','    <xacro:property name="wheel_width" value="${float(\'$(arg wheel_width)\')}" />')
-          s=s.replace('    <xacro:property name="wheel_length" value="0.8e-01" />\n    <xacro:property name="wheel_radius" value="1.600e-01" />','    <!-- Wheel radius is a physical parameter shared with command allocation. -->')
-          anchor='    <xacro:include filename="scout_mini_wheel_collision.xacro" />'
-          s=s.replace(anchor,anchor+'\n    <xacro:include filename="scout_mini_wheel_inertial.xacro" />');p.write_text(s)
-          (root/'urdf/scout_mini_wheel_inertial.xacro').write_text('''<?xml version="1.0"?>
-          <robot xmlns:xacro="http://ros.org/wiki/xacro">
-            <!-- Uniform-cylinder approximation about its configured mass centre.
-                 SI units: kg, m, kg m^2. The mass centre is NOT inferred from a
-                 tire visual; the legacy 0 m offset remains the default. -->
-            <xacro:macro name="scout_mini_wheel_inertial" params="radius width">
-              <xacro:property name="wheel_mass_si" value="${float('$(arg wheel_mass)')}"/>
-              <inertial>
-                <origin xyz="0 0 $(arg wheel_inertial_axial_offset)" rpy="0 0 0"/>
-                <mass value="${wheel_mass_si}"/>
-                <inertia ixx="${wheel_mass_si * (3*radius*radius + width*width)/12}" ixy="0" ixz="0"
-                         iyy="${wheel_mass_si * (3*radius*radius + width*width)/12}" iyz="0"
-                         izz="${wheel_mass_si * radius*radius/2}"/>
-              </inertial>
-            </xacro:macro>
-          </robot>
-          ''')
-          for i in range(1,5):
-            p=root/f'urdf/scout_mini_wheel_{i}.xacro';s=p.read_text()
-            # Match only the active uniform-cylinder inertia (not commented CAD data).
-            pattern=r'<inertial>\s*<mass value="3" />\s*<origin xyz="0 0 0" />\s*<inertia\s*ixx="0.006564" ixy="0" ixz="0"\s*iyy="0.006564" iyz="0"\s*izz="0.0096"/>\s*</inertial>'
-            s,n=re.subn(pattern,'<xacro:scout_mini_wheel_inertial radius="${wheel_radius}" width="${wheel_width}"/>',s)
-            assert n==1,(p,n)
-            assert s.count('<dynamics damping="0.1" friction="0.0" />')==1
-            s=s.replace('<dynamics damping="0.1" friction="0.0" />','<dynamics damping="$(arg wheel_joint_damping)" friction="0.0" />');p.write_text(s)
-          PY
-      - name: Add reusable expanded-model regression
-        run: |
-          mkdir -p scout/test
-          cat > scout/test/test_physical_wheel_contract.py <<'PY'
-          """ROS-free xacro expansion tests; not a Gazebo or hardware acceptance."""
-          from pathlib import Path
-          import math,unittest,xml.etree.ElementTree as ET
-          import xacro
-          ROOT=Path(__file__).resolve().parents[1]
-          class PhysicalWheelContract(unittest.TestCase):
-              def expand(self,**kwargs):
-                  mapping={'urdf_extras':str(ROOT/'urdf/empty.urdf')}
-                  mapping.update({k:str(v) for k,v in kwargs.items()})
-                  return ET.fromstring(xacro.process_file(str(ROOT/'urdf/mini.xacro'),mappings=mapping).toxml())
-              def assert_model(self,doc,r,m,width,damping,offset):
-                  wheels=[e for e in doc.findall('link') if e.attrib['name'].endswith('_wheel_link')]
-                  self.assertEqual(len(wheels),4)
-                  for link in wheels:
-                      self.assertAlmostEqual(float(link.find('collision/geometry/cylinder').get('radius')),r,places=12)
-                      self.assertAlmostEqual(float(link.find('collision/geometry/cylinder').get('length')),width,places=12)
-                      inertial=link.find('inertial');self.assertAlmostEqual(float(inertial.find('mass').get('value')),m)
-                      self.assertAlmostEqual(float(inertial.find('origin').get('xyz').split()[2]),offset)
-                      I=inertial.find('inertia');self.assertAlmostEqual(float(I.get('izz')),m*r*r/2,places=12)
-                      self.assertAlmostEqual(float(I.get('ixx')),m*(3*r*r+width*width)/12,places=12)
-                      self.assertAlmostEqual(float(I.get('iyy')),m*(3*r*r+width*width)/12,places=12)
-                  for joint in doc.findall('joint'):
-                      if joint.get('type')=='continuous':
-                          self.assertAlmostEqual(float(joint.find('dynamics').get('damping')),damping)
-              def test_legacy_physical_baseline_preserved(self):
-                  self.assert_model(self.expand(),.08,3.,.084,.1,0.)
-              def test_parameter_change_reaches_collision_inertia_and_damping(self):
-                  self.assert_model(self.expand(wheel_radius=.1,wheel_mass=2.,wheel_width=.09,wheel_joint_damping=.03,wheel_inertial_axial_offset=.02),.1,2.,.09,.03,.02)
-              def test_radius_is_forwarded_to_both_description_and_allocator(self):
-                  spawn=ET.parse(ROOT/'launch/spawn_accurate.launch').getroot()
-                  desc=next(e for e in spawn.findall('include') if e.get('file').endswith('mini_description.launch'))
-                  forwarded={e.get('name'):e.get('value') for e in desc.findall('arg')}
-                  for key in ('wheel_radius','wheel_mass','wheel_width','wheel_joint_damping','wheel_inertial_axial_offset'):
-                      self.assertEqual(forwarded[key],'$(arg '+key+')')
-                  text=(ROOT/'launch/mini_description.launch').read_text()
-                  self.assertIn('wheel_radius:=$(arg wheel_radius)',text)
-              def test_delay_and_input_inertia_contract(self):
-                  for name in ('accurate.launch','spawn_accurate.launch'):
-                      root=ET.parse(ROOT/'launch'/name).getroot();args={e.get('name'):e.get('default') for e in root.findall('arg')}
-                      self.assertEqual(float(args['command_delay_s']),.005)
-                      self.assertFalse(any('time_constant' in k for k in args))
-          if __name__=='__main__':unittest.main(verbosity=2)
-          PY
-          cat > scout/docs/physical_wheel_parameters.md <<'EOF'
-          # Physical wheel parameter contract — harness #93
-
-          `wheel_radius` [m] now reaches the wheel-speed allocator AND all four
-          collision cylinders. Previously the launch argument changed only the
-          inverse wheel-speed allocation while geometry remained radius 0.08 m.
-          A radius identification then acted partly as an unexplained command gain.
-
-          `wheel_mass` [kg], `wheel_width` [m] and `wheel_joint_damping`
-          [N m s/rad] are exposed through the same description chain. The existing
-          cylinder approximation uses J_axle = m r^2/2 and
-          J_transverse = m(3 r^2 + width^2)/12, about its configured centre.
-          `wheel_inertial_axial_offset` [m] is explicit. Its default stays 0;
-          neither the 0.039638344 m visual/collision tire offset nor a real
-          motor/wheel mass centre is silently substituted for it.
-
-          Defaults reproduce the previous collision geometry, mass, J_axle=0.0096,
-          J_transverse=0.006564, damping=0.1 and mass centre. No PI, friction,
-          torque limit, allocation gain, 5 ms communication delay or controller
-          law is tuned by this change. There is no added input inertia.
-
-          Run `python3 scout/test/test_physical_wheel_contract.py` with xacro
-          installed. Tests expand the real product xacro, including non-default
-          radius/mass/width/damping, rather than matching source text alone.
-          On the target also capture `gz sdf -p` output and verify its contacts.
-          The visual mesh is intentionally not resized: it is not a calibrated
-          tire geometry measurement; a non-default radius requires visual review.
-
-          This repair makes physically consistent identification possible; it
-          does NOT certify agreement with hardware or four-vehicle acceptance.
-          Fit one parameter vector on the training input, freeze its SHA, then
-          evaluate the independent bag without refitting. Record mass-centre
-          assumptions separately; the measured marker translation is uncalibrated.
-          EOF
-          python3 -m pip install xacro==2.1.1
-          python3 scout/test/test_physical_wheel_contract.py
-      - name: Push tested source repair to the owning branch
-        run: |
-          git config user.name 'XGC issue93 source repair'
-          git config user.email '141200314+lxk36@users.noreply.github.com'
-          git add scout/launch scout/urdf scout/test/test_physical_wheel_contract.py scout/docs/physical_wheel_parameters.md
-          git diff --cached --check
-          git commit -m 'fix(scout): propagate physical wheel radius and derive coherent wheel inertias'
-          git push origin HEAD:refs/heads/issue93/physical-wheel-contract
+          set -euo pipefail
+          source /opt/ros/noetic/setup.bash
+          python3 -c 'import xacro; print(xacro.__file__)'
+          dpkg-query -W gazebo11 libgazebo11 ros-noetic-gazebo-ros-control ros-noetic-control-toolbox ros-noetic-xacro
           git rev-parse HEAD
+      - name: Expand actual source and verify non-default physical parameters
+        shell: bash
+        run: |
+          set -euo pipefail
+          source /opt/ros/noetic/setup.bash
+          python3 scout/test/test_physical_wheel_contract.py
+          git diff --check
