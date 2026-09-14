@@ -1,0 +1,14 @@
+name: Scout command contract
+on:
+  pull_request:
+    paths:
+      - 'scout/**'
+      - '.github/workflows/scout-command-contract.yml'
+permissions:
+  contents: read
+jobs:
+  numerical-contract:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 scout/test/test_command_contract.py
