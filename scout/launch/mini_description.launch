@@ -17,6 +17,11 @@
     <arg name="wheelbase" default="0.451"/>
     <arg name="wheel_track" default="0.416503"/>
 
+    <arg name="wheel_radius" default="0.08"/>
+    <arg name="wheel_mass" default="3.0"/>
+    <arg name="wheel_width" default="0.084"/>
+    <arg name="wheel_joint_damping" default="0.1"/>
+    <arg name="wheel_inertial_axial_offset" default="0.0"/>
     <arg name="wheel_effort_limit" default="3.0"/>
     <arg name="wheel_velocity_limit" default="24.0"/>
 
@@ -36,6 +41,11 @@
         wheel_contact_slip2:=$(arg wheel_contact_slip2)
         wheelbase:=$(arg wheelbase)
         wheel_track:=$(arg wheel_track)
+        wheel_radius:=$(arg wheel_radius)
+        wheel_mass:=$(arg wheel_mass)
+        wheel_width:=$(arg wheel_width)
+        wheel_joint_damping:=$(arg wheel_joint_damping)
+        wheel_inertial_axial_offset:=$(arg wheel_inertial_axial_offset)
         wheel_effort_limit:=$(arg wheel_effort_limit)
         wheel_velocity_limit:=$(arg wheel_velocity_limit)
         urdf_extras:=$(arg urdf_extras)" />
