@@ -1,7 +1,11 @@
 FROM gazebo@sha256:eba35c7ca3198daa68edf71b4732fc42668ff43d9bfa712d66402c66d3628305
 ENV DEBIAN_FRONTEND=noninteractive
-# The base is the official gzserver11 image, not a ROS or product runtime.
-RUN sed -i 's|http://packages.osrfoundation.org|https://packages.osrfoundation.org|g' /etc/apt/sources.list.d/gazebo-latest.list \
+# Bootstrap CA roots from Ubuntu's signed archive before enabling HTTPS for
+# OSRF. Do not disable TLS or package signature verification.
+RUN mv /etc/apt/sources.list.d/gazebo-latest.list /tmp/gazebo-latest.list \
+ && apt-get update \
+ && apt-get install -y --no-install-recommends ca-certificates \
+ && sed 's|http://packages.osrfoundation.org|https://packages.osrfoundation.org|g' /tmp/gazebo-latest.list > /etc/apt/sources.list.d/gazebo-latest.list \
  && apt-get update \
  && apt-get install -y --no-install-recommends build-essential cmake pkg-config libyaml-cpp-dev libgazebo11-dev=11.15.1-1* \
  && test ! -d /opt/ros \
