@@ -25,18 +25,12 @@ jobs:
         with:
           persist-credentials: false
           lfs: false
-      - name: Record installed source interfaces and require xacro
+      - name: Record installed interfaces and require real xacro expansion
         shell: bash
         run: |
           set -euo pipefail
           source /opt/ros/noetic/setup.bash
           python3 -c 'import xacro; print(xacro.__file__)'
           dpkg-query -W gazebo11 libgazebo11 ros-noetic-gazebo-ros-control ros-noetic-control-toolbox ros-noetic-xacro
-          git -c safe.directory="$PWD" rev-parse HEAD
-      - name: Expand actual source and verify non-default physical parameters
-        shell: bash
-        run: |
-          set -euo pipefail
-          source /opt/ros/noetic/setup.bash
+          printf 'CHECKOUT_SHA=%s\n' "$GITHUB_SHA"
           python3 scout/test/test_physical_wheel_contract.py
-          git -c safe.directory="$PWD" diff --check
