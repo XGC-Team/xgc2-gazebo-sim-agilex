@@ -8,6 +8,7 @@
  */
 
 #include "scout_gazebo/scout_skid_steer.hpp"
+#include "scout_gazebo/wheel_allocation.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -56,6 +57,8 @@ ScoutSkidSteer::ScoutSkidSteer(ros::NodeHandle *nh, std::string robot_name)
       wheel_radius_, command_gain_, angular_command_gain_, command_delay_s_,
       enable_command_limits_ ? "true" : "false",
       max_linear_speed_, max_angular_speed_);
+  ROS_INFO("Scout wheel command clock=ROS period=0.010 s effective_yaw_span=%.9f m",
+           wheel_separation_ * angular_command_gain_);
 }
 
 ScoutSkidSteer::~ScoutSkidSteer() {
@@ -74,10 +77,11 @@ void ScoutSkidSteer::SetupSubscription() {
   xgc_chassis_hold::Hub::instance().add(&hold_gate_);
   cmd_sub_ = nh_->subscribe<geometry_msgs::Twist>(
       cmd_topic_, 5, &ScoutSkidSteer::TwistCmdCallback, this);
-  // Wall scheduling survives a paused/rewound clock. The plant itself uses
-  // ROS simulation time, so wall ticks never advance paused dynamics.
-  control_timer_ = nh_->createWallTimer(
-      ros::WallDuration(0.01), &ScoutSkidSteer::ControlTick, this);
+  // Queue deadlines and actuator sampling use the same ROS time domain.
+  // Pausing simulation pauses normal actuation; emergency hold's zero thunk
+  // remains independent of this timer and resets the delayed queue.
+  control_timer_ = nh_->createTimer(
+      ros::Duration(0.01), &ScoutSkidSteer::ControlTick, this);
 }
 
 void ScoutSkidSteer::HoldZeroThunk(void *self) {
@@ -128,22 +132,25 @@ void ScoutSkidSteer::TwistCmdCallback(
   });
 }
 
-void ScoutSkidSteer::ControlTick(const ros::WallTimerEvent &) {
+void ScoutSkidSteer::ControlTick(const ros::TimerEvent &) {
   hold_gate_.withCommand([this](bool held) {
     if (held) {
       PublishZeroMotors();
       return;
     }
     const CommandVelocity command = command_delay_.Advance(ros::Time::now().toSec());
-    const double steering = command.angular * angular_command_gain_;
-    const double half_track = wheel_separation_ * 0.5;
-    const double left = (command.linear - steering * half_track) / wheel_radius_;
-    const double right = (command.linear + steering * half_track) / wheel_radius_;
+    WheelAllocation allocation;
+    if (!AllocateScoutWheels(command.linear, command.angular, wheel_radius_,
+                             wheel_separation_, command_gain_, angular_command_gain_,
+                             allocation)) {
+      ROS_ERROR_THROTTLE(1.0, "Scout wheel allocation is non-finite; clearing commands");
+      PublishZeroMotors();
+      return;
+    }
     std_msgs::Float64 motor_cmd[4];
-    motor_cmd[0].data = right * command_gain_;
-    motor_cmd[1].data = left * command_gain_;
-    motor_cmd[2].data = left * command_gain_;
-    motor_cmd[3].data = right * command_gain_;
+    for (size_t i = 0; i < allocation.target.size(); ++i) {
+      motor_cmd[i].data = allocation.target[i];
+    }
     motor_fr_pub_.publish(motor_cmd[0]);
     motor_fl_pub_.publish(motor_cmd[1]);
     motor_rl_pub_.publish(motor_cmd[2]);
