@@ -8,6 +8,7 @@
  */
 
 #include "scout_gazebo/scout_skid_steer.hpp"
+#include "scout_gazebo/wheel_allocation.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -17,7 +18,7 @@
 
 namespace wescore {
 ScoutSkidSteer::ScoutSkidSteer(ros::NodeHandle *nh, std::string robot_name)
-    : robot_name_(robot_name), command_delay_s_(0.005), nh_(nh),
+    : robot_name_(robot_name), command_delay_s_(0.005), control_period_s_(0.001), nh_(nh),
       hold_gate_(xgc_chassis_hold::lastPath(robot_name)) {
   ros::NodeHandle private_nh("~");
   private_nh.param("wheel_separation", wheel_separation_, 0.416503);
@@ -25,20 +26,23 @@ ScoutSkidSteer::ScoutSkidSteer(ros::NodeHandle *nh, std::string robot_name)
   private_nh.param("command_gain", command_gain_, 1.0);
   private_nh.param("angular_command_gain", angular_command_gain_, 1.0);
   private_nh.param("command_delay_s", command_delay_s_, 0.005);
+  private_nh.param("control_period_s", control_period_s_, 0.001);
   private_nh.param("enable_command_limits", enable_command_limits_, true);
   private_nh.param("max_linear_speed", max_linear_speed_, 1.5);
   private_nh.param("max_angular_speed", max_angular_speed_, 0.5235);
 
-  if (!std::isfinite(command_delay_s_) || command_delay_s_ < 0.0) {
-    ROS_WARN("Invalid Scout command_delay_s %.6f; using 0", command_delay_s_);
-    command_delay_s_ = 0.0;
+  if (!std::isfinite(command_delay_s_) || command_delay_s_ < 0.0 ||
+      !std::isfinite(control_period_s_) || control_period_s_ <= 0.0) {
+    throw std::invalid_argument("Scout delay must be nonnegative and control period positive, in simulation seconds");
   }
-
-  if (!std::isfinite(wheel_radius_) || wheel_radius_ <= 0.0 ||
-      !std::isfinite(wheel_separation_) || wheel_separation_ <= 0.0 ||
-      !std::isfinite(command_gain_) || !std::isfinite(angular_command_gain_)) {
-    throw std::invalid_argument("Scout wheel geometry and command gains must be finite; geometry must be positive");
+  if (enable_command_limits_ &&
+      (!std::isfinite(max_linear_speed_) || max_linear_speed_ <= 0.0 ||
+       !std::isfinite(max_angular_speed_) || max_angular_speed_ <= 0.0)) {
+    throw std::invalid_argument("Enabled Scout command limits must be finite and positive");
   }
+  // Validate the same SI allocation kernel used by production and offline tests.
+  AllocateWheelSpeeds(0.0, 0.0, wheel_radius_, wheel_separation_,
+                      command_gain_, angular_command_gain_);
   command_delay_.Configure(command_delay_s_);
 
   motor_fr_topic_ = JoinTopic(robot_name_, "scout_motor_fr_controller/command");
@@ -50,16 +54,17 @@ ScoutSkidSteer::ScoutSkidSteer(ros::NodeHandle *nh, std::string robot_name)
   ROS_INFO(
       "Scout skid steer: cmd=%s fr=%s fl=%s rl=%s rr=%s wheel_separation=%.6f "
       "wheel_radius=%.6f gain=%.3f angular_gain=%.3f command_delay=%.3f "
-      "limits=%s max_linear=%.4f max_angular=%.4f",
+      "control_period_sim_s=%.6f limits=%s max_linear=%.4f max_angular=%.4f",
       cmd_topic_.c_str(), motor_fr_topic_.c_str(), motor_fl_topic_.c_str(),
       motor_rl_topic_.c_str(), motor_rr_topic_.c_str(), wheel_separation_,
       wheel_radius_, command_gain_, angular_command_gain_, command_delay_s_,
-      enable_command_limits_ ? "true" : "false",
+      control_period_s_, enable_command_limits_ ? "true" : "false",
       max_linear_speed_, max_angular_speed_);
 }
 
 ScoutSkidSteer::~ScoutSkidSteer() {
   control_timer_.stop();
+  hold_timer_.stop();
   cmd_sub_.shutdown();
   // remove() drains any UDP callback before the Gate and publishers die.
   xgc_chassis_hold::Hub::instance().remove(&hold_gate_);
@@ -74,10 +79,14 @@ void ScoutSkidSteer::SetupSubscription() {
   xgc_chassis_hold::Hub::instance().add(&hold_gate_);
   cmd_sub_ = nh_->subscribe<geometry_msgs::Twist>(
       cmd_topic_, 5, &ScoutSkidSteer::TwistCmdCallback, this);
-  // Wall scheduling survives a paused/rewound clock. The plant itself uses
-  // ROS simulation time, so wall ticks never advance paused dynamics.
-  control_timer_ = nh_->createWallTimer(
-      ros::WallDuration(0.01), &ScoutSkidSteer::ControlTick, this);
+  // Receipt, due time and normal command release all use ROS/simulation time.
+  // A wall-time release tick otherwise changes input quantization with RTF.
+  control_timer_ = nh_->createTimer(
+      ros::Duration(control_period_s_), &ScoutSkidSteer::ControlTick, this);
+  // Only the existing safety hold needs wall scheduling while /clock is paused.
+  // This timer never advances the command queue or publishes normal motion.
+  hold_timer_ = nh_->createWallTimer(
+      ros::WallDuration(0.01), &ScoutSkidSteer::HoldTick, this);
 }
 
 void ScoutSkidSteer::HoldZeroThunk(void *self) {
@@ -128,22 +137,24 @@ void ScoutSkidSteer::TwistCmdCallback(
   });
 }
 
-void ScoutSkidSteer::ControlTick(const ros::WallTimerEvent &) {
+void ScoutSkidSteer::HoldTick(const ros::WallTimerEvent &) {
+  hold_gate_.withCommand([this](bool held) {
+    if (held) PublishZeroMotors();
+  });
+}
+
+void ScoutSkidSteer::ControlTick(const ros::TimerEvent &) {
   hold_gate_.withCommand([this](bool held) {
     if (held) {
       PublishZeroMotors();
       return;
     }
     const CommandVelocity command = command_delay_.Advance(ros::Time::now().toSec());
-    const double steering = command.angular * angular_command_gain_;
-    const double half_track = wheel_separation_ * 0.5;
-    const double left = (command.linear - steering * half_track) / wheel_radius_;
-    const double right = (command.linear + steering * half_track) / wheel_radius_;
+    const auto targets = AllocateWheelSpeeds(
+        command.linear, command.angular, wheel_radius_, wheel_separation_,
+        command_gain_, angular_command_gain_);
     std_msgs::Float64 motor_cmd[4];
-    motor_cmd[0].data = right * command_gain_;
-    motor_cmd[1].data = left * command_gain_;
-    motor_cmd[2].data = left * command_gain_;
-    motor_cmd[3].data = right * command_gain_;
+    for (std::size_t i = 0; i < targets.size(); ++i) motor_cmd[i].data = targets[i];
     motor_fr_pub_.publish(motor_cmd[0]);
     motor_fl_pub_.publish(motor_cmd[1]);
     motor_rl_pub_.publish(motor_cmd[2]);

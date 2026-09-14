@@ -39,6 +39,7 @@ private:
   double command_gain_;
   double angular_command_gain_;
   double command_delay_s_;
+  double control_period_s_;
   bool enable_command_limits_;
   double max_linear_speed_;
   double max_angular_speed_;
@@ -53,13 +54,15 @@ private:
   ros::Publisher motor_rr_pub_;
 
   ros::Subscriber cmd_sub_;
-  ros::WallTimer control_timer_;
+  ros::Timer control_timer_;
+  ros::WallTimer hold_timer_;
   xgc_chassis_hold::Gate hold_gate_;
 
   void TwistCmdCallback(const geometry_msgs::Twist::ConstPtr &msg);
   void PublishZeroMotors();
   static void HoldZeroThunk(void *self);
-  void ControlTick(const ros::WallTimerEvent &event);
+  void ControlTick(const ros::TimerEvent &event);
+  void HoldTick(const ros::WallTimerEvent &event);
   double Clamp(double value, double limit) const;
   std::string JoinTopic(const std::string &ns, const std::string &topic) const;
 };

@@ -1,0 +1,24 @@
+name: Simulation-clock command scheduler
+on:
+  push:
+    branches: [issue93/sim-clock-command-scheduler]
+  pull_request:
+    paths:
+      - scout/include/scout_gazebo/**
+      - scout/src/scout_skid_steer.cpp
+      - scout/test/test_sim_clock_scheduler.py
+      - .github/workflows/sim-clock-scheduler.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  kernels:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          lfs: false
+          submodules: false
+      - run: python3 scout/test/test_inner_loop_delay.py
+      - run: python3 scout/test/test_sim_clock_scheduler.py
