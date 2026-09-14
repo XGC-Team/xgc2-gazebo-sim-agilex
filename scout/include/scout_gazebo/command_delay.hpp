@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cmath>
+#include <cstdint>
 #include <deque>
 #include <stdexcept>
 
@@ -9,6 +10,14 @@ namespace wescore {
 struct CommandVelocity {
   double linear;
   double angular;
+};
+
+struct DelayedCommandSample {
+  CommandVelocity velocity{0.0, 0.0};
+  double received_s = 0.0;
+  double due_s = 0.0;
+  std::uint64_t sequence = 0U;
+  bool valid = false;
 };
 
 // Receipt and execution are separate. Advance() must be called by the control
@@ -25,7 +34,7 @@ class CommandDelay {
 
   void Reset() {
     history_.clear();
-    delayed_ = {0.0, 0.0};
+    delayed_ = DelayedCommandSample{};
     initialized_ = false;
     last_time_ = 0.0;
   }
@@ -36,7 +45,13 @@ class CommandDelay {
       throw std::invalid_argument("command and simulation time must be finite");
     }
     Advance(now);
-    history_.push_back({now + delay_, linear, angular});
+    DelayedCommandSample sample;
+    sample.velocity = {linear, angular};
+    sample.received_s = now;
+    sample.due_s = now + delay_;
+    sample.sequence = ++sequence_;
+    sample.valid = true;
+    history_.push_back(sample);
     // Preserve the original bounded history and retain the newest command,
     // including a final zero. Normal command rates stay well below this limit.
     while (history_.size() > 2048U) history_.pop_front();
@@ -53,22 +68,24 @@ class CommandDelay {
     }
     // Consume every due command, retaining the last one. This is a pure
     // transport delay and zero-order hold, without an actuator response model.
-    while (!history_.empty() && history_.front().due <= now) {
-      const Command next = history_.front();
-      delayed_ = {next.linear, next.angular};
+    while (!history_.empty() && history_.front().due_s <= now) {
+      delayed_ = history_.front();
       history_.pop_front();
     }
     last_time_ = now;
-    return delayed_;
+    return delayed_.velocity;
   }
 
- private:
-  struct Command { double due; double linear; double angular; };
+  // Caller records its own dispatch time after Advance(). A due time is not
+  // a wheel-publication time or the later physics step's applied-torque time.
+  const DelayedCommandSample &Sample() const { return delayed_; }
 
-  std::deque<Command> history_;
-  CommandVelocity delayed_{0.0, 0.0};
+ private:
+  std::deque<DelayedCommandSample> history_;
+  DelayedCommandSample delayed_;
   double delay_ = 0.0;
   double last_time_ = 0.0;
+  std::uint64_t sequence_ = 0U;
   bool initialized_ = false;
 };
 
