@@ -25,7 +25,11 @@ class ControlContractTest(unittest.TestCase):
         self.assertIn('command_delay_.Push', receive)
         self.assertNotIn('motor_fr_pub_.publish', receive)
         self.assertIn('command_delay_.Advance(ros::Time::now().toSec())', tick)
-        self.assertIn('createWallTimer', text)
+        self.assertIn('nh_->createTimer(', text)
+        self.assertNotIn('createWallTimer(', text)
+        # Paused simulation must still accept the existing immediate UDP HOLD.
+        self.assertIn('hold_gate_.setZeroThunk(&ScoutSkidSteer::HoldZeroThunk, this);', text)
+        self.assertIn('static_cast<ScoutSkidSteer *>(self)->PublishZeroMotors();', text)
         self.assertIn('command_delay_.Reset()', text)
 
     def test_shutdown_drains_producers_before_unregistering(self):
