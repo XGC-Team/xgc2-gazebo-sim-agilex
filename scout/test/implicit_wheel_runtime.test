@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+<launch>
+  <!-- Run only in an isolated ROS/Gazebo test container, never a live station. -->
+  <env name="GAZEBO_MASTER_URI" value="http://127.0.0.1:11473"/>
+  <include file="$(find gazebo_sim_scout)/launch/implicit_brush.launch">
+    <arg name="ns" value="brush_test"/>
+    <arg name="gui" value="false"/>
+  </include>
+  <test test-name="implicit_wheel_runtime" pkg="gazebo_sim_scout"
+        type="test_implicit_wheel_runtime.py" time-limit="90"/>
+</launch>

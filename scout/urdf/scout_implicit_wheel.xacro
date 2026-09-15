@@ -1,0 +1,8 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://ros.org/wiki/xacro">
+  <gazebo>
+    <plugin name="scout_implicit_wheel" filename="libscout_implicit_wheel_plugin.so">
+      <robotNamespace>$(arg ns)</robotNamespace>
+    </plugin>
+  </gazebo>
+</robot>
