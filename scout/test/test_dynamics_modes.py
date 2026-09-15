@@ -101,10 +101,10 @@ class DynamicsModesTest(unittest.TestCase):
         self.assertEqual(root.find(ns + 'unless').get('value'), '$(arg enable_ros_control)')
         self.assertEqual(root.find(ns + 'if').get('value'), '$(arg enable_ros_control)')
         cmake = (PACKAGE / 'CMakeLists.txt').read_text()
-        installation = cmake.split('install(', 1)[1].split(')', 1)[0]
+        self.assertIn('TARGETS scout_unicycle_plugin scout_wheel_diagnostics', cmake)
+        self.assertIn('CATKIN_PACKAGE_SHARE_DESTINATION}/plugins', cmake)
         for name in ('scout_unicycle_plugin', 'scout_wheel_diagnostics'):
             self.assertIn('add_library(%s SHARED' % name, cmake)
-            self.assertIn(name, installation)
         self.assertIn('xgc2_math 0.5.8 REQUIRED', cmake)
 
     def test_diagnostics_cannot_actuate(self):
