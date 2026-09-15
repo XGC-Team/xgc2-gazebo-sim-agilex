@@ -3,12 +3,17 @@
 import math
 import time
 import unittest
-import rospy
-import rostest
-from geometry_msgs.msg import Twist
-from std_msgs.msg import Float64MultiArray, String
-from gazebo_msgs.srv import GetModelState
+try:
+    import rospy
+    import rostest
+    from geometry_msgs.msg import Twist
+    from std_msgs.msg import Float64MultiArray, String
+    from gazebo_msgs.srv import GetModelState
+    _HAS_ROS = True
+except ImportError:
+    _HAS_ROS = False
 
+@unittest.skipUnless(_HAS_ROS, 'requires isolated ROS/Gazebo')
 class PhysicalBackend(unittest.TestCase):
     def setUp(self):
         self.rows=[];self.fault='';self.backend=''
@@ -50,5 +55,7 @@ class PhysicalBackend(unittest.TestCase):
         self.command(0,0)
         self.sub.unregister();self.fs.unregister();self.bs.unregister();self.pub.unregister()
 if __name__=='__main__':
+    if not _HAS_ROS:
+        raise SystemExit('requires isolated ROS/Gazebo')
     rospy.init_node('implicit_wheel_regression')
     rostest.rosrun('gazebo_sim_scout','implicit_wheel_runtime',PhysicalBackend)

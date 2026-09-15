@@ -7,14 +7,19 @@ import threading
 import time
 import unittest
 
-import rospy
-import rostest
-from gazebo_msgs.srv import GetModelState
-from geometry_msgs.msg import Twist, TwistStamped
-from std_msgs.msg import String
-from std_srvs.srv import Empty
+try:
+    import rospy
+    import rostest
+    from gazebo_msgs.srv import GetModelState
+    from geometry_msgs.msg import Twist, TwistStamped
+    from std_msgs.msg import String
+    from std_srvs.srv import Empty
+    _HAS_ROS = True
+except ImportError:
+    _HAS_ROS = False
 
 
+@unittest.skipUnless(_HAS_ROS, 'requires isolated ROS/Gazebo')
 class UnicycleRuntimeTest(unittest.TestCase):
     def setUp(self):
         self.lock = threading.Lock()
@@ -110,5 +115,7 @@ class UnicycleRuntimeTest(unittest.TestCase):
 
 
 if __name__ == '__main__':
+    if not _HAS_ROS:
+        raise SystemExit('requires isolated ROS/Gazebo')
     rospy.init_node('scout_unicycle_runtime_test')
     rostest.rosrun('gazebo_sim_scout', 'scout_unicycle_runtime', UnicycleRuntimeTest)
