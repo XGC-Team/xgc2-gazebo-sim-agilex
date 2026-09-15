@@ -94,10 +94,16 @@ if(CATKIN_ENABLE_TESTING)
 endif()
 
 install(
-  TARGETS scout_unicycle_plugin scout_wheel_diagnostics scout_wheel_velocity_controller scout_gazebo scout_skid_steer_controller gazebo_model_ground_truth sim_scout_status
+  TARGETS scout_wheel_velocity_controller scout_gazebo scout_skid_steer_controller gazebo_model_ground_truth sim_scout_status
   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+)
+# Gazebo-linked plugins are dropped from /opt/ros/noetic/lib by the Debian
+# helper; install them under share so the package actually contains them.
+install(
+  TARGETS scout_unicycle_plugin scout_wheel_diagnostics
+  LIBRARY DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/plugins
 )
 
 install(

@@ -59,7 +59,7 @@
   <run_depend>xacro</run_depend>
   <run_depend>rostopic</run_depend>
   <export>
-    <gazebo_ros plugin_path="${prefix}/../../lib"/>
+    <gazebo_ros plugin_path="${prefix}/plugins:${prefix}/../../lib"/>
     <controller_interface plugin="${prefix}/scout_controllers.xml"/>
   </export>
   <test_depend>rostest</test_depend>
