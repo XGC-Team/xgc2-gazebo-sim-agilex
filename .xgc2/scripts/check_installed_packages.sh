@@ -99,7 +99,10 @@ log "checking installed ELF dependencies"
 check_paths=(
   "/opt/ros/${ROS_DISTRO}/lib/gazebo_sim_scout"
   "/opt/ros/${ROS_DISTRO}/lib/libscout_gazebo.a"
+  "/opt/ros/${ROS_DISTRO}/lib/libscout_wheel_velocity_controller.so"
 )
+
+test -f "/opt/ros/${ROS_DISTRO}/lib/libscout_wheel_velocity_controller.so"
 
 while IFS= read -r file; do
   if ! file -b "${file}" | grep -q '^ELF'; then

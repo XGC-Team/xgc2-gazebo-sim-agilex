@@ -1,7 +1,7 @@
 schema: xgc2.product.v1
 id: xgc2-gazebo-sim-scout
 name: XGC2 Gazebo Classic Scout
-version: 0.4.9-47
+version: 0.4.9-48
 kind: ros1-apt
 summary: AgileX Scout Gazebo Classic simulation package for ROS Noetic.
 ros:
@@ -39,6 +39,7 @@ ownership:
   - /opt/ros/noetic/share/gazebo_sim_scout
   - /opt/ros/noetic/lib/gazebo_sim_scout
   - /opt/ros/noetic/lib/libscout_gazebo.a
+  - /opt/ros/noetic/lib/libscout_wheel_velocity_controller.so
 release:
   requires:
   - libxgc2-math-dev
@@ -50,4 +51,4 @@ release:
     xgc2-scout-description: verify
     xgc2-scout-msgs: rebuild
   apt_versions:
-    focal: 0.4.9-47
+    focal: 0.4.9-48
