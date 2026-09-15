@@ -40,6 +40,8 @@ ownership:
   - /opt/ros/noetic/lib/gazebo_sim_scout
   - /opt/ros/noetic/lib/libscout_gazebo.a
   - /opt/ros/noetic/lib/libscout_wheel_velocity_controller.so
+  - /opt/ros/noetic/lib/libscout_unicycle_plugin.so
+  - /opt/ros/noetic/lib/libscout_wheel_diagnostics.so
 release:
   requires:
   - libxgc2-math-dev

@@ -24,6 +24,14 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCL
 ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 -->
 <launch>
+    <arg name="dynamics_mode" default="unicycle"/>
+    <arg name="unicycle_linear_time_constant_s" default="0.005"/>
+    <arg name="unicycle_angular_time_constant_s" default="0.005"/>
+    <arg name="wheel_diagnostics" default="false"/>
+    <arg name="command_delay_s" default="0.005"/>
+    <arg name="enable_command_limits" default="true"/>
+    <arg name="max_linear_speed" default="1.5"/>
+    <arg name="max_angular_speed" default="1.0"/>
 
     <arg name="ns" default="ugv1"/>
     <arg name="model_name" default="$(arg ns)"/>
@@ -54,6 +62,14 @@ ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSI
     </include>
 
     <include file="$(dirname)/spawn_accurate.launch">
+        <arg name="dynamics_mode" value="$(arg dynamics_mode)" />
+        <arg name="unicycle_linear_time_constant_s" value="$(arg unicycle_linear_time_constant_s)" />
+        <arg name="unicycle_angular_time_constant_s" value="$(arg unicycle_angular_time_constant_s)" />
+        <arg name="wheel_diagnostics" value="$(arg wheel_diagnostics)" />
+        <arg name="command_delay_s" value="$(arg command_delay_s)" />
+        <arg name="enable_command_limits" value="$(arg enable_command_limits)" />
+        <arg name="max_linear_speed" value="$(arg max_linear_speed)" />
+        <arg name="max_angular_speed" value="$(arg max_angular_speed)" />
         <arg name="ns" value="$(arg ns)"/>
         <arg name="model_name" value="$(arg model_name)"/>
         <arg name="enable_lidar" value="$(arg enable_lidar)"/>

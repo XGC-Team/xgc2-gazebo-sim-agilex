@@ -1,5 +1,12 @@
 <?xml version="1.0"?>
 <launch>
+    <!-- Startup selection; changing it requires respawn, never a new package. -->
+    <arg name="dynamics_mode" default="wheel_physics"/>
+    <arg name="unicycle_linear_time_constant_s" default="0.005"/>
+    <arg name="unicycle_angular_time_constant_s" default="0.005"/>
+    <arg name="wheel_diagnostics" default="false"/>
+    <!-- A misspelling must fail launch, not silently select another model. -->
+    <arg name="wheel_physics" value="$(eval {'wheel_physics': True, 'unicycle': False}[arg('dynamics_mode')])"/>
     <arg name="x" default="0.0"/>
     <arg name="y" default="0.0"/>
     <arg name="z" default="0.181"/>
@@ -46,9 +53,10 @@
     <arg name="light_control_topic" default="/$(arg ns)/scout_light_control"/>
     <arg name="battery_voltage" default="28.765"/>
 
-    <include file="$(dirname)/mini_description.launch">
+    <include if="$(arg wheel_physics)" file="$(dirname)/mini_description.launch">
         <arg name="ns" value="$(arg ns)" />
         <arg name="enable_ros_control" value="true" />
+        <arg name="urdf_extras" value="$(dirname)/../urdf/scout_dynamics_plugins.xacro" />
         <arg name="robot_description_param" value="$(arg robot_description_param)" />
         <arg name="frame_prefix" value="$(arg frame_prefix)" />
         <arg name="sensor_ns" value="$(arg sensor_ns)" />
@@ -71,7 +79,33 @@
         <arg name="wheel_velocity_limit" value="$(arg wheel_velocity_limit)" />
     </include>
 
-    <group ns="$(arg ns)">
+    <include unless="$(arg wheel_physics)" file="$(dirname)/mini_description.launch">
+        <arg name="ns" value="$(arg ns)" />
+        <arg name="enable_ros_control" value="false" />
+        <arg name="urdf_extras" value="$(dirname)/../urdf/scout_dynamics_plugins.xacro" />
+        <arg name="robot_description_param" value="$(arg robot_description_param)" />
+        <arg name="frame_prefix" value="$(arg frame_prefix)" />
+        <arg name="sensor_ns" value="$(arg sensor_ns)" />
+        <arg name="enable_lidar" value="$(arg enable_lidar)" />
+        <arg name="enable_rslidar" value="$(arg enable_rslidar)" />
+        <arg name="enable_camera" value="$(arg enable_camera)" />
+        <arg name="wheel_contact_mu2" value="0.0" />
+        <arg name="wheel_contact_mu1" value="0.0" />
+        <arg name="wheel_contact_fdir1" value="$(arg wheel_contact_fdir1)" />
+        <arg name="wheel_contact_slip1" value="0.0" />
+        <arg name="wheel_contact_slip2" value="0.0" />
+        <arg name="wheelbase" value="$(arg wheelbase)" />
+        <arg name="wheel_track" value="$(arg wheel_track)" />
+        <arg name="wheel_radius" value="$(arg wheel_radius)" />
+        <arg name="wheel_mass" value="$(arg wheel_mass)" />
+        <arg name="wheel_width" value="$(arg wheel_width)" />
+        <arg name="wheel_joint_damping" value="0.0" />
+        <arg name="wheel_inertial_axial_offset" value="$(arg wheel_inertial_axial_offset)" />
+        <arg name="wheel_effort_limit" value="$(arg wheel_effort_limit)" />
+        <arg name="wheel_velocity_limit" value="$(arg wheel_velocity_limit)" />
+    </include>
+
+    <group if="$(arg wheel_physics)" ns="$(arg ns)">
         <rosparam file="$(dirname)/../config/scout_mini_ros_control.yaml" command="load"/>
         <param name="scout_motor_fr_controller/p" type="double" value="$(arg wheel_pid_p)"/>
         <param name="scout_motor_fr_controller/i" type="double" value="$(arg wheel_pid_i)"/>
@@ -83,6 +117,19 @@
         <param name="scout_motor_rr_controller/i" type="double" value="$(arg wheel_pid_i)"/>
     </group>
 
+    <group ns="$(arg ns)">
+        <param name="simulation/dynamics_mode" type="string" value="$(arg dynamics_mode)"/>
+        <param name="wheel_diagnostics/enabled" type="bool" value="$(arg wheel_diagnostics)"/>
+    </group>
+    <group unless="$(arg wheel_physics)" ns="$(arg ns)/unicycle">
+        <param name="command_delay_s" type="double" value="$(arg command_delay_s)"/>
+        <param name="linear_time_constant_s" type="double" value="$(arg unicycle_linear_time_constant_s)"/>
+        <param name="angular_time_constant_s" type="double" value="$(arg unicycle_angular_time_constant_s)"/>
+        <param name="enable_command_limits" type="bool" value="$(arg enable_command_limits)"/>
+        <param name="max_linear_speed" type="double" value="$(arg max_linear_speed)"/>
+        <param name="max_angular_speed" type="double" value="$(arg max_angular_speed)"/>
+    </group>
+
     <node name="$(arg ns)_spawn_scout_model" pkg="gazebo_ros" type="spawn_model" args="-x $(arg x)
               -y $(arg y)
               -z $(arg z)
@@ -91,11 +138,11 @@
               -param $(arg robot_description_param)
               -model $(arg model_name)" />
 
-    <node name="controller_spawner" pkg="controller_manager" type="spawner" respawn="false" output="screen"
+    <node if="$(arg wheel_physics)" name="controller_spawner" pkg="controller_manager" type="spawner" respawn="false" output="screen"
           ns="$(arg ns)"
           args="scout_state_controller scout_motor_fr_controller scout_motor_fl_controller scout_motor_rl_controller scout_motor_rr_controller"/>
 
-    <node name="$(arg ns)_scout_skid_steer_controller" pkg="gazebo_sim_scout" type="scout_skid_steer_controller" output="screen">
+    <node if="$(arg wheel_physics)" name="$(arg ns)_scout_skid_steer_controller" pkg="gazebo_sim_scout" type="scout_skid_steer_controller" output="screen">
         <param name="ns" type="string" value="$(arg ns)" />
         <param name="wheel_separation" type="double" value="$(arg wheel_separation)" />
         <param name="wheel_radius" type="double" value="$(arg wheel_radius)" />

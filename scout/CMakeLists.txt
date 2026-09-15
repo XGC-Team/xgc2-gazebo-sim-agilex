@@ -17,7 +17,8 @@ find_package(catkin REQUIRED COMPONENTS
     tf2 
     tf2_ros
 )
-find_package(xgc2_math 0.5.7 REQUIRED CONFIG)
+find_package(gazebo REQUIRED)
+find_package(xgc2_math 0.5.8 REQUIRED CONFIG)
 
 catkin_package(
   INCLUDE_DIRS include
@@ -33,13 +34,19 @@ catkin_package(
 include_directories(
     include
     ${catkin_INCLUDE_DIRS}
+    ${GAZEBO_INCLUDE_DIRS}
 )
+link_directories(${GAZEBO_LIBRARY_DIRS})
 
 add_library(scout_wheel_velocity_controller src/scout_wheel_velocity_controller.cpp)
 target_link_libraries(scout_wheel_velocity_controller ${catkin_LIBRARIES} xgc2_math::control)
 
 add_library(scout_gazebo STATIC src/scout_skid_steer.cpp)
 find_package(Threads REQUIRED)
+add_library(scout_unicycle_plugin SHARED src/scout_unicycle_plugin.cpp)
+target_link_libraries(scout_unicycle_plugin ${catkin_LIBRARIES} ${GAZEBO_LIBRARIES} Threads::Threads xgc2_math::control)
+add_library(scout_wheel_diagnostics SHARED src/scout_wheel_diagnostics.cpp)
+target_link_libraries(scout_wheel_diagnostics ${catkin_LIBRARIES} ${GAZEBO_LIBRARIES} xgc2_math::control)
 target_link_libraries(scout_gazebo ${catkin_LIBRARIES} Threads::Threads xgc2_math::control)
 
 add_executable(scout_skid_steer_controller src/scout_skid_steer_controller.cpp)
@@ -58,6 +65,8 @@ target_link_libraries(sim_scout_status ${catkin_LIBRARIES})
 
 if(CATKIN_ENABLE_TESTING)
   find_package(roslaunch REQUIRED)
+  find_package(rostest REQUIRED)
+  add_rostest(test/unicycle_runtime.test)
   roslaunch_add_file_check(launch)
   find_package(PythonInterp REQUIRED)
   add_test(
@@ -79,10 +88,12 @@ if(CATKIN_ENABLE_TESTING)
     COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/test/test_ground_truth.py
   )
   set_tests_properties(scout_ground_truth PROPERTIES TIMEOUT 90)
+  add_test(NAME scout_dynamics_modes
+    COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/test/test_dynamics_modes.py)
 endif()
 
 install(
-  TARGETS scout_wheel_velocity_controller scout_gazebo scout_skid_steer_controller gazebo_model_ground_truth sim_scout_status
+  TARGETS scout_unicycle_plugin scout_wheel_diagnostics scout_wheel_velocity_controller scout_gazebo scout_skid_steer_controller gazebo_model_ground_truth sim_scout_status
   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}

@@ -1,0 +1,20 @@
+<launch>
+  <!-- Run only in an isolated test container. Never attach to a live station. -->
+  <env name="GAZEBO_MASTER_URI" value="http://127.0.0.1:11369"/>
+  <include file="$(find gazebo_ros)/launch/empty_world.launch">
+    <arg name="gui" value="false"/>
+    <arg name="paused" value="false"/>
+    <arg name="use_sim_time" value="true"/>
+  </include>
+  <include file="$(find gazebo_sim_scout)/launch/spawn_accurate.launch">
+    <arg name="ns" value="unicycle_test"/>
+    <arg name="model_name" value="unicycle_test"/>
+    <arg name="dynamics_mode" value="unicycle"/>
+    <arg name="robot_description_param" value="/unicycle_test/robot_description"/>
+    <arg name="publish_scout_status" value="false"/>
+    <arg name="robot_state_publisher_ns" value="unicycle_test"/>
+    <arg name="frame_prefix" value="unicycle_test/"/>
+  </include>
+  <test test-name="scout_unicycle_runtime" pkg="gazebo_sim_scout"
+        type="test_unicycle_runtime.py" time-limit="90"/>
+</launch>

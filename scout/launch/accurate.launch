@@ -1,5 +1,9 @@
 <?xml version="1.0"?>
 <launch>
+    <arg name="dynamics_mode" default="wheel_physics"/>
+    <arg name="unicycle_linear_time_constant_s" default="0.005"/>
+    <arg name="unicycle_angular_time_constant_s" default="0.005"/>
+    <arg name="wheel_diagnostics" default="false"/>
     <arg name="ns" default="ugv1"/>
     <arg name="world_name" default="$(find gazebo_sim_worlds)/worlds/empty/empty.world"/>
     <arg name="model_name" default="$(arg ns)"/>
@@ -48,6 +52,10 @@
     </include>
 
     <include file="$(dirname)/spawn_accurate.launch">
+        <arg name="dynamics_mode" value="$(arg dynamics_mode)" />
+        <arg name="unicycle_linear_time_constant_s" value="$(arg unicycle_linear_time_constant_s)" />
+        <arg name="unicycle_angular_time_constant_s" value="$(arg unicycle_angular_time_constant_s)" />
+        <arg name="wheel_diagnostics" value="$(arg wheel_diagnostics)" />
         <arg name="ns" value="$(arg ns)" />
         <arg name="model_name" value="$(arg model_name)" />
         <arg name="enable_lidar" value="$(arg enable_lidar)" />
