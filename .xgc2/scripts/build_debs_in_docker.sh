@@ -59,9 +59,12 @@ docker run --rm \
       fi
     apt-get update
     apt-get install -y --no-install-recommends \
+      libxgc2-math-dev \
       ros-noetic-scout-msgs \
       ros-noetic-xgc2-gazebo-sim-worlds \
       ros-noetic-xgc2-scout-description
+
+    dpkg --compare-versions "$(dpkg-query -W -f="\${Version}" libxgc2-math-dev)" ge "0.5.7"
 
     rm -rf /workspace/work/src /workspace/work/build /workspace/work/devel /workspace/work/install-root
     mkdir -p /workspace/work/src

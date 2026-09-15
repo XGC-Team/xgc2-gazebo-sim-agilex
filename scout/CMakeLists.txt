@@ -13,6 +13,8 @@ find_package(catkin REQUIRED COMPONENTS
     tf2 
     tf2_ros
 )
+find_package(xgc2_math 0.5.7 REQUIRED CONFIG)
+
 catkin_package(
   INCLUDE_DIRS include
 #   LIBRARIES 
@@ -31,7 +33,7 @@ include_directories(
 
 add_library(scout_gazebo STATIC src/scout_skid_steer.cpp)
 find_package(Threads REQUIRED)
-target_link_libraries(scout_gazebo ${catkin_LIBRARIES} Threads::Threads)
+target_link_libraries(scout_gazebo ${catkin_LIBRARIES} Threads::Threads xgc2_math::control)
 
 add_executable(scout_skid_steer_controller src/scout_skid_steer_controller.cpp)
 target_link_libraries(scout_skid_steer_controller scout_gazebo ${catkin_LIBRARIES})

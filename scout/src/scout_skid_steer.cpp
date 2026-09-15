@@ -9,6 +9,8 @@
 
 #include "scout_gazebo/scout_skid_steer.hpp"
 
+#include <xgc2_math/control/wheel_drive.hpp>
+
 #include <algorithm>
 #include <cmath>
 
@@ -140,15 +142,14 @@ void ScoutSkidSteer::ControlTick(const ros::TimerEvent &) {
     if (published_sequence_ == command_delay_.OutputSequence()) return;
     published_sequence_ = command_delay_.OutputSequence();
     // The wheel controllers retain their target between matured commands.
-    const double steering = command.angular * angular_command_gain_;
-    const double half_track = wheel_separation_ * 0.5;
-    const double left = (command.linear - steering * half_track) / wheel_radius_;
-    const double right = (command.linear + steering * half_track) / wheel_radius_;
+    const auto wheels = xgc2_math::differentialDriveWheelVelocity(
+        command.linear, command.angular,
+        {wheel_radius_, wheel_separation_, command_gain_, angular_command_gain_});
     std_msgs::Float64 motor_cmd[4];
-    motor_cmd[0].data = right * command_gain_;
-    motor_cmd[1].data = left * command_gain_;
-    motor_cmd[2].data = left * command_gain_;
-    motor_cmd[3].data = right * command_gain_;
+    motor_cmd[0].data = wheels.right_rad_s;
+    motor_cmd[1].data = wheels.left_rad_s;
+    motor_cmd[2].data = wheels.left_rad_s;
+    motor_cmd[3].data = wheels.right_rad_s;
     motor_fr_pub_.publish(motor_cmd[0]);
     motor_fl_pub_.publish(motor_cmd[1]);
     motor_rl_pub_.publish(motor_cmd[2]);
