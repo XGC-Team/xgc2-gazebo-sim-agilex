@@ -1,0 +1,22 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://ros.org/wiki/xacro">
+  <!-- Included only by the simulation launch. The same geometry/sensors are
+       retained, but exactly one subsystem owns horizontal vehicle motion. -->
+  <xacro:unless value="$(arg enable_ros_control)">
+    <gazebo>
+      <plugin name="scout_unicycle" filename="libscout_unicycle_plugin.so">
+        <robotNamespace>$(arg ns)</robotNamespace>
+        <wheelRadius>$(arg wheel_radius)</wheelRadius>
+        <wheelTrack>$(arg wheel_track)</wheelTrack>
+      </plugin>
+    </gazebo>
+  </xacro:unless>
+  <xacro:if value="$(arg enable_ros_control)">
+    <gazebo>
+      <plugin name="scout_wheel_diagnostics" filename="libscout_wheel_diagnostics.so">
+        <robotNamespace>$(arg ns)</robotNamespace>
+        <wheelRadius>$(arg wheel_radius)</wheelRadius>
+      </plugin>
+    </gazebo>
+  </xacro:if>
+</robot>

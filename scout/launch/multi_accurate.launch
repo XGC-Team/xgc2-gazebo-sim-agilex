@@ -1,5 +1,9 @@
 <?xml version="1.0"?>
 <launch>
+    <arg name="dynamics_mode" default="wheel_physics"/>
+    <arg name="unicycle_linear_time_constant_s" default="0.005"/>
+    <arg name="unicycle_angular_time_constant_s" default="0.005"/>
+    <arg name="wheel_diagnostics" default="false"/>
     <arg name="world_name" default="$(find gazebo_sim_worlds)/worlds/empty/empty.world"/>
     <arg name="gui" default="true"/>
     <arg name="rviz" default="true"/>
@@ -27,6 +31,10 @@
     <arg name="angular_command_gain" default="1.46"/>
     <arg name="command_delay_s" default="0.005"/>
 
+    <arg name="ugv1_dynamics_mode" default="$(arg dynamics_mode)"/>
+    <arg name="ugv1_unicycle_linear_time_constant_s" default="$(arg unicycle_linear_time_constant_s)"/>
+    <arg name="ugv1_unicycle_angular_time_constant_s" default="$(arg unicycle_angular_time_constant_s)"/>
+    <arg name="ugv1_wheel_diagnostics" default="$(arg wheel_diagnostics)"/>
     <arg name="ugv1_ns" default="ugv1"/>
     <arg name="ugv1_model_name" default="$(arg ugv1_ns)"/>
     <arg name="ugv1_x" default="-4.0"/>
@@ -49,6 +57,10 @@
     <arg name="ugv1_enable_rslidar" default="$(arg enable_rslidar)"/>
     <arg name="ugv1_enable_camera" default="$(arg enable_camera)"/>
 
+    <arg name="ugv2_dynamics_mode" default="$(arg dynamics_mode)"/>
+    <arg name="ugv2_unicycle_linear_time_constant_s" default="$(arg unicycle_linear_time_constant_s)"/>
+    <arg name="ugv2_unicycle_angular_time_constant_s" default="$(arg unicycle_angular_time_constant_s)"/>
+    <arg name="ugv2_wheel_diagnostics" default="$(arg wheel_diagnostics)"/>
     <arg name="ugv2_ns" default="ugv2"/>
     <arg name="ugv2_model_name" default="$(arg ugv2_ns)"/>
     <arg name="ugv2_x" default="-4.0"/>
@@ -82,6 +94,10 @@
 
     <include file="$(dirname)/spawn_accurate.launch">
         <arg name="ns" value="$(arg ugv1_ns)" />
+        <arg name="dynamics_mode" value="$(arg ugv1_dynamics_mode)" />
+        <arg name="unicycle_linear_time_constant_s" value="$(arg ugv1_unicycle_linear_time_constant_s)" />
+        <arg name="unicycle_angular_time_constant_s" value="$(arg ugv1_unicycle_angular_time_constant_s)" />
+        <arg name="wheel_diagnostics" value="$(arg ugv1_wheel_diagnostics)" />
         <arg name="model_name" value="$(arg ugv1_model_name)" />
         <arg name="x" value="$(arg ugv1_x)" />
         <arg name="y" value="$(arg ugv1_y)" />
@@ -118,6 +134,10 @@
 
     <include file="$(dirname)/spawn_accurate.launch">
         <arg name="ns" value="$(arg ugv2_ns)" />
+        <arg name="dynamics_mode" value="$(arg ugv2_dynamics_mode)" />
+        <arg name="unicycle_linear_time_constant_s" value="$(arg ugv2_unicycle_linear_time_constant_s)" />
+        <arg name="unicycle_angular_time_constant_s" value="$(arg ugv2_unicycle_angular_time_constant_s)" />
+        <arg name="wheel_diagnostics" value="$(arg ugv2_wheel_diagnostics)" />
         <arg name="model_name" value="$(arg ugv2_model_name)" />
         <arg name="x" value="$(arg ugv2_x)" />
         <arg name="y" value="$(arg ugv2_y)" />
