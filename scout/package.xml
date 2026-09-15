@@ -37,6 +37,7 @@
   <run_depend>geometry_msgs</run_depend>
   <run_depend>gazebo_msgs</run_depend>
   <run_depend>gazebo_dev</run_depend>
+  <run_depend>gazebo</run_depend>
   <run_depend>scout_msgs</run_depend>
   <run_depend>sensor_msgs</run_depend>
   <run_depend>std_msgs</run_depend>

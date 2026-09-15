@@ -47,6 +47,7 @@ add_library(scout_unicycle_plugin SHARED src/scout_unicycle_plugin.cpp)
 target_link_libraries(scout_unicycle_plugin ${catkin_LIBRARIES} ${GAZEBO_LIBRARIES} Threads::Threads xgc2_math::control)
 add_library(scout_wheel_diagnostics SHARED src/scout_wheel_diagnostics.cpp)
 target_link_libraries(scout_wheel_diagnostics ${catkin_LIBRARIES} ${GAZEBO_LIBRARIES} xgc2_math::control)
+set_target_properties(scout_unicycle_plugin scout_wheel_diagnostics PROPERTIES INSTALL_RPATH_USE_LINK_PATH TRUE)
 target_link_libraries(scout_gazebo ${catkin_LIBRARIES} Threads::Threads xgc2_math::control)
 
 add_executable(scout_skid_steer_controller src/scout_skid_steer_controller.cpp)
