@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Lock the Scout launch defaults to the bounded PI development defaults (plant validation is separate)."""
+"""Lock the Scout launch defaults to the bounded I-P development contract."""
 
 from __future__ import annotations
 
@@ -11,31 +11,25 @@ from pathlib import Path
 PACKAGE = Path(__file__).resolve().parents[1]
 EXPECTED = {
     "wheel_track": "0.416503",
-    "wheel_contact_mu1": "0.10",
+    "wheel_contact_mu1": "0.16",
     "wheel_contact_mu2": "1.0",
     "wheel_contact_fdir1": "0 0 1",
     "wheel_contact_slip1": "0.0",
     "wheel_contact_slip2": "0.0",
-    "wheel_pid_p": "2.0",
-    "wheel_pid_i": "8.0",
-    "wheel_pid_d": "0.0",
-    "wheel_pid_i_clamp": "2.0",
-    "wheel_pid_antiwindup": "true",
-    "wheel_effort_limit": "3.0",
-    "wheel_velocity_limit": "24.0",
-    "command_gain": "1.04",
-    "angular_command_gain": "0.80",
+    "wheel_pid_p": "1.8",
+    "wheel_pid_i": "10.0",
+    "wheel_effort_limit": "6.0",
+    "wheel_velocity_limit": "26.0",
+    "command_gain": "1.01",
+    "angular_command_gain": "1.46",
     "command_delay_s": "0.005",
 }
 
-PI_CANDIDATE = {
+IP_CANDIDATE = {
     name: EXPECTED[name]
     for name in (
         "wheel_pid_p",
         "wheel_pid_i",
-        "wheel_pid_d",
-        "wheel_pid_i_clamp",
-        "wheel_pid_antiwindup",
         "wheel_effort_limit",
         "wheel_velocity_limit",
         "command_gain",
@@ -78,13 +72,13 @@ class ScoutStableDefaultsTest(unittest.TestCase):
             for name, expected in EXPECTED.items():
                 self.assertEqual(defaults.get(name), expected, f"{filename}: {name}")
 
-    def test_helios_exposes_and_forwards_pi_candidate(self) -> None:
+    def test_helios_exposes_and_forwards_ip_candidate(self) -> None:
         root = ET.parse(PACKAGE / "launch" / "helios16.launch").getroot()
         defaults = {
             element.attrib["name"]: element.attrib.get("default")
             for element in root.findall("./arg")
         }
-        for name, expected in PI_CANDIDATE.items():
+        for name, expected in IP_CANDIDATE.items():
             self.assertEqual(defaults.get(name), expected, f"helios16.launch: {name}")
 
         include = root.find("./include[@file='$(dirname)/accurate.launch']")
@@ -93,21 +87,42 @@ class ScoutStableDefaultsTest(unittest.TestCase):
             element.attrib["name"]: element.attrib.get("value")
             for element in include.findall("./arg")
         }
-        for name in PI_CANDIDATE:
+        for name in IP_CANDIDATE:
             self.assertEqual(forwarded.get(name), f"$(arg {name})", name)
 
-    def test_controller_yaml_uses_pi_and_symmetric_antiwindup(self) -> None:
+    def test_controller_yaml_uses_effort_bounded_ip(self) -> None:
         text = (PACKAGE / "config" / "scout_mini_ros_control.yaml").read_text()
-        self.assertEqual(text.count("p: 2.0"), 4)
-        self.assertEqual(text.count("i: 8.0"), 4)
-        self.assertEqual(text.count("d: 0.0"), 4)
-        self.assertEqual(text.count("i_clamp_max: 2.0"), 4)
-        self.assertEqual(text.count("i_clamp_min: -2.0"), 4)
-        self.assertEqual(text.count("antiwindup: true"), 4)
-        self.assertNotIn("p: 6.0", text)
-        self.assertNotIn("p: 9.0", text)
+        state_text = (PACKAGE / "config" / "scout_mini_state_control.yaml").read_text()
+        self.assertEqual(text.count("type: scout_gazebo/WheelVelocityController"), 4)
+        self.assertEqual(text.count("p: 1.8"), 4)
+        self.assertEqual(text.count("i: 10.0"), 4)
+        self.assertNotIn("pid_gains", text)
+        self.assertNotIn("i_clamp", text)
+        self.assertNotIn("antiwindup", text)
+        self.assertNotIn("velocity_controllers/JointVelocityController", text)
+        self.assertNotIn("pid_gains", state_text)
+        self.assertIn("joint_state_controller/JointStateController", state_text)
 
-    def test_pi_candidate_is_forwarded_through_single_robot_chain(self) -> None:
+    def test_ip_controller_uses_physical_limits_without_hidden_shaping(self) -> None:
+        source = (PACKAGE / "src" / "scout_wheel_velocity_controller.cpp").read_text()
+        transmission = (PACKAGE / "urdf" / "scout_wheel.gazebo").read_text()
+        self.assertIn("Controller<hardware_interface::EffortJointInterface>", source)
+        self.assertIn('node.getParam("p", p_)', source)
+        self.assertIn('node.getParam("i", i_)', source)
+        self.assertIn("joint->limits->effort", source)
+        self.assertIn("joint->limits->velocity", source)
+        self.assertIn("xgc2_math::wheelVelocityIPStep", source)
+        self.assertNotIn("SlewRateLimiter", source)
+        self.assertNotIn("acceleration", source)
+        self.assertIn("hardware_interface/EffortJointInterface", transmission)
+
+        dead_parameters = ("wheel_pid_d", "wheel_pid_i_clamp", "wheel_pid_antiwindup")
+        for filename in ("accurate.launch", "spawn_accurate.launch", "multi_accurate.launch", "helios16.launch"):
+            text = (PACKAGE / "launch" / filename).read_text()
+            for parameter in dead_parameters:
+                self.assertNotIn(parameter, text, filename)
+
+    def test_ip_candidate_is_forwarded_through_single_robot_chain(self) -> None:
         root = ET.parse(PACKAGE / "launch" / "accurate.launch").getroot()
         include = root.find("./include[@file='$(dirname)/spawn_accurate.launch']")
         self.assertIsNotNone(include)
@@ -115,10 +130,10 @@ class ScoutStableDefaultsTest(unittest.TestCase):
             element.attrib["name"]: element.attrib.get("value")
             for element in include.findall("./arg")
         }
-        for name in PI_CANDIDATE:
+        for name in IP_CANDIDATE:
             self.assertEqual(forwarded.get(name), f"$(arg {name})", name)
 
-    def test_multi_accurate_has_per_robot_pi_candidate_overrides(self) -> None:
+    def test_multi_accurate_has_per_robot_ip_candidate_overrides(self) -> None:
         root = ET.parse(PACKAGE / "launch" / "multi_accurate.launch").getroot()
         defaults = {
             element.attrib["name"]: element.attrib.get("default")
@@ -137,7 +152,7 @@ class ScoutStableDefaultsTest(unittest.TestCase):
                 element.attrib["name"]: element.attrib.get("value")
                 for element in include.findall("./arg")
             }
-            for name in PI_CANDIDATE:
+            for name in IP_CANDIDATE:
                 robot_name = prefix + name
                 self.assertEqual(defaults.get(robot_name), f"$(arg {name})", robot_name)
                 self.assertEqual(forwarded.get(name), f"$(arg {robot_name})", robot_name)
@@ -148,16 +163,16 @@ class ScoutStableDefaultsTest(unittest.TestCase):
             element.attrib["name"]: element.attrib.get("default")
             for element in root.findall("./arg")
         }
-        self.assertEqual(defaults.get("wheel_effort_limit"), "3.0")
-        self.assertEqual(defaults.get("wheel_velocity_limit"), "24.0")
+        self.assertEqual(defaults.get("wheel_effort_limit"), "6.0")
+        self.assertEqual(defaults.get("wheel_velocity_limit"), "26.0")
 
         command = root.find("./param[@name='$(arg robot_description_param)']").attrib["command"]
         self.assertIn("wheel_effort_limit:=$(arg wheel_effort_limit)", command)
         self.assertIn("wheel_velocity_limit:=$(arg wheel_velocity_limit)", command)
 
         model = (PACKAGE / "urdf" / "mini.xacro").read_text()
-        self.assertIn('<xacro:arg name="wheel_effort_limit" default="3.0"', model)
-        self.assertIn('<xacro:arg name="wheel_velocity_limit" default="24.0"', model)
+        self.assertIn('<xacro:arg name="wheel_effort_limit" default="6.0"', model)
+        self.assertIn('<xacro:arg name="wheel_velocity_limit" default="26.0"', model)
         for number in range(1, 5):
             wheel = (PACKAGE / "urdf" / f"scout_mini_wheel_{number}.xacro").read_text()
             self.assertIn(
@@ -249,22 +264,40 @@ class ScoutStableDefaultsTest(unittest.TestCase):
         )
         self.assertEqual(text.count('value="$(arg wheel_pid_p)"'), 4)
         self.assertEqual(text.count('value="$(arg wheel_pid_i)"'), 4)
-        self.assertEqual(text.count('value="$(arg wheel_pid_d)"'), 4)
-        self.assertEqual(text.count('value="$(arg wheel_pid_i_clamp)"'), 4)
-        self.assertEqual(text.count('value="-$(arg wheel_pid_i_clamp)"'), 4)
-        self.assertEqual(text.count('value="$(arg wheel_pid_antiwindup)"'), 4)
+        self.assertNotIn("wheel_pid_d", text)
+        self.assertNotIn("wheel_pid_i_clamp", text)
+        self.assertNotIn("wheel_pid_antiwindup", text)
+        self.assertNotIn("gazebo_ros_control/pid_gains", text)
         self.assertIn(
             'name="command_delay_s" type="double" value="$(arg command_delay_s)"',
             text,
         )
         self.assertNotIn("command_time_constant", text)
 
+        root = ET.fromstring(text)
+        defaults = {
+            element.attrib["name"]: element.attrib.get("default")
+            for element in root.findall("./arg")
+        }
+        self.assertEqual(defaults.get("max_angular_speed"), "1.0")
+
+        allocator = (PACKAGE / "src" / "scout_skid_steer.cpp").read_text()
+        self.assertIn('param("command_gain", command_gain_, 1.01)', allocator)
+        self.assertIn('param("angular_command_gain", angular_command_gain_, 1.46)', allocator)
+        self.assertIn('param("max_angular_speed", max_angular_speed_, 1.0)', allocator)
+
     def test_wheel_friction_direction_is_fixed_to_the_axle(self) -> None:
         # Wheel-local z is the joint axis. Unlike local x, it does not rotate
         # through the contact plane as the wheel spins.
         model = (PACKAGE / "urdf" / "mini.xacro").read_text()
         self.assertIn('name="wheel_contact_fdir1" default="0 0 1"', model)
-        self.assertIn('name="wheel_contact_mu1" default="0.10"', model)
+        self.assertIn('name="wheel_contact_mu1" default="0.16"', model)
+        for filename in ("simple.launch", "mini_description.launch"):
+            self.assertIn(
+                'name="wheel_contact_mu1" default="0.16"',
+                (PACKAGE / "launch" / filename).read_text(),
+                filename,
+            )
         self.assertIn('name="wheel_contact_mu2" default="1.0"', model)
 
     def test_bridge_voltage_topic_matches_wheeltec_powervoltage(self) -> None:

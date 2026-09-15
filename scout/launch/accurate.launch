@@ -10,16 +10,13 @@
     <arg name="enable_lidar" default="false"/>
     <arg name="enable_rslidar" default="false"/>
     <arg name="enable_camera" default="false"/>
-    <arg name="wheel_contact_mu1" default="0.10"/>
+    <arg name="wheel_contact_mu1" default="0.16"/>
     <arg name="wheel_contact_mu2" default="1.0"/>
     <arg name="wheel_contact_fdir1" default="0 0 1"/>
     <arg name="wheel_contact_slip1" default="0.0"/>
     <arg name="wheel_contact_slip2" default="0.0"/>
-    <arg name="wheel_pid_p" default="2.0"/>
-    <arg name="wheel_pid_i" default="8.0"/>
-    <arg name="wheel_pid_d" default="0.0"/>
-    <arg name="wheel_pid_i_clamp" default="2.0"/>
-    <arg name="wheel_pid_antiwindup" default="true"/>
+    <arg name="wheel_pid_p" default="1.8"/>
+    <arg name="wheel_pid_i" default="10.0"/>
     <arg name="wheelbase" default="0.451"/>
     <arg name="wheel_track" default="0.416503"/>
     <arg name="wheel_separation" default="$(arg wheel_track)"/>
@@ -28,14 +25,14 @@
     <arg name="wheel_width" default="0.084"/>
     <arg name="wheel_joint_damping" default="0.1"/>
     <arg name="wheel_inertial_axial_offset" default="0.0"/>
-    <arg name="wheel_effort_limit" default="3.0"/>
-    <arg name="wheel_velocity_limit" default="24.0"/>
-    <arg name="command_gain" default="1.04"/>
-    <arg name="angular_command_gain" default="0.80"/>
+    <arg name="wheel_effort_limit" default="6.0"/>
+    <arg name="wheel_velocity_limit" default="26.0"/>
+    <arg name="command_gain" default="1.01"/>
+    <arg name="angular_command_gain" default="1.46"/>
     <arg name="command_delay_s" default="0.005"/>
     <arg name="enable_command_limits" default="true"/>
     <arg name="max_linear_speed" default="1.5"/>
-    <arg name="max_angular_speed" default="0.5235"/>
+    <arg name="max_angular_speed" default="1.0"/>
     <arg name="publish_scout_status" default="true"/>
     <arg name="status_topic" default="/$(arg ns)/scout_status"/>
     <arg name="light_control_topic" default="/$(arg ns)/scout_light_control"/>
@@ -63,9 +60,6 @@
         <arg name="wheel_contact_slip2" value="$(arg wheel_contact_slip2)" />
         <arg name="wheel_pid_p" value="$(arg wheel_pid_p)" />
         <arg name="wheel_pid_i" value="$(arg wheel_pid_i)" />
-        <arg name="wheel_pid_d" value="$(arg wheel_pid_d)" />
-        <arg name="wheel_pid_i_clamp" value="$(arg wheel_pid_i_clamp)" />
-        <arg name="wheel_pid_antiwindup" value="$(arg wheel_pid_antiwindup)" />
         <arg name="wheelbase" value="$(arg wheelbase)" />
         <arg name="wheel_track" value="$(arg wheel_track)" />
         <arg name="wheel_mass" value="$(arg wheel_mass)" />

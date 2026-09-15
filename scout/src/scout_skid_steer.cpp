@@ -24,12 +24,12 @@ ScoutSkidSteer::ScoutSkidSteer(ros::NodeHandle *nh, std::string robot_name)
   ros::NodeHandle private_nh("~");
   private_nh.param("wheel_separation", wheel_separation_, 0.416503);
   private_nh.param("wheel_radius", wheel_radius_, 0.08);
-  private_nh.param("command_gain", command_gain_, 1.0);
-  private_nh.param("angular_command_gain", angular_command_gain_, 1.0);
+  private_nh.param("command_gain", command_gain_, 1.01);
+  private_nh.param("angular_command_gain", angular_command_gain_, 1.46);
   private_nh.param("command_delay_s", command_delay_s_, 0.005);
   private_nh.param("enable_command_limits", enable_command_limits_, true);
   private_nh.param("max_linear_speed", max_linear_speed_, 1.5);
-  private_nh.param("max_angular_speed", max_angular_speed_, 0.5235);
+  private_nh.param("max_angular_speed", max_angular_speed_, 1.0);
 
   if (!std::isfinite(command_delay_s_) || command_delay_s_ < 0.0) {
     ROS_WARN("Invalid Scout command_delay_s %.6f; using 0", command_delay_s_);

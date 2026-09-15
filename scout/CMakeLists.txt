@@ -4,7 +4,11 @@ project(gazebo_sim_scout)
 ## C++ standard and release flags are set by workspace build defaults.
 
 find_package(catkin REQUIRED COMPONENTS    
-    roscpp 
+    roscpp
+    controller_interface
+    hardware_interface
+    pluginlib
+    urdf
     gazebo_msgs
     scout_msgs
     std_msgs
@@ -30,6 +34,9 @@ include_directories(
     include
     ${catkin_INCLUDE_DIRS}
 )
+
+add_library(scout_wheel_velocity_controller src/scout_wheel_velocity_controller.cpp)
+target_link_libraries(scout_wheel_velocity_controller ${catkin_LIBRARIES} xgc2_math::control)
 
 add_library(scout_gazebo STATIC src/scout_skid_steer.cpp)
 find_package(Threads REQUIRED)
@@ -75,7 +82,7 @@ if(CATKIN_ENABLE_TESTING)
 endif()
 
 install(
-  TARGETS scout_gazebo scout_skid_steer_controller gazebo_model_ground_truth sim_scout_status
+  TARGETS scout_wheel_velocity_controller scout_gazebo scout_skid_steer_controller gazebo_model_ground_truth sim_scout_status
   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
@@ -90,3 +97,5 @@ catkin_install_python(PROGRAMS
   scripts/pointcloud_to_pointcloud2
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
+
+install(FILES scout_controllers.xml DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})

@@ -1,0 +1,5 @@
+<library path="lib/libscout_wheel_velocity_controller">
+  <class name="scout_gazebo/WheelVelocityController" type="scout_gazebo::WheelVelocityController" base_class_type="controller_interface::ControllerBase">
+    <description>Effort-bounded I-P wheel velocity controller for the Scout simulation.</description>
+  </class>
+</library>

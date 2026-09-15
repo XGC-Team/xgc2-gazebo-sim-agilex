@@ -1,26 +1,27 @@
-gazebo_ros_control:
-  pid_gains:
-    front_right_wheel: {p: 2.0, i: 8.0, d: 0.0, i_clamp_max: 2.0, i_clamp_min: -2.0, antiwindup: true}
-    front_left_wheel: {p: 2.0, i: 8.0, d: 0.0, i_clamp_max: 2.0, i_clamp_min: -2.0, antiwindup: true}
-    rear_left_wheel: {p: 2.0, i: 8.0, d: 0.0, i_clamp_max: 2.0, i_clamp_min: -2.0, antiwindup: true}
-    rear_right_wheel: {p: 2.0, i: 8.0, d: 0.0, i_clamp_max: 2.0, i_clamp_min: -2.0, antiwindup: true}
-
 scout_state_controller:
   type: joint_state_controller/JointStateController
   publish_rate: 50
 
 scout_motor_fr_controller:
-  type: velocity_controllers/JointVelocityController
+  type: scout_gazebo/WheelVelocityController
+  p: 1.8
+  i: 10.0
   joint: front_right_wheel
 
 scout_motor_fl_controller:
-  type: velocity_controllers/JointVelocityController
+  type: scout_gazebo/WheelVelocityController
+  p: 1.8
+  i: 10.0
   joint: front_left_wheel
 
 scout_motor_rl_controller:
-  type: velocity_controllers/JointVelocityController
+  type: scout_gazebo/WheelVelocityController
+  p: 1.8
+  i: 10.0
   joint: rear_left_wheel
 
 scout_motor_rr_controller:
-  type: velocity_controllers/JointVelocityController
+  type: scout_gazebo/WheelVelocityController
+  p: 1.8
+  i: 10.0
   joint: rear_right_wheel
