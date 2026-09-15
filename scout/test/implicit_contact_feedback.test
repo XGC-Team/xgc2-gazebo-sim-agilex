@@ -1,0 +1,22 @@
+<?xml version="1.0"?>
+<launch>
+  <!-- Isolated regression only: never run against a live station/master. -->
+  <arg name="step_size" default="0.004"/>
+  <env name="GAZEBO_MASTER_URI" value="http://127.0.0.1:11474"/>
+  <include file="$(find gazebo_ros)/launch/empty_world.launch">
+    <arg name="world_name" value="$(find gazebo_sim_scout)/test/implicit_contact_feedback.world"/>
+    <arg name="use_sim_time" value="true"/>
+    <arg name="gui" value="false"/>
+  </include>
+  <include file="$(find gazebo_sim_scout)/launch/spawn_selectable.launch">
+    <arg name="ns" value="brush_contact_test"/>
+    <arg name="dynamics_mode" value="wheel_physics"/>
+    <arg name="wheel_physics_backend" value="implicit_brush"/>
+    <arg name="max_linear_speed" value="1.5"/>
+    <arg name="max_angular_speed" value="1.0"/>
+  </include>
+  <test test-name="implicit_contact_feedback" pkg="gazebo_sim_scout"
+        type="test_implicit_contact_runtime.py" time-limit="150">
+    <param name="step_size" value="$(arg step_size)"/>
+  </test>
+</launch>

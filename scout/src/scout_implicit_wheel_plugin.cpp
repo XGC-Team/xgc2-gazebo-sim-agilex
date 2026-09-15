@@ -14,11 +14,13 @@
 #include <xgc2_math/control/delayed_planar_velocity.hpp>
 #include <xgc2_math/control/implicit_wheel_contact.hpp>
 #include "xgc_chassis_hold/udp.hpp"
+#include "scout_gazebo/ode_contact_feedback.hpp"
 
 #include <array>
 #include <atomic>
 #include <cmath>
 #include <functional>
+#include <map>
 #include <memory>
 #include <stdexcept>
 #include <string>
@@ -33,9 +35,15 @@ namespace scout_gazebo {
 class ImplicitWheelPlugin final : public gazebo::ModelPlugin {
     using Vec = ignition::math::Vector3d;
     struct Patch { double normal{0}; Vec point{0,0,0}; double time{-1}; std::string support; };
+    struct ContactStats {
+        double first_time{-1},last_time{-1};
+        unsigned matched{0},samples{0},eligible{0},accepted{0};
+        unsigned no_frame{0},wrong_time{0},nonfinite{0},nonhorizontal{0},moving{0},nonpositive{0};
+        Vec raw{0,0,0},world{0,0,0};
+    };
 public:
     ~ImplicitWheelPlugin() override {
-        begin_.reset(); end_.reset();
+        begin_.reset(); capture_.reset(); end_.reset(); pause_.reset(); time_reset_.reset();
         stopping_.store(true); queue_.disable();
         if (thread_.joinable()) thread_.join();
         command_sub_.shutdown();
@@ -80,13 +88,13 @@ public:
         delayed_.reset(new xgc2_math::DelayedPlanarVelocity({delay,0,0})); // NO extra first-order lag
         last_time_=world_->SimTime().Double();delayed_->reset(last_time_);
         const std::array<std::string,4> names{{"front_left_wheel","front_right_wheel","rear_left_wheel","rear_right_wheel"}};
-        std::vector<std::string> collisions;
+        std::map<std::string,gazebo::physics::CollisionPtr> collisions;
         for(std::size_t i=0;i<4;++i) {
             joints_[i]=model->GetJoint(names[i]);wheels_[i]=model->GetLink(names[i]+"_link");
             if(!joints_[i] || !wheels_[i] || wheels_[i]->GetCollisions().size()!=1)
                 throw std::runtime_error("implicit wheels require four single-collision wheel links");
             collisions_[i]=wheels_[i]->GetCollisions().front();
-            collisions.push_back(collisions_[i]->GetScopedName());
+            collisions.emplace(collisions_[i]->GetScopedName(),collisions_[i]);
             const auto cylinder=boost::dynamic_pointer_cast<gazebo::physics::CylinderShape>(collisions_[i]->GetShape());
             if(!cylinder)throw std::runtime_error("implicit wheels require cylindrical wheel collision shapes");
             nominal_radius_[i]=cylinder->GetRadius();
@@ -102,31 +110,41 @@ public:
         (void)xgc2_math::implicitWheelContactStep(probe,{},parameters_);
         joint_pub_=node_->advertise<sensor_msgs::JointState>("joint_states",2);
         report_pub_=node_->advertise<std_msgs::Float64MultiArray>("simulation/implicit_wheels",2);
+        contact_report_pub_=node_->advertise<std_msgs::Float64MultiArray>("simulation/implicit_contacts",2);
         fault_pub_=node_->advertise<std_msgs::String>("simulation/dynamics_fault",1,true);
         mode_pub_=node_->advertise<std_msgs::String>("simulation/dynamics_mode",1,true);
         backend_pub_=node_->advertise<std_msgs::String>("simulation/wheel_physics_backend",1,true);
         std_msgs::String label;label.data="wheel_physics";mode_pub_.publish(label);
         label.data="implicit_brush";backend_pub_.publish(label);label.data="";fault_pub_.publish(label);
         manager_=world_->Physics()->GetContactManager();
-        filter_="scout_implicit_"+model->GetName();
-        const auto topic=manager_->CreateFilter(filter_,collisions);
+        if(!manager_)throw std::runtime_error("implicit wheels require a contact manager");
+        const auto filter="scout_implicit_"+model->GetScopedName();
+        // Register actual collision pointers: no deferred name lookup, global
+        // contact setting, or external probe is needed to allocate ODE feedback.
+        const auto topic=manager_->CreateFilter(filter,collisions);
+        if(topic.empty())throw std::runtime_error("cannot create implicit wheel contact filter");
+        filter_=filter; // Own/remove it only after successful creation.
         transport_.reset(new gazebo::transport::Node);transport_->Init(world_->Name());
-        // Subscription requests per-wheel feedback; physics data is read ONLY
-        // at UpdateEnd, not consumed from asynchronous message callbacks.
+        // Keep the local subscription alive too; consume physics data ONLY at
+        // UpdateEnd, never from asynchronous transport callbacks.
         contact_sub_=transport_->Subscribe(topic,&ImplicitWheelPlugin::ContactsKeepalive,this);
+        if(!contact_sub_)throw std::runtime_error("cannot subscribe to implicit wheel contacts");
         gate_.reset(new xgc_chassis_hold::Gate(xgc_chassis_hold::lastPath(ns)));
         gate_->setZeroThunk(&ImplicitWheelPlugin::HoldThunk,this);
         xgc_chassis_hold::Hub::instance().add(gate_.get());
         command_sub_=node_->subscribe("cmd_vel",10,&ImplicitWheelPlugin::Command,this);
         begin_=gazebo::event::Events::ConnectWorldUpdateBegin(std::bind(&ImplicitWheelPlugin::Update,this,std::placeholders::_1));
+        capture_=gazebo::event::Events::ConnectBeforePhysicsUpdate(std::bind(&ImplicitWheelPlugin::CaptureFeedbackFrame,this,std::placeholders::_1));
         end_=gazebo::event::Events::ConnectWorldUpdateEnd(std::bind(&ImplicitWheelPlugin::Collect,this));
+        pause_=gazebo::event::Events::ConnectPause(std::bind(&ImplicitWheelPlugin::PauseChanged,this,std::placeholders::_1));
+        time_reset_=gazebo::event::Events::ConnectTimeReset(std::bind(&ImplicitWheelPlugin::Reset,this));
         thread_=std::thread([this]{while(!stopping_.load() && node_->ok())queue_.callAvailable(ros::WallDuration(.01));});
         ROS_WARN("Scout implicit_brush is an uncalibrated experimental force backend; no field-accuracy claim");
     }
     void Reset() override {
         if(!gate_) return;
         gate_->withCommand([this](bool){
-            memory_={};patches_={};last_time_=world_->SimTime().Double();delayed_->reset(last_time_);fault_=false;
+            memory_={};InvalidateFeedback();support_={};last_time_=world_->SimTime().Double();delayed_->reset(last_time_);fault_=false;
             std_msgs::String clear;fault_pub_.publish(clear);
         });
     }
@@ -151,43 +169,127 @@ private:
         std_msgs::String message;message.data=why;fault_pub_.publish(message);
         ROS_ERROR_STREAM("Scout implicit wheel backend latched fault: "<<why);
     }
+    static ode_contact::Vector Components(const Vec& v) { return {{v.X(),v.Y(),v.Z()}}; }
+    void InvalidateFeedback() { patches_={};feedback_frames_={}; }
+    void PauseChanged(bool) {
+        if(gate_)gate_->withCommand([this](bool){InvalidateFeedback();});
+    }
+    void CaptureFeedbackFrame(const gazebo::common::UpdateInfo& info) {
+        if(!gate_)return;
+        gate_->withCommand([&](bool){
+            feedback_frames_={};
+            if(!world_->PhysicsEnabled()) { patches_={};return; }
+            // ODE converts its world-space feedback using Entity::worldPose
+            // BEFORE World::Update synchronizes dirty poses. Capture here,
+            // after model updates/collision detection and before integration.
+            for(std::size_t i=0;i<4;++i) {
+                const auto rotation=wheels_[i]->WorldPose().Rot();
+                auto& frame=feedback_frames_[i];
+                frame.columns={{Components(rotation.RotateVector(Vec(1,0,0))),
+                                Components(rotation.RotateVector(Vec(0,1,0))),
+                                Components(rotation.RotateVector(Vec(0,0,1)))}};
+                frame.time_s=info.simTime.Double();frame.valid=true;
+            }
+        });
+    }
     void Collect() {
         if(!gate_)return;
         gate_->withCommand([&](bool){
             patches_={};
+            const auto frames=feedback_frames_;
+            feedback_frames_={}; // Each frame may be consumed only once.
+            std::array<ContactStats,4> stats{};
             const double now=world_->SimTime().Double();
-            for(unsigned k=0;k<manager_->GetContactCount();++k) {
+            const unsigned count=manager_->GetContactCount();
+            const bool registered=manager_->HasFilter(filter_);
+            if(!registered && !fault_)Fault("implicit wheel contact filter was removed");
+            const auto gravity=world_->Gravity();
+            if(!gravity.IsFinite() || gravity.Length()<=0) {
+                if(!fault_)Fault("invalid gravity for contact feedback");
+                return;
+            }
+            const auto up=Components(-gravity/gravity.Length());
+            for(unsigned k=0;k<count;++k) {
                 const auto* contact=manager_->GetContact(k);if(!contact)continue;
                 for(std::size_t i=0;i<4;++i){
                     const bool first=contact->collision1==collisions_[i].get();
                     if(!first && contact->collision2!=collisions_[i].get())continue;
+                    auto& trace=stats[i];++trace.matched;
+                    const double sample_time=contact->time.Double();
+                    if(trace.first_time<0)trace.first_time=sample_time;
+                    else trace.first_time=std::min(trace.first_time,sample_time);
+                    trace.last_time=std::max(trace.last_time,sample_time);
                     auto* other=first?contact->collision2:contact->collision1;
                     for(int j=0;j<contact->count;++j){
+                        ++trace.samples;
+                        if(!contact->normals[j].IsFinite() || !contact->positions[j].IsFinite()) {
+                            ++trace.nonfinite;
+                            if(!fault_)Fault("nonfinite contact geometry");
+                            continue;
+                        }
                         // Only near-horizontal static support belongs to this
                         // reduced tire model. Obstacle normals remain ODE's job.
-                        if(std::abs(contact->normals[j].Z())<.999)continue;
-                        if(!other || !other->GetLink()->GetModel()->IsStatic()){
-                            if(!fault_)Fault("moving support is outside implicit_brush validity");continue;
+                        if(std::abs(contact->normals[j].Z())<.999){++trace.nonhorizontal;continue;}
+                        if(!other || !other->GetLink() || !other->GetLink()->GetModel() ||
+                           !other->GetLink()->GetModel()->IsStatic()){
+                            ++trace.moving;
+                            if(!fault_)Fault("moving support is outside implicit_brush validity");
+                            continue;
                         }
-                        const auto force=first?contact->wrench[j].body1Force:contact->wrench[j].body2Force;
-                        const double n=std::max(0.0,force.Z());
-                        if(!std::isfinite(n)||!contact->positions[j].IsFinite()){
-                            if(!fault_)Fault("nonfinite contact feedback");continue;
+                        ++trace.eligible;
+                        const auto load=ode_contact::restore(frames[i],sample_time,now,first,
+                            Components(contact->wrench[j].body1Force),
+                            Components(contact->wrench[j].body2Force),up);
+                        using Rejection=ode_contact::Rejection;
+                        if(load.rejection==Rejection::missing_frame){++trace.no_frame;continue;}
+                        if(load.rejection==Rejection::wrong_time){++trace.wrong_time;continue;}
+                        if(load.rejection==Rejection::nonfinite){
+                            ++trace.nonfinite;
+                            if(!fault_)Fault("nonfinite contact feedback");
+                            continue;
                         }
+                        trace.raw+=Vec(load.raw[0],load.raw[1],load.raw[2]);
+                        trace.world+=Vec(load.world[0],load.world[1],load.world[2]);
+                        if(load.rejection==Rejection::nonpositive){++trace.nonpositive;continue;}
+                        ++trace.accepted;
+                        const double n=load.normal_n;
                         const auto support=other->GetScopedName();
                         if(patches_[i].support.empty())patches_[i].support=support;
                         else if(patches_[i].support!=support)patches_[i].support="multiple-static-supports";
-                        patches_[i].normal+=n;patches_[i].point+=n*contact->positions[j];patches_[i].time=now;
+                        patches_[i].normal+=n;patches_[i].point+=n*contact->positions[j];
+                        patches_[i].time=sample_time;
                     }
                 }
             }
             for(auto& patch:patches_)if(patch.normal>0)patch.point/=patch.normal;
+            PublishContacts(now,count,registered,frames,stats);
         });
+    }
+    void PublishContacts(double now,unsigned count,bool registered,
+                         const std::array<ode_contact::Frame,4>& frames,
+                         const std::array<ContactStats,4>& stats) {
+        // A separate topic preserves the existing 4x14 implicit_wheels ABI.
+        std_msgs::Float64MultiArray report;
+        report.layout.dim.resize(2);report.layout.dim[0].label="wheel_FL_FR_RL_RR";
+        report.layout.dim[0].size=4;report.layout.dim[0].stride=92;
+        report.layout.dim[1].label="sim_time,frame_time,contact_first_time,contact_last_time,contacts,matched_pairs,samples,static_horizontal,accepted,discard_no_frame,discard_time,discard_nonfinite,discard_nonhorizontal,discard_moving,discard_nonpositive,raw_Fx,raw_Fy,raw_Fz,world_Fx,world_Fy,world_Fz,normal,filter_registered";
+        report.layout.dim[1].size=23;report.layout.dim[1].stride=23;
+        for(std::size_t i=0;i<4;++i) {
+            const auto& t=stats[i];
+            const double row[]={now,frames[i].time_s,t.first_time,t.last_time,static_cast<double>(count),
+                static_cast<double>(t.matched),static_cast<double>(t.samples),static_cast<double>(t.eligible),
+                static_cast<double>(t.accepted),static_cast<double>(t.no_frame),static_cast<double>(t.wrong_time),
+                static_cast<double>(t.nonfinite),static_cast<double>(t.nonhorizontal),static_cast<double>(t.moving),
+                static_cast<double>(t.nonpositive),t.raw.X(),t.raw.Y(),t.raw.Z(),
+                t.world.X(),t.world.Y(),t.world.Z(),patches_[i].normal,registered?1.0:0.0};
+            report.data.insert(report.data.end(),std::begin(row),std::end(row));
+        }
+        contact_report_pub_.publish(report);
     }
     void Update(const gazebo::common::UpdateInfo& info) {
         gate_->withCommand([&](bool held){
             const double now=info.simTime.Double();
-            if(now<last_time_){memory_={};patches_={};delayed_->reset(now);fault_=false;}
+            if(now<last_time_){memory_={};InvalidateFeedback();support_={};delayed_->reset(now);fault_=false;}
             last_time_=now;
             if(fault_){for(auto& joint:joints_)joint->SetForce(0,0);return;}
             try {
@@ -289,13 +391,14 @@ private:
     std::array<gazebo::physics::LinkPtr,4> wheels_;
     std::array<gazebo::physics::CollisionPtr,4> collisions_;
     gazebo::physics::ContactManager* manager_{nullptr};
-    gazebo::event::ConnectionPtr begin_,end_;
+    gazebo::event::ConnectionPtr begin_,capture_,end_,pause_,time_reset_;
     gazebo::transport::NodePtr transport_;gazebo::transport::SubscriberPtr contact_sub_;std::string filter_;
     std::unique_ptr<ros::NodeHandle> node_;ros::CallbackQueue queue_;std::thread thread_;std::atomic<bool> stopping_{false};
-    ros::Subscriber command_sub_;ros::Publisher joint_pub_,report_pub_,fault_pub_,mode_pub_,backend_pub_;
+    ros::Subscriber command_sub_;ros::Publisher joint_pub_,report_pub_,contact_report_pub_,fault_pub_,mode_pub_,backend_pub_;
     std::unique_ptr<xgc_chassis_hold::Gate> gate_;
     std::unique_ptr<xgc2_math::DelayedPlanarVelocity> delayed_;
     xgc2_math::ImplicitWheelParameters parameters_;xgc2_math::ImplicitWheelMemory memory_;
+    std::array<ode_contact::Frame,4> feedback_frames_{};
     std::array<Patch,4> patches_{};std::array<double,4> nominal_radius_{};std::array<std::string,4> support_{};
     double last_time_{0},max_v_{1.5},max_w_{.5235},max_wheel_{26},gain_{1},yaw_gain_{1};bool fault_{false};
 };

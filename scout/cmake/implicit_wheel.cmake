@@ -6,5 +6,8 @@ install(TARGETS scout_implicit_wheel_plugin LIBRARY DESTINATION ${CATKIN_PACKAGE
 if(CATKIN_ENABLE_TESTING)
   add_test(NAME scout_implicit_wheel_wiring
     COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/test/test_implicit_wheel_wiring.py)
+  add_executable(scout_ode_contact_feedback_test test/ode_contact_feedback_test.cpp)
+  add_test(NAME scout_ode_contact_feedback COMMAND scout_ode_contact_feedback_test)
   add_rostest(test/implicit_wheel_runtime.test)
+  add_rostest(test/implicit_contact_feedback.test)
 endif()
