@@ -22,9 +22,9 @@ find_package(xgc2_math 0.5.8 REQUIRED CONFIG)
 
 catkin_package(
   INCLUDE_DIRS include
-#   LIBRARIES 
+  LIBRARIES scout_unicycle_plugin scout_wheel_diagnostics scout_wheel_velocity_controller scout_gazebo
   CATKIN_DEPENDS roscpp gazebo_msgs scout_msgs sensor_msgs std_msgs
-#   DEPENDS Boost
+  DEPENDS gazebo
 )
 
 ###########
