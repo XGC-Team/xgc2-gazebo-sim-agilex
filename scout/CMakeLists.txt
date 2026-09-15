@@ -110,3 +110,5 @@ catkin_install_python(PROGRAMS
 )
 
 install(FILES scout_controllers.xml DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})
+
+include(cmake/implicit_wheel.cmake)

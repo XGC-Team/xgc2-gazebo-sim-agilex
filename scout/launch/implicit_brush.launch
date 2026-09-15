@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<launch>
+  <arg name="ns" default="ugv1"/>
+  <arg name="gui" default="true"/>
+  <arg name="world_name" default="$(find gazebo_sim_worlds)/worlds/empty/empty.world"/>
+  <include file="$(find gazebo_ros)/launch/empty_world.launch">
+    <arg name="world_name" value="$(arg world_name)"/>
+    <arg name="use_sim_time" value="true"/>
+    <arg name="gui" value="$(arg gui)"/>
+  </include>
+  <include file="$(dirname)/spawn_selectable.launch">
+    <arg name="ns" value="$(arg ns)"/>
+    <arg name="dynamics_mode" value="wheel_physics"/>
+    <arg name="wheel_physics_backend" value="implicit_brush"/>
+    <arg name="max_angular_speed" value="0.5235"/>
+  </include>
+</launch>

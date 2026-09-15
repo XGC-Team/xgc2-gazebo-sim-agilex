@@ -1,0 +1,155 @@
+<?xml version="1.0"?>
+<launch>
+  <arg name="dynamics_mode" default="wheel_physics"/>
+  <arg name="unicycle_linear_time_constant_s" default="0.005"/>
+  <arg name="unicycle_angular_time_constant_s" default="0.005"/>
+  <arg name="wheel_diagnostics" default="false"/>
+  <arg name="x" default="0.0"/>
+  <arg name="y" default="0.0"/>
+  <arg name="z" default="0.181"/>
+  <arg name="yaw" default="0.0"/>
+  <arg name="ns" default="ugv1"/>
+  <arg name="model_name" default="$(arg ns)"/>
+  <arg name="robot_description_param" default="robot_description"/>
+  <arg name="pose_topic" default="/$(arg ns)/simulation/ground_truth/pose"/>
+  <arg name="twist_topic" default="/$(arg ns)/simulation/ground_truth/twist"/>
+  <arg name="world_frame" default="world"/>
+  <arg name="tf_prefix" default=""/>
+  <arg name="frame_prefix" default=""/>
+  <arg name="sensor_ns" default="/"/>
+  <arg name="enable_lidar" default="false"/>
+  <arg name="enable_rslidar" default="false"/>
+  <arg name="enable_camera" default="false"/>
+  <arg name="robot_state_publisher_ns" default="/"/>
+  <arg name="run_mode" default="simulation"/>
+  <arg name="wheel_contact_mu1" default="0.16"/>
+  <arg name="wheel_contact_mu2" default="1.0"/>
+  <arg name="wheel_contact_fdir1" default="0 0 1"/>
+  <arg name="wheel_contact_slip1" default="0.0"/>
+  <arg name="wheel_contact_slip2" default="0.0"/>
+  <arg name="wheel_pid_p" default="1.8"/>
+  <arg name="wheel_pid_i" default="10.0"/>
+  <arg name="wheelbase" default="0.451"/>
+  <arg name="wheel_track" default="0.416503"/>
+  <arg name="wheel_separation" default="$(arg wheel_track)"/>
+  <arg name="wheel_radius" default="0.08"/>
+  <arg name="wheel_mass" default="3.0"/>
+  <arg name="wheel_width" default="0.084"/>
+  <arg name="wheel_joint_damping" default="0.1"/>
+  <arg name="wheel_inertial_axial_offset" default="0.0"/>
+  <arg name="wheel_effort_limit" default="6.0"/>
+  <arg name="wheel_velocity_limit" default="26.0"/>
+  <arg name="command_gain" default="1.01"/>
+  <arg name="angular_command_gain" default="1.46"/>
+  <arg name="command_delay_s" default="0.005"/>
+  <arg name="enable_command_limits" default="true"/>
+  <arg name="max_linear_speed" default="1.5"/>
+  <arg name="max_angular_speed" default="1.0"/>
+  <arg name="publish_scout_status" default="true"/>
+  <arg name="status_topic" default="/$(arg ns)/scout_status"/>
+  <arg name="light_control_topic" default="/$(arg ns)/scout_light_control"/>
+  <arg name="battery_voltage" default="28.765"/>
+  <arg name="wheel_physics_backend" default="ode"/>
+  <arg name="brush_stiffness_n_m" default="12000.0"/>
+  <arg name="brush_friction" default="0.6"/>
+  <arg name="brush_renewal_length_m" default="0.04"/>
+  <arg name="brush_allocation_gain" default="1.0"/>
+  <arg name="brush_yaw_calibration" default="1.0"/>
+  <arg name="brush_passive_drag_nm_s" default="0.0"/>
+  <arg name="implicit_brush_selected" value="$(eval {'wheel_physics': {'ode': False, 'implicit_brush': True}, 'unicycle': {'ode': False}}[arg('dynamics_mode')][arg('wheel_physics_backend')])"/>
+  <!-- Exactly one actuation stack. Existing backend stays available for A/B. -->
+  <include unless="$(arg implicit_brush_selected)" file="$(dirname)/spawn_accurate.launch">
+    <arg name="dynamics_mode" value="$(arg dynamics_mode)"/>
+    <arg name="unicycle_linear_time_constant_s" value="$(arg unicycle_linear_time_constant_s)"/>
+    <arg name="unicycle_angular_time_constant_s" value="$(arg unicycle_angular_time_constant_s)"/>
+    <arg name="wheel_diagnostics" value="$(arg wheel_diagnostics)"/>
+    <arg name="x" value="$(arg x)"/>
+    <arg name="y" value="$(arg y)"/>
+    <arg name="z" value="$(arg z)"/>
+    <arg name="yaw" value="$(arg yaw)"/>
+    <arg name="ns" value="$(arg ns)"/>
+    <arg name="model_name" value="$(arg model_name)"/>
+    <arg name="robot_description_param" value="$(arg robot_description_param)"/>
+    <arg name="pose_topic" value="$(arg pose_topic)"/>
+    <arg name="twist_topic" value="$(arg twist_topic)"/>
+    <arg name="world_frame" value="$(arg world_frame)"/>
+    <arg name="tf_prefix" value="$(arg tf_prefix)"/>
+    <arg name="frame_prefix" value="$(arg frame_prefix)"/>
+    <arg name="sensor_ns" value="$(arg sensor_ns)"/>
+    <arg name="enable_lidar" value="$(arg enable_lidar)"/>
+    <arg name="enable_rslidar" value="$(arg enable_rslidar)"/>
+    <arg name="enable_camera" value="$(arg enable_camera)"/>
+    <arg name="robot_state_publisher_ns" value="$(arg robot_state_publisher_ns)"/>
+    <arg name="run_mode" value="$(arg run_mode)"/>
+    <arg name="wheel_contact_mu1" value="$(arg wheel_contact_mu1)"/>
+    <arg name="wheel_contact_mu2" value="$(arg wheel_contact_mu2)"/>
+    <arg name="wheel_contact_fdir1" value="$(arg wheel_contact_fdir1)"/>
+    <arg name="wheel_contact_slip1" value="$(arg wheel_contact_slip1)"/>
+    <arg name="wheel_contact_slip2" value="$(arg wheel_contact_slip2)"/>
+    <arg name="wheel_pid_p" value="$(arg wheel_pid_p)"/>
+    <arg name="wheel_pid_i" value="$(arg wheel_pid_i)"/>
+    <arg name="wheelbase" value="$(arg wheelbase)"/>
+    <arg name="wheel_track" value="$(arg wheel_track)"/>
+    <arg name="wheel_separation" value="$(arg wheel_separation)"/>
+    <arg name="wheel_radius" value="$(arg wheel_radius)"/>
+    <arg name="wheel_mass" value="$(arg wheel_mass)"/>
+    <arg name="wheel_width" value="$(arg wheel_width)"/>
+    <arg name="wheel_joint_damping" value="$(arg wheel_joint_damping)"/>
+    <arg name="wheel_inertial_axial_offset" value="$(arg wheel_inertial_axial_offset)"/>
+    <arg name="wheel_effort_limit" value="$(arg wheel_effort_limit)"/>
+    <arg name="wheel_velocity_limit" value="$(arg wheel_velocity_limit)"/>
+    <arg name="command_gain" value="$(arg command_gain)"/>
+    <arg name="angular_command_gain" value="$(arg angular_command_gain)"/>
+    <arg name="command_delay_s" value="$(arg command_delay_s)"/>
+    <arg name="enable_command_limits" value="$(arg enable_command_limits)"/>
+    <arg name="max_linear_speed" value="$(arg max_linear_speed)"/>
+    <arg name="max_angular_speed" value="$(arg max_angular_speed)"/>
+    <arg name="publish_scout_status" value="$(arg publish_scout_status)"/>
+    <arg name="status_topic" value="$(arg status_topic)"/>
+    <arg name="light_control_topic" value="$(arg light_control_topic)"/>
+    <arg name="battery_voltage" value="$(arg battery_voltage)"/>
+  </include>
+  <include if="$(arg implicit_brush_selected)" file="$(dirname)/spawn_implicit_brush.launch">
+    <arg name="x" value="$(arg x)"/>
+    <arg name="y" value="$(arg y)"/>
+    <arg name="z" value="$(arg z)"/>
+    <arg name="yaw" value="$(arg yaw)"/>
+    <arg name="ns" value="$(arg ns)"/>
+    <arg name="model_name" value="$(arg model_name)"/>
+    <arg name="robot_description_param" value="$(arg robot_description_param)"/>
+    <arg name="pose_topic" value="$(arg pose_topic)"/>
+    <arg name="twist_topic" value="$(arg twist_topic)"/>
+    <arg name="world_frame" value="$(arg world_frame)"/>
+    <arg name="tf_prefix" value="$(arg tf_prefix)"/>
+    <arg name="frame_prefix" value="$(arg frame_prefix)"/>
+    <arg name="sensor_ns" value="$(arg sensor_ns)"/>
+    <arg name="enable_lidar" value="$(arg enable_lidar)"/>
+    <arg name="enable_rslidar" value="$(arg enable_rslidar)"/>
+    <arg name="enable_camera" value="$(arg enable_camera)"/>
+    <arg name="robot_state_publisher_ns" value="$(arg robot_state_publisher_ns)"/>
+    <arg name="run_mode" value="$(arg run_mode)"/>
+    <arg name="wheel_pid_p" value="$(arg wheel_pid_p)"/>
+    <arg name="wheel_pid_i" value="$(arg wheel_pid_i)"/>
+    <arg name="wheelbase" value="$(arg wheelbase)"/>
+    <arg name="wheel_track" value="$(arg wheel_track)"/>
+    <arg name="wheel_radius" value="$(arg wheel_radius)"/>
+    <arg name="wheel_mass" value="$(arg wheel_mass)"/>
+    <arg name="wheel_width" value="$(arg wheel_width)"/>
+    <arg name="wheel_inertial_axial_offset" value="$(arg wheel_inertial_axial_offset)"/>
+    <arg name="wheel_effort_limit" value="$(arg wheel_effort_limit)"/>
+    <arg name="wheel_velocity_limit" value="$(arg wheel_velocity_limit)"/>
+    <arg name="command_delay_s" value="$(arg command_delay_s)"/>
+    <arg name="max_linear_speed" value="$(arg max_linear_speed)"/>
+    <arg name="max_angular_speed" value="$(arg max_angular_speed)"/>
+    <arg name="publish_scout_status" value="$(arg publish_scout_status)"/>
+    <arg name="status_topic" value="$(arg status_topic)"/>
+    <arg name="light_control_topic" value="$(arg light_control_topic)"/>
+    <arg name="battery_voltage" value="$(arg battery_voltage)"/>
+    <arg name="brush_stiffness_n_m" value="$(arg brush_stiffness_n_m)"/>
+    <arg name="brush_friction" value="$(arg brush_friction)"/>
+    <arg name="brush_renewal_length_m" value="$(arg brush_renewal_length_m)"/>
+    <arg name="brush_allocation_gain" value="$(arg brush_allocation_gain)"/>
+    <arg name="brush_yaw_calibration" value="$(arg brush_yaw_calibration)"/>
+    <arg name="brush_passive_drag_nm_s" value="$(arg brush_passive_drag_nm_s)"/>
+  </include>
+</launch>

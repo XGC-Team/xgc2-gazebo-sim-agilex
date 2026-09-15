@@ -42,6 +42,7 @@ ownership:
   - /opt/ros/noetic/lib/libscout_wheel_velocity_controller.so
   - /opt/ros/noetic/lib/libscout_unicycle_plugin.so
   - /opt/ros/noetic/lib/libscout_wheel_diagnostics.so
+  - /opt/ros/noetic/lib/libscout_implicit_wheel_plugin.so
 release:
   requires:
   - libxgc2-math-dev
