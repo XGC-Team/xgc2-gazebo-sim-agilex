@@ -1,0 +1,90 @@
+name: Implicit contact feedback
+on:
+  pull_request:
+    paths:
+      - 'scout/src/scout_implicit_wheel_plugin.cpp'
+      - 'scout/include/scout_gazebo/ode_contact_feedback.hpp'
+      - 'scout/test/*contact*'
+      - 'scout/cmake/implicit_wheel.cmake'
+      - '.github/workflows/implicit-contact-feedback.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  probe-free-gazebo:
+    strategy:
+      fail-fast: false
+      matrix:
+        step: ['0.001', '0.002', '0.004']
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    container: ghcr.io/xgc-team/xgc2-images/xgc2-build-focal-full-noetic:1.0.0
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          repository: XGC-Team/xgc2-math
+          ref: 4789e075acd54e8df565763124b59ce4b604f352
+          path: .ci/math
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          repository: XGC-Team/xgc2-scout-description
+          ref: 22fdff9c6d426b75637168bc0ca8888df184f9a4
+          path: .ci/scout-description
+          persist-credentials: false
+      - name: Install test dependencies inside isolated container
+        run: |
+          set -eo pipefail
+          export DEBIAN_FRONTEND=noninteractive
+          echo "deb [trusted=yes arch=$(dpkg --print-architecture)] https://xgc2.apt.xiaokang.ink focal main" > /etc/apt/sources.list.d/xgc2.list
+          apt-get update
+          apt-get install -y --no-install-recommends libeigen3-dev \
+            ros-noetic-scout-msgs ros-noetic-xgc2-scout-description \
+            ros-noetic-xgc2-gazebo-sim-worlds ros-noetic-rostest
+      - name: Build source math and the actual Scout plugin
+        run: |
+          set -eo pipefail
+          cmake -S .ci/math -B /tmp/contact-math -DXGC2_MATH_BUILD_TESTING=OFF \
+            -DCMAKE_INSTALL_PREFIX=/tmp/contact-math-install -DCMAKE_INSTALL_LIBDIR=lib
+          cmake --build /tmp/contact-math --target install
+          g++ -std=c++17 -O1 -Wall -Wextra -Werror -I.ci/math/include \
+            .ci/math/test/implicit_wheel_contact_test.cpp -o /tmp/contact-math-test
+          /tmp/contact-math-test
+          source /opt/ros/noetic/setup.bash
+          mkdir -p /tmp/contact-ws/src
+          ln -s "$GITHUB_WORKSPACE/scout" /tmp/contact-ws/src/gazebo_sim_scout
+          cd /tmp/contact-ws
+          catkin_make -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCATKIN_ENABLE_TESTING=ON \
+            -Dxgc2_math_DIR=/tmp/contact-math-install/lib/cmake/xgc2_math
+      - name: Run adapter checks and probe-free physical regression
+        env:
+          ROS_HOME: ${{ github.workspace }}/.ci/ros-home
+          ROS_TEST_RESULTS_DIR: ${{ github.workspace }}/.ci/test-results
+          GAZEBO_MODEL_DATABASE_URI: ''
+        run: |
+          set -eo pipefail
+          source /opt/ros/noetic/setup.bash
+          source /tmp/contact-ws/devel/setup.bash
+          export ROS_PACKAGE_PATH="$GITHUB_WORKSPACE/.ci/scout-description:$ROS_PACKAGE_PATH"
+          mkdir -p "$ROS_HOME" "$ROS_TEST_RESULTS_DIR"
+          python3 -m unittest discover -s scout/test -p 'test_ode_contact_feedback.py' -v
+          sha256sum scout/src/scout_implicit_wheel_plugin.cpp \
+            /tmp/contact-ws/devel/lib/libscout_implicit_wheel_plugin.so > "$ROS_HOME/source-binary-sha256.txt"
+          gzserver --version > "$ROS_HOME/gazebo-version.txt"
+          rostest gazebo_sim_scout implicit_contact_feedback.test step_size:=${{ matrix.step }}
+      - name: Preserve runtime evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: implicit-contact-${{ matrix.step }}
+          path: |
+            .ci/ros-home
+            .ci/test-results
+          include-hidden-files: true
+          retention-days: 14
