@@ -91,6 +91,8 @@ if(CATKIN_ENABLE_TESTING)
   set_tests_properties(scout_ground_truth PROPERTIES TIMEOUT 90)
   add_test(NAME scout_dynamics_modes
     COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/test/test_dynamics_modes.py)
+  add_test(NAME scout_simple_lidar_contract
+    COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/test_ros/test_simple_lidar.py)
 endif()
 
 install(

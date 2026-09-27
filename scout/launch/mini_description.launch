@@ -9,6 +9,8 @@
     <arg name="enable_lidar" default="false"/>
     <arg name="enable_rslidar" default="false"/>
     <arg name="enable_camera" default="false"/>
+    <arg name="enable_simple_lidar" default="false"/>
+    <arg name="simple_lidar_pose" default="0 0 0.35 0 0 0"/>
     <arg name="wheel_contact_mu1" default="0.16"/>
     <arg name="wheel_contact_mu2" default="1.0"/>
     <arg name="wheel_contact_fdir1" default="0 0 1"/>
@@ -34,6 +36,8 @@
         enable_lidar:=$(arg enable_lidar)
         enable_rslidar:=$(arg enable_rslidar)
         enable_camera:=$(arg enable_camera)
+        enable_simple_lidar:=$(arg enable_simple_lidar)
+        simple_lidar_pose:='$(arg simple_lidar_pose)'
         wheel_contact_mu2:=$(arg wheel_contact_mu2)
         wheel_contact_mu1:=$(arg wheel_contact_mu1)
         wheel_contact_fdir1:='$(arg wheel_contact_fdir1)'

@@ -3,6 +3,8 @@
   <arg name="ns" default="ugv1"/>
   <arg name="gui" default="true"/>
   <arg name="world_name" default="$(find gazebo_sim_worlds)/worlds/empty/empty.world"/>
+  <arg name="enable_simple_lidar" default="false"/>
+  <arg name="simple_lidar_pose" default="0 0 0.35 0 0 0"/>
   <include file="$(find gazebo_ros)/launch/empty_world.launch">
     <arg name="world_name" value="$(arg world_name)"/>
     <arg name="use_sim_time" value="true"/>
@@ -13,5 +15,7 @@
     <arg name="dynamics_mode" value="wheel_physics"/>
     <arg name="wheel_physics_backend" value="implicit_brush"/>
     <arg name="max_angular_speed" value="0.5235"/>
+    <arg name="enable_simple_lidar" value="$(arg enable_simple_lidar)"/>
+    <arg name="simple_lidar_pose" value="$(arg simple_lidar_pose)"/>
   </include>
 </launch>

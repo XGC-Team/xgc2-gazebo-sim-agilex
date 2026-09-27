@@ -13,6 +13,8 @@
     <arg name="enable_lidar" default="false"/>
     <arg name="enable_rslidar" default="false"/>
     <arg name="enable_camera" default="false"/>
+    <arg name="enable_simple_lidar" default="false"/>
+    <arg name="simple_lidar_pose" default="0 0 0.35 0 0 0"/>
     <arg name="wheel_contact_mu1" default="0.16"/>
     <arg name="wheel_contact_mu2" default="1.0"/>
     <arg name="wheel_contact_fdir1" default="0 0 1"/>
@@ -56,6 +58,8 @@
     <arg name="ugv1_enable_lidar" default="$(arg enable_lidar)"/>
     <arg name="ugv1_enable_rslidar" default="$(arg enable_rslidar)"/>
     <arg name="ugv1_enable_camera" default="$(arg enable_camera)"/>
+    <arg name="ugv1_enable_simple_lidar" default="$(arg enable_simple_lidar)"/>
+    <arg name="ugv1_simple_lidar_pose" default="$(arg simple_lidar_pose)"/>
 
     <arg name="ugv2_dynamics_mode" default="$(arg dynamics_mode)"/>
     <arg name="ugv2_unicycle_linear_time_constant_s" default="$(arg unicycle_linear_time_constant_s)"/>
@@ -82,6 +86,8 @@
     <arg name="ugv2_enable_lidar" default="$(arg enable_lidar)"/>
     <arg name="ugv2_enable_rslidar" default="$(arg enable_rslidar)"/>
     <arg name="ugv2_enable_camera" default="$(arg enable_camera)"/>
+    <arg name="ugv2_enable_simple_lidar" default="$(arg enable_simple_lidar)"/>
+    <arg name="ugv2_simple_lidar_pose" default="$(arg simple_lidar_pose)"/>
 
     <include file="$(find gazebo_ros)/launch/empty_world.launch">
         <arg name="world_name" value="$(arg world_name)"/>
@@ -113,6 +119,8 @@
         <arg name="enable_lidar" value="$(arg ugv1_enable_lidar)" />
         <arg name="enable_rslidar" value="$(arg ugv1_enable_rslidar)" />
         <arg name="enable_camera" value="$(arg ugv1_enable_camera)" />
+        <arg name="enable_simple_lidar" value="$(arg ugv1_enable_simple_lidar)" />
+        <arg name="simple_lidar_pose" value="$(arg ugv1_simple_lidar_pose)" />
         <arg name="robot_state_publisher_ns" value="$(arg ugv1_ns)" />
         <arg name="wheel_contact_mu1" value="$(arg ugv1_wheel_contact_mu1)" />
         <arg name="wheel_contact_mu2" value="$(arg ugv1_wheel_contact_mu2)" />
@@ -153,6 +161,8 @@
         <arg name="enable_lidar" value="$(arg ugv2_enable_lidar)" />
         <arg name="enable_rslidar" value="$(arg ugv2_enable_rslidar)" />
         <arg name="enable_camera" value="$(arg ugv2_enable_camera)" />
+        <arg name="enable_simple_lidar" value="$(arg ugv2_enable_simple_lidar)" />
+        <arg name="simple_lidar_pose" value="$(arg ugv2_simple_lidar_pose)" />
         <arg name="robot_state_publisher_ns" value="$(arg ugv2_ns)" />
         <arg name="wheel_contact_mu1" value="$(arg ugv2_wheel_contact_mu1)" />
         <arg name="wheel_contact_mu2" value="$(arg ugv2_wheel_contact_mu2)" />

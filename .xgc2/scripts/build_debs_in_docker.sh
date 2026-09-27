@@ -62,7 +62,8 @@ docker run --rm \
       libxgc2-math-dev \
       ros-noetic-scout-msgs \
       ros-noetic-xgc2-gazebo-sim-worlds \
-      ros-noetic-xgc2-scout-description
+      ros-noetic-xgc2-scout-description \
+      ros-noetic-xgc2-simple-lidar
 
     dpkg --compare-versions "$(dpkg-query -W -f="\${Version}" libxgc2-math-dev)" ge "0.5.7"
 
@@ -72,6 +73,7 @@ docker run --rm \
 
     cd /workspace/work
     source /opt/ros/noetic/setup.bash
+    python3 /workspace/xgc2-gazebo-sim-scout/scout/test_ros/test_simple_lidar.py
     DESTDIR=/workspace/work/install-root catkin_make install \
       -DCMAKE_INSTALL_PREFIX=/opt/ros/noetic \
       -DCMAKE_BUILD_TYPE=Release \

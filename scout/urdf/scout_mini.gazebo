@@ -244,4 +244,12 @@
         </gazebo>
     </xacro:if>
 
+    <!-- Load the shared model only when enabled, so default xacro expansion
+         does not need to resolve the optional package. -->
+    <xacro:if value="$(arg enable_simple_lidar)">
+        <xacro:include filename="$(find xgc2_simple_lidar)/models/sensor.xacro" />
+        <gazebo reference="base_link">
+            <xacro:xgc2_simple_lidar_sensor namespace="$(arg ns)" pose="$(arg simple_lidar_pose)" />
+        </gazebo>
+    </xacro:if>
 </robot>

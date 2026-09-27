@@ -4,6 +4,8 @@
   <arg name="world_name" default="$(find gazebo_sim_worlds)/worlds/corridor_static/corridor_static.world"/>
   <arg name="gui" default="true"/>
   <arg name="rviz" default="false"/>
+  <arg name="enable_simple_lidar" default="false"/>
+  <arg name="simple_lidar_pose" default="0 0 0.35 0 0 0"/>
   <arg name="wheel_contact_mu1" default="0.16"/>
   <arg name="wheel_contact_mu2" default="1.0"/>
   <arg name="wheel_contact_fdir1" default="0 0 1"/>
@@ -26,6 +28,8 @@
     <arg name="gui" value="$(arg gui)"/>
     <arg name="rviz" value="$(arg rviz)"/>
     <arg name="enable_rslidar" value="true"/>
+    <arg name="enable_simple_lidar" value="$(arg enable_simple_lidar)"/>
+    <arg name="simple_lidar_pose" value="$(arg simple_lidar_pose)"/>
     <arg name="wheel_contact_mu1" value="$(arg wheel_contact_mu1)"/>
     <arg name="wheel_contact_mu2" value="$(arg wheel_contact_mu2)"/>
     <arg name="wheel_contact_fdir1" value="$(arg wheel_contact_fdir1)"/>
