@@ -249,7 +249,7 @@
     <xacro:if value="$(arg enable_simple_lidar)">
         <xacro:include filename="$(find xgc2_simple_lidar)/models/sensor.xacro" />
         <gazebo reference="base_link">
-            <xacro:xgc2_simple_lidar_sensor namespace="$(arg ns)" pose="$(arg simple_lidar_pose)" />
+            <xacro:xgc2_simple_lidar_sensor namespace="$(arg ns)" pose="$(arg simple_lidar_pose)" acceleration="$(arg simple_lidar_acceleration)" rate="$(arg simple_lidar_rate_hz)" max_range="$(arg simple_lidar_range_meters)" samples="$(arg simple_lidar_hres)" layers="$(arg simple_lidar_vres)" horizontal_fov="${float('$(arg simple_lidar_hfov_deg)') * pi / 180}" vertical_fov="${float('$(arg simple_lidar_vfov_deg)') * pi / 180}" />
         </gazebo>
     </xacro:if>
 </robot>

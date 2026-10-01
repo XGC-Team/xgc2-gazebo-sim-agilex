@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import os
+import math
 import shutil
 import subprocess
 import unittest
@@ -115,6 +116,24 @@ class ScoutSimpleLidarTest(unittest.TestCase):
         self.assertIsNotNone(plugin)
         self.assertEqual(plugin.attrib.get("filename"), "libxgc2_simple_lidar.so")
         self.assertEqual(plugin.findtext("robotNamespace"), "ugv1")
+
+    def test_cpu_native_scan_keeps_authored_parameters(self) -> None:
+        root = self.render(["enable_simple_lidar:=true", "ns:=ugv2",
+                            "simple_lidar_acceleration:=cpu", "simple_lidar_rate_hz:=12",
+                            "simple_lidar_range_meters:=8", "simple_lidar_hfov_deg:=120",
+                            "simple_lidar_vfov_deg:=40", "simple_lidar_hres:=90",
+                            "simple_lidar_vres:=8"], shared_package_available=True)
+        sensor = root.find("./gazebo[@reference='base_link']/sensor[@name='simple_lidar']")
+        self.assertEqual(sensor.get('type'), 'ray')
+        self.assertEqual(sensor.find('plugin').get('filename'), 'libxgc2_simple_lidar_cpu.so')
+        self.assertEqual(sensor.findtext('plugin/robotNamespace'), 'ugv2')
+        self.assertEqual(float(sensor.findtext('update_rate')), 12)
+        self.assertEqual(float(sensor.findtext('ray/range/max')), 8)
+        for direction, count, degrees in [('horizontal', 90, 120), ('vertical', 8, 40)]:
+            scan = sensor.find('ray/scan/' + direction)
+            self.assertEqual(int(scan.findtext('samples')), count)
+            self.assertAlmostEqual(float(scan.findtext('max_angle')) - float(scan.findtext('min_angle')),
+                                   math.radians(degrees))
 
     def test_two_robot_namespaces_resolve_to_separate_topics(self) -> None:
         resolved_topics = []

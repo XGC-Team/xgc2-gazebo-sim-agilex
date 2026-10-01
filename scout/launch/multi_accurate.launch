@@ -15,6 +15,13 @@
     <arg name="enable_camera" default="false"/>
     <arg name="enable_simple_lidar" default="false"/>
     <arg name="simple_lidar_pose" default="0 0 0.35 0 0 0"/>
+    <arg name="simple_lidar_acceleration" default="gpu"/>
+    <arg name="simple_lidar_rate_hz" default="10"/>
+    <arg name="simple_lidar_range_meters" default="20"/>
+    <arg name="simple_lidar_hfov_deg" default="360"/>
+    <arg name="simple_lidar_vfov_deg" default="57.29577951308232"/>
+    <arg name="simple_lidar_hres" default="360"/>
+    <arg name="simple_lidar_vres" default="16"/>
     <arg name="wheel_contact_mu1" default="0.16"/>
     <arg name="wheel_contact_mu2" default="1.0"/>
     <arg name="wheel_contact_fdir1" default="0 0 1"/>
@@ -60,6 +67,13 @@
     <arg name="ugv1_enable_camera" default="$(arg enable_camera)"/>
     <arg name="ugv1_enable_simple_lidar" default="$(arg enable_simple_lidar)"/>
     <arg name="ugv1_simple_lidar_pose" default="$(arg simple_lidar_pose)"/>
+    <arg name="ugv1_simple_lidar_acceleration" default="$(arg simple_lidar_acceleration)"/>
+    <arg name="ugv1_simple_lidar_rate_hz" default="$(arg simple_lidar_rate_hz)"/>
+    <arg name="ugv1_simple_lidar_range_meters" default="$(arg simple_lidar_range_meters)"/>
+    <arg name="ugv1_simple_lidar_hfov_deg" default="$(arg simple_lidar_hfov_deg)"/>
+    <arg name="ugv1_simple_lidar_vfov_deg" default="$(arg simple_lidar_vfov_deg)"/>
+    <arg name="ugv1_simple_lidar_hres" default="$(arg simple_lidar_hres)"/>
+    <arg name="ugv1_simple_lidar_vres" default="$(arg simple_lidar_vres)"/>
 
     <arg name="ugv2_dynamics_mode" default="$(arg dynamics_mode)"/>
     <arg name="ugv2_unicycle_linear_time_constant_s" default="$(arg unicycle_linear_time_constant_s)"/>
@@ -88,6 +102,13 @@
     <arg name="ugv2_enable_camera" default="$(arg enable_camera)"/>
     <arg name="ugv2_enable_simple_lidar" default="$(arg enable_simple_lidar)"/>
     <arg name="ugv2_simple_lidar_pose" default="$(arg simple_lidar_pose)"/>
+    <arg name="ugv2_simple_lidar_acceleration" default="$(arg simple_lidar_acceleration)"/>
+    <arg name="ugv2_simple_lidar_rate_hz" default="$(arg simple_lidar_rate_hz)"/>
+    <arg name="ugv2_simple_lidar_range_meters" default="$(arg simple_lidar_range_meters)"/>
+    <arg name="ugv2_simple_lidar_hfov_deg" default="$(arg simple_lidar_hfov_deg)"/>
+    <arg name="ugv2_simple_lidar_vfov_deg" default="$(arg simple_lidar_vfov_deg)"/>
+    <arg name="ugv2_simple_lidar_hres" default="$(arg simple_lidar_hres)"/>
+    <arg name="ugv2_simple_lidar_vres" default="$(arg simple_lidar_vres)"/>
 
     <include file="$(find gazebo_ros)/launch/empty_world.launch">
         <arg name="world_name" value="$(arg world_name)"/>
@@ -121,6 +142,13 @@
         <arg name="enable_camera" value="$(arg ugv1_enable_camera)" />
         <arg name="enable_simple_lidar" value="$(arg ugv1_enable_simple_lidar)" />
         <arg name="simple_lidar_pose" value="$(arg ugv1_simple_lidar_pose)" />
+        <arg name="simple_lidar_acceleration" value="$(arg ugv1_simple_lidar_acceleration)"/>
+        <arg name="simple_lidar_rate_hz" value="$(arg ugv1_simple_lidar_rate_hz)"/>
+        <arg name="simple_lidar_range_meters" value="$(arg ugv1_simple_lidar_range_meters)"/>
+        <arg name="simple_lidar_hfov_deg" value="$(arg ugv1_simple_lidar_hfov_deg)"/>
+        <arg name="simple_lidar_vfov_deg" value="$(arg ugv1_simple_lidar_vfov_deg)"/>
+        <arg name="simple_lidar_hres" value="$(arg ugv1_simple_lidar_hres)"/>
+        <arg name="simple_lidar_vres" value="$(arg ugv1_simple_lidar_vres)"/>
         <arg name="robot_state_publisher_ns" value="$(arg ugv1_ns)" />
         <arg name="wheel_contact_mu1" value="$(arg ugv1_wheel_contact_mu1)" />
         <arg name="wheel_contact_mu2" value="$(arg ugv1_wheel_contact_mu2)" />
@@ -163,6 +191,13 @@
         <arg name="enable_camera" value="$(arg ugv2_enable_camera)" />
         <arg name="enable_simple_lidar" value="$(arg ugv2_enable_simple_lidar)" />
         <arg name="simple_lidar_pose" value="$(arg ugv2_simple_lidar_pose)" />
+        <arg name="simple_lidar_acceleration" value="$(arg ugv2_simple_lidar_acceleration)"/>
+        <arg name="simple_lidar_rate_hz" value="$(arg ugv2_simple_lidar_rate_hz)"/>
+        <arg name="simple_lidar_range_meters" value="$(arg ugv2_simple_lidar_range_meters)"/>
+        <arg name="simple_lidar_hfov_deg" value="$(arg ugv2_simple_lidar_hfov_deg)"/>
+        <arg name="simple_lidar_vfov_deg" value="$(arg ugv2_simple_lidar_vfov_deg)"/>
+        <arg name="simple_lidar_hres" value="$(arg ugv2_simple_lidar_hres)"/>
+        <arg name="simple_lidar_vres" value="$(arg ugv2_simple_lidar_vres)"/>
         <arg name="robot_state_publisher_ns" value="$(arg ugv2_ns)" />
         <arg name="wheel_contact_mu1" value="$(arg ugv2_wheel_contact_mu1)" />
         <arg name="wheel_contact_mu2" value="$(arg ugv2_wheel_contact_mu2)" />
