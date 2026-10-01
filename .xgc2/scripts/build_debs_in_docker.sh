@@ -69,7 +69,7 @@ docker run --rm \
 
     rm -rf /workspace/work/src /workspace/work/build /workspace/work/devel /workspace/work/install-root
     mkdir -p /workspace/work/src
-    rsync -a --delete /workspace/xgc2-gazebo-sim-scout/scout/ /workspace/work/src/
+    rsync -a --delete --exclude=.git --exclude=.work --exclude=.ci --exclude=debs /workspace/xgc2-gazebo-sim-scout/scout/ /workspace/work/src/
 
     cd /workspace/work
     source /opt/ros/noetic/setup.bash

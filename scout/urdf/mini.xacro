@@ -14,6 +14,13 @@
     <xacro:arg name="enable_camera" default="false" />
     <xacro:arg name="enable_simple_lidar" default="false" />
     <xacro:arg name="simple_lidar_pose" default="0 0 0.35 0 0 0" />
+    <xacro:arg name="simple_lidar_acceleration" default="gpu"/>
+    <xacro:arg name="simple_lidar_rate_hz" default="10"/>
+    <xacro:arg name="simple_lidar_range_meters" default="20"/>
+    <xacro:arg name="simple_lidar_hfov_deg" default="360"/>
+    <xacro:arg name="simple_lidar_vfov_deg" default="57.29577951308232"/>
+    <xacro:arg name="simple_lidar_hres" default="360"/>
+    <xacro:arg name="simple_lidar_vres" default="16"/>
     <!-- fdir1 stays parallel to the wheel axle as the wheel spins. Direction 1
          is lateral; direction 2 is longitudinal. -->
     <xacro:arg name="wheel_contact_mu1" default="0.16" />
