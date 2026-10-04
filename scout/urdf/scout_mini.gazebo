@@ -158,25 +158,25 @@
             <sensor type="ray" name="helios16">
               <pose>0 0 0 0 0 0</pose>
               <visualize>false</visualize>
-              <update_rate>10</update_rate>
+              <update_rate>$(arg rslidar_rate_hz)</update_rate>
               <ray>
                 <scan>
                   <horizontal>
-                    <samples>900</samples>
+                    <samples>$(arg rslidar_hres)</samples>
                     <resolution>1</resolution>
-                    <min_angle>-3.14159265</min_angle>
-                    <max_angle>3.14159265</max_angle>
+                    <min_angle>${-(float('$(arg rslidar_hfov_deg)') * pi / 360 if float('$(arg rslidar_hfov_deg)') > 0 else 3.14159265)}</min_angle>
+                    <max_angle>${(float('$(arg rslidar_hfov_deg)') * pi / 360 if float('$(arg rslidar_hfov_deg)') > 0 else 3.14159265)}</max_angle>
                   </horizontal>
                   <vertical>
-                    <samples>16</samples>
+                    <samples>$(arg rslidar_vres)</samples>
                     <resolution>1</resolution>
-                    <min_angle>-0.261799</min_angle>
-                    <max_angle>0.261799</max_angle>
+                    <min_angle>${-(float('$(arg rslidar_vfov_deg)') * pi / 360 if float('$(arg rslidar_vfov_deg)') > 0 else 0.261799)}</min_angle>
+                    <max_angle>${(float('$(arg rslidar_vfov_deg)') * pi / 360 if float('$(arg rslidar_vfov_deg)') > 0 else 0.261799)}</max_angle>
                   </vertical>
                 </scan>
                 <range>
-                  <min>0.2</min>
-                  <max>80.0</max>
+                  <min>$(arg rslidar_min_range_meters)</min>
+                  <max>$(arg rslidar_range_meters)</max>
                   <resolution>0.03</resolution>
                 </range>
                 <noise>
@@ -185,7 +185,7 @@
                   <stddev>0.01</stddev>
                 </noise>
               </ray>
-              <plugin name="gazebo_ros_helios16" filename="libgazebo_ros_block_laser.so">
+              <plugin name="gazebo_ros_helios16" filename="libscout_gazebo_ros_block_laser.so">
                 <robotNamespace>$(arg sensor_ns)</robotNamespace>
                 <topicName>rslidar_points_raw</topicName>
                 <frameName>$(arg frame_prefix)rslidar</frameName>

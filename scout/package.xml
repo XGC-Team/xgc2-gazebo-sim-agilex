@@ -8,6 +8,7 @@
   <maintainer email="ruixiang.du@westonrobot.com">Ruixiang Du</maintainer>
 
   <license>BSD</license>
+  <license>Apache-2.0</license>
 
   <url type="website">http://ros.org/wiki/scout_gazebo</url>
   <url type="bugtracker">https://github.com/husky/husky_simulator/issues</url>
@@ -24,11 +25,14 @@
   <build_depend>geometry_msgs</build_depend>
   <build_depend>gazebo_msgs</build_depend>
   <build_depend>gazebo_dev</build_depend>
+  <build_depend>gazebo_plugins</build_depend>
+  <build_depend>boost</build_depend>
   <build_depend>scout_msgs</build_depend>
   <build_depend>sensor_msgs</build_depend>
   <build_depend>std_msgs</build_depend>
   <build_depend>tf2</build_depend>
   <build_depend>tf2_ros</build_depend>
+  <build_depend>tf</build_depend>
   <run_depend>roscpp</run_depend>
   <run_depend>controller_interface</run_depend>
   <run_depend>hardware_interface</run_depend>
@@ -43,6 +47,7 @@
   <run_depend>std_msgs</run_depend>
   <run_depend>tf2</run_depend>
   <run_depend>tf2_ros</run_depend>
+  <run_depend>tf</run_depend>
   <run_depend>controller_manager</run_depend>
   <run_depend>gazebo_plugins</run_depend>
   <run_depend>gazebo_ros</run_depend>

@@ -35,6 +35,8 @@ def ring_of(x, y, z):
 def convert(msg, pub):
     points = []
     for p in msg.points:
+        if not (math.isfinite(p.x) and math.isfinite(p.y) and math.isfinite(p.z)):
+            continue
         rng = math.sqrt(p.x * p.x + p.y * p.y + p.z * p.z)
         intensity = max(1.0, min(255.0, 80.0 / max(rng, 0.5)))
         points.append((p.x, p.y, p.z, intensity, ring_of(p.x, p.y, p.z)))
@@ -50,7 +52,17 @@ def convert(msg, pub):
 
 
 def main():
+    global N_RINGS, PITCH_MIN, PITCH_MAX
     rospy.init_node("pointcloud_to_pointcloud2")
+    N_RINGS = int(rospy.get_param("~vertical_samples", N_RINGS))
+    vertical_fov_deg = float(rospy.get_param("~vertical_fov_deg", 0.0))
+    if not 1 <= N_RINGS <= 65536:
+        raise ValueError("vertical_samples must encode UINT16 ring indices (1..65536)")
+    if not math.isfinite(vertical_fov_deg) or not 0 <= vertical_fov_deg <= 180:
+        raise ValueError("vertical_fov_deg must be finite in [0, 180]; 0 keeps the original FOV")
+    if vertical_fov_deg > 0:
+        PITCH_MIN = -math.radians(vertical_fov_deg) / 2.0
+        PITCH_MAX = -PITCH_MIN
     pub = rospy.Publisher("~out", PointCloud2, queue_size=5)
     rospy.Subscriber("~in", PointCloud, lambda m: convert(m, pub), queue_size=5)
     rospy.spin()

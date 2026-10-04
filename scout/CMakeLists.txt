@@ -16,8 +16,11 @@ find_package(catkin REQUIRED COMPONENTS
     geometry_msgs
     tf2 
     tf2_ros
+    tf
 )
 find_package(gazebo REQUIRED)
+find_package(gazebo_plugins REQUIRED CONFIG)
+find_package(Boost REQUIRED COMPONENTS thread)
 find_package(xgc2_math 0.5.8 REQUIRED CONFIG)
 
 catkin_package(
@@ -43,6 +46,13 @@ target_link_libraries(scout_wheel_velocity_controller ${catkin_LIBRARIES} xgc2_m
 
 add_library(scout_gazebo STATIC src/scout_skid_steer.cpp)
 find_package(Threads REQUIRED)
+# Reuse the stock 2.9.3 publisher with the owned range/angle fixes.
+add_library(scout_gazebo_ros_block_laser SHARED vendor/gazebo_ros_block_laser.cpp)
+target_include_directories(scout_gazebo_ros_block_laser PRIVATE
+  ${gazebo_plugins_INCLUDE_DIRS} ${Boost_INCLUDE_DIRS})
+target_link_libraries(scout_gazebo_ros_block_laser
+  RayPlugin ${catkin_LIBRARIES} ${GAZEBO_LIBRARIES} ${Boost_LIBRARIES})
+set_target_properties(scout_gazebo_ros_block_laser PROPERTIES INSTALL_RPATH_USE_LINK_PATH TRUE)
 add_library(scout_unicycle_plugin SHARED src/scout_unicycle_plugin.cpp)
 target_link_libraries(scout_unicycle_plugin ${catkin_LIBRARIES} ${GAZEBO_LIBRARIES} Threads::Threads xgc2_math::control)
 add_library(scout_wheel_diagnostics SHARED src/scout_wheel_diagnostics.cpp)
@@ -104,7 +114,7 @@ install(
 # Gazebo-linked plugins are dropped from /opt/ros/noetic/lib by the Debian
 # helper; install them under share so the package actually contains them.
 install(
-  TARGETS scout_unicycle_plugin scout_wheel_diagnostics
+  TARGETS scout_unicycle_plugin scout_wheel_diagnostics scout_gazebo_ros_block_laser
   LIBRARY DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/plugins
 )
 

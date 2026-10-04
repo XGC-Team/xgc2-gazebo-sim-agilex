@@ -4,6 +4,14 @@
   <arg name="world_name" default="$(find gazebo_sim_worlds)/worlds/corridor_static/corridor_static.world"/>
   <arg name="gui" default="true"/>
   <arg name="rviz" default="false"/>
+  <arg name="rslidar_rate_hz" default="10"/>
+  <arg name="rslidar_min_range_meters" default="0.2"/>
+  <arg name="rslidar_range_meters" default="80.0"/>
+  <arg name="rslidar_hfov_deg" default="0"/>
+  <arg name="rslidar_vfov_deg" default="0"/>
+  <arg name="rslidar_hres" default="900"/>
+  <arg name="rslidar_vres" default="16"/>
+  <arg name="rslidar_pose" default="0 0 0.307 0 0 0"/>
   <arg name="enable_simple_lidar" default="false"/>
   <arg name="simple_lidar_pose" default="0 0 0.35 0 0 0"/>
   <arg name="simple_lidar_acceleration" default="gpu"/>
@@ -35,6 +43,14 @@
     <arg name="gui" value="$(arg gui)"/>
     <arg name="rviz" value="$(arg rviz)"/>
     <arg name="enable_rslidar" value="true"/>
+    <arg name="rslidar_rate_hz" value="$(arg rslidar_rate_hz)"/>
+    <arg name="rslidar_min_range_meters" value="$(arg rslidar_min_range_meters)"/>
+    <arg name="rslidar_range_meters" value="$(arg rslidar_range_meters)"/>
+    <arg name="rslidar_hfov_deg" value="$(arg rslidar_hfov_deg)"/>
+    <arg name="rslidar_vfov_deg" value="$(arg rslidar_vfov_deg)"/>
+    <arg name="rslidar_hres" value="$(arg rslidar_hres)"/>
+    <arg name="rslidar_vres" value="$(arg rslidar_vres)"/>
+    <arg name="rslidar_pose" value="$(arg rslidar_pose)"/>
     <arg name="enable_simple_lidar" value="$(arg enable_simple_lidar)"/>
     <arg name="simple_lidar_pose" value="$(arg simple_lidar_pose)"/>
     <arg name="simple_lidar_acceleration" value="$(arg simple_lidar_acceleration)"/>
@@ -59,6 +75,8 @@
   </include>
 
   <node name="rslidar_points_pc2" pkg="gazebo_sim_scout" type="pointcloud_to_pointcloud2" output="screen">
+    <param name="vertical_samples" type="int" value="$(arg rslidar_vres)"/>
+    <param name="vertical_fov_deg" type="double" value="$(arg rslidar_vfov_deg)"/>
     <remap from="~in" to="/rslidar_points_raw"/>
     <remap from="~out" to="/rslidar_points"/>
   </node>

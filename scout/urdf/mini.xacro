@@ -11,6 +11,14 @@
     <xacro:arg name="sensor_ns" default="/" />
     <xacro:arg name="enable_lidar" default="false" />
     <xacro:arg name="enable_rslidar" default="false" />
+    <xacro:arg name="rslidar_rate_hz" default="10" />
+    <xacro:arg name="rslidar_min_range_meters" default="0.2" />
+    <xacro:arg name="rslidar_range_meters" default="80.0" />
+    <xacro:arg name="rslidar_hfov_deg" default="0" />
+    <xacro:arg name="rslidar_vfov_deg" default="0" />
+    <xacro:arg name="rslidar_hres" default="900" />
+    <xacro:arg name="rslidar_vres" default="16" />
+    <xacro:arg name="rslidar_pose" default="0 0 0.307 0 0 0" />
     <xacro:arg name="enable_camera" default="false" />
     <xacro:arg name="enable_simple_lidar" default="false" />
     <xacro:arg name="simple_lidar_pose" default="0 0 0.35 0 0 0" />
@@ -186,7 +194,7 @@
         </collision>
     </link>
     <joint name="rslidar_joint" type="fixed">
-        <origin xyz="0 0 0.307" rpy="0 0 0" />
+        <origin xyz="${' '.join('$(arg rslidar_pose)'.split()[:3])}" rpy="${' '.join('$(arg rslidar_pose)'.split()[3:])}" />
         <parent link="base_link" />
         <child link="rslidar" />
     </joint>

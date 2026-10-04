@@ -9,6 +9,14 @@
     <arg name="enable_lidar" default="false"/>
     <arg name="enable_rslidar" default="false"/>
     <arg name="enable_camera" default="false"/>
+    <arg name="rslidar_rate_hz" default="10"/>
+    <arg name="rslidar_min_range_meters" default="0.2"/>
+    <arg name="rslidar_range_meters" default="80.0"/>
+    <arg name="rslidar_hfov_deg" default="0"/>
+    <arg name="rslidar_vfov_deg" default="0"/>
+    <arg name="rslidar_hres" default="900"/>
+    <arg name="rslidar_vres" default="16"/>
+    <arg name="rslidar_pose" default="0 0 0.307 0 0 0"/>
     <arg name="enable_simple_lidar" default="false"/>
     <arg name="simple_lidar_pose" default="0 0 0.35 0 0 0"/>
     <arg name="simple_lidar_acceleration" default="gpu"/>
@@ -42,6 +50,14 @@
         sensor_ns:=$(arg sensor_ns)
         enable_lidar:=$(arg enable_lidar)
         enable_rslidar:=$(arg enable_rslidar)
+        rslidar_rate_hz:=$(arg rslidar_rate_hz)
+        rslidar_min_range_meters:=$(arg rslidar_min_range_meters)
+        rslidar_range_meters:=$(arg rslidar_range_meters)
+        rslidar_hfov_deg:=$(arg rslidar_hfov_deg)
+        rslidar_vfov_deg:=$(arg rslidar_vfov_deg)
+        rslidar_hres:=$(arg rslidar_hres)
+        rslidar_vres:=$(arg rslidar_vres)
+        rslidar_pose:=&quot;$(arg rslidar_pose)&quot;
         enable_camera:=$(arg enable_camera)
         enable_simple_lidar:=$(arg enable_simple_lidar)
         simple_lidar_pose:='$(arg simple_lidar_pose)'
