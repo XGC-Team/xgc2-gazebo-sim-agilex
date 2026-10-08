@@ -1,5 +1,8 @@
 <?xml version="1.0"?>
 <launch>
+  <arg name="world_name"/>
+  <arg name="simulation_service_ref_json"/>
+  <arg name="target_id"/>
   <!-- Run only in an isolated ROS/Gazebo test container, never a live station. -->
   <env name="GAZEBO_MASTER_URI" value="http://127.0.0.1:11473"/>
   <include file="$(find gazebo_sim_scout)/launch/implicit_brush.launch">
@@ -7,5 +10,5 @@
     <arg name="gui" value="false"/>
   </include>
   <test test-name="implicit_wheel_runtime" pkg="gazebo_sim_scout"
-        type="test_implicit_wheel_runtime.py" time-limit="90"/>
+        type="test_implicit_wheel_runtime.py" time-limit="90"><param name="simulation_service_ref_json" value="$(arg simulation_service_ref_json)"/><param name="target_id" value="$(arg target_id)"/></test>
 </launch>

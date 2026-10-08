@@ -1,7 +1,9 @@
 <?xml version="1.0"?>
 <launch>
+  <arg name="simulation_service_ref_json"/>
+  <arg name="target_id"/>
   <arg name="ns" default="ugv1"/>
-  <arg name="world_name" default="$(find gazebo_sim_worlds)/worlds/corridor_static/corridor_static.world"/>
+  <arg name="world_name"/>
   <arg name="gui" default="true"/>
   <arg name="rviz" default="false"/>
   <arg name="rslidar_rate_hz" default="10"/>
@@ -38,6 +40,8 @@
   <!-- Use the sibling launch so an older installed gazebo_sim_scout package
        cannot silently win duplicate-package resolution. -->
   <include file="$(dirname)/accurate.launch">
+    <arg name="simulation_service_ref_json" value="$(arg simulation_service_ref_json)"/>
+    <arg name="target_id" value="$(arg target_id)"/>
     <arg name="ns" value="$(arg ns)"/>
     <arg name="world_name" value="$(arg world_name)"/>
     <arg name="gui" value="$(arg gui)"/>

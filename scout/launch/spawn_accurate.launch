@@ -1,5 +1,7 @@
 <?xml version="1.0"?>
 <launch>
+  <arg name="simulation_service_ref_json"/>
+  <arg name="target_id"/>
     <!-- Startup selection; changing it requires respawn, never a new package. -->
     <arg name="dynamics_mode" default="wheel_physics"/>
     <arg name="unicycle_linear_time_constant_s" default="0.005"/>
@@ -72,6 +74,7 @@
 
     <include if="$(arg wheel_physics)" file="$(dirname)/mini_description.launch">
         <arg name="ns" value="$(arg ns)" />
+        <arg name="chassis_robot_id" value="$(arg model_name)"/>
         <arg name="enable_ros_control" value="true" />
         <arg name="urdf_extras" value="$(dirname)/../urdf/scout_dynamics_plugins.xacro" />
         <arg name="robot_description_param" value="$(arg robot_description_param)" />
@@ -115,6 +118,7 @@
 
     <include unless="$(arg wheel_physics)" file="$(dirname)/mini_description.launch">
         <arg name="ns" value="$(arg ns)" />
+        <arg name="chassis_robot_id" value="$(arg model_name)"/>
         <arg name="enable_ros_control" value="false" />
         <arg name="urdf_extras" value="$(dirname)/../urdf/scout_dynamics_plugins.xacro" />
         <arg name="robot_description_param" value="$(arg robot_description_param)" />
@@ -156,17 +160,7 @@
         <arg name="wheel_velocity_limit" value="$(arg wheel_velocity_limit)" />
     </include>
 
-    <group if="$(arg wheel_physics)" ns="$(arg ns)">
-        <rosparam file="$(dirname)/../config/scout_mini_ros_control.yaml" command="load"/>
-        <param name="scout_motor_fr_controller/p" type="double" value="$(arg wheel_pid_p)"/>
-        <param name="scout_motor_fr_controller/i" type="double" value="$(arg wheel_pid_i)"/>
-        <param name="scout_motor_fl_controller/p" type="double" value="$(arg wheel_pid_p)"/>
-        <param name="scout_motor_fl_controller/i" type="double" value="$(arg wheel_pid_i)"/>
-        <param name="scout_motor_rl_controller/p" type="double" value="$(arg wheel_pid_p)"/>
-        <param name="scout_motor_rl_controller/i" type="double" value="$(arg wheel_pid_i)"/>
-        <param name="scout_motor_rr_controller/p" type="double" value="$(arg wheel_pid_p)"/>
-        <param name="scout_motor_rr_controller/i" type="double" value="$(arg wheel_pid_i)"/>
-    </group>
+
 
     <group ns="$(arg ns)">
         <param name="simulation/dynamics_mode" type="string" value="$(arg dynamics_mode)"/>
@@ -181,20 +175,17 @@
         <param name="max_angular_speed" type="double" value="$(arg max_angular_speed)"/>
     </group>
 
-    <node name="$(arg ns)_spawn_scout_model" pkg="gazebo_ros" type="spawn_model" args="-x $(arg x)
+    <node name="$(arg ns)_spawn_scout_model" pkg="xgc2_gazebo_scene" type="spawn_robot_model" args="-x $(arg x)
               -y $(arg y)
               -z $(arg z)
               -Y $(arg yaw)
               -urdf
               -param $(arg robot_description_param)
-              -model $(arg model_name)" />
+              -model $(arg model_name) -simulation_service_ref_json '$(arg simulation_service_ref_json)' -target_id $(arg target_id) -robot_namespace /$(arg ns)" />
 
-    <node if="$(arg wheel_physics)" name="controller_spawner" pkg="controller_manager" type="spawner" respawn="false" output="screen"
-          ns="$(arg ns)"
-          args="scout_state_controller scout_motor_fr_controller scout_motor_fl_controller scout_motor_rl_controller scout_motor_rr_controller"/>
-
-    <node if="$(arg wheel_physics)" name="$(arg ns)_scout_skid_steer_controller" pkg="gazebo_sim_scout" type="scout_skid_steer_controller" output="screen">
-        <param name="ns" type="string" value="$(arg ns)" />
+    <group if="$(arg wheel_physics)" ns="$(arg ns)/skid_steer">
+        <param name="wheel_pid_p" type="double" value="$(arg wheel_pid_p)"/>
+        <param name="wheel_pid_i" type="double" value="$(arg wheel_pid_i)"/>
         <param name="wheel_separation" type="double" value="$(arg wheel_separation)" />
         <param name="wheel_radius" type="double" value="$(arg wheel_radius)" />
         <param name="command_gain" type="double" value="$(arg command_gain)" />
@@ -203,7 +194,7 @@
         <param name="enable_command_limits" type="bool" value="$(arg enable_command_limits)" />
         <param name="max_linear_speed" type="double" value="$(arg max_linear_speed)" />
         <param name="max_angular_speed" type="double" value="$(arg max_angular_speed)" />
-    </node>
+    </group>
 
     <node name="$(arg ns)_gazebo_model_ground_truth" pkg="gazebo_sim_scout" type="gazebo_model_ground_truth" output="screen">
         <param name="model_name" type="string" value="$(arg model_name)" />

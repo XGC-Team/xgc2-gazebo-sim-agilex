@@ -29,10 +29,10 @@ class Wiring(unittest.TestCase):
     def test_force_geometry_and_whole_assembly_inertia(self):
         for token in ('model_->GetLinks()', 'WorldInertiaMatrix()', 'GlobalAxis(0)', 'Anchor(0)', 'axis.Cross(point[i]-anchor)'):self.assertIn(token,S)
     def test_force_failure_and_hold_are_serialized(self):
-        self.assertIn('gate_->withCommand',S)
+        self.assertIn('gate_->with_command',S)
         self.assertIn('Fault(e.what())',S)
         callback=S.split('static void HoldThunk',1)[1].split('void Command',1)[0]
-        self.assertNotIn('SetForce(',callback)
+        self.assertIn('SetForce(0, 0.0)',callback)
         self.assertIn('delayed_->reset',callback)
     def test_dispatch_rejects_unknown_and_impossible_modes(self):
         root=ET.parse(P/'launch/spawn_selectable.launch').getroot()

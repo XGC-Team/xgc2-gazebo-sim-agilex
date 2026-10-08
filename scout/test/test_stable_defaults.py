@@ -262,8 +262,8 @@ class ScoutStableDefaultsTest(unittest.TestCase):
             'name="wheel_contact_slip2" value="$(arg wheel_contact_slip2)"',
             text,
         )
-        self.assertEqual(text.count('value="$(arg wheel_pid_p)"'), 4)
-        self.assertEqual(text.count('value="$(arg wheel_pid_i)"'), 4)
+        self.assertEqual(text.count('value="$(arg wheel_pid_p)"'), 1)
+        self.assertEqual(text.count('value="$(arg wheel_pid_i)"'), 1)
         self.assertNotIn("wheel_pid_d", text)
         self.assertNotIn("wheel_pid_i_clamp", text)
         self.assertNotIn("wheel_pid_antiwindup", text)
@@ -282,9 +282,9 @@ class ScoutStableDefaultsTest(unittest.TestCase):
         self.assertEqual(defaults.get("max_angular_speed"), "1.0")
 
         allocator = (PACKAGE / "src" / "scout_skid_steer.cpp").read_text()
-        self.assertIn('param("command_gain", command_gain_, 1.01)', allocator)
-        self.assertIn('param("angular_command_gain", angular_command_gain_, 1.46)', allocator)
-        self.assertIn('param("max_angular_speed", max_angular_speed_, 1.0)', allocator)
+        self.assertIn('param("command_gain", gain_, 1.01)', allocator)
+        self.assertIn('param("angular_command_gain", yaw_gain_, 1.46)', allocator)
+        self.assertIn('param("max_angular_speed", max_w_, 1.0)', allocator)
 
     def test_wheel_friction_direction_is_fixed_to_the_axle(self) -> None:
         # Wheel-local z is the joint axis. Unlike local x, it does not rotate

@@ -1,189 +1,115 @@
-/*
- * scout_skid_steer.cpp
- *
- * Created on: Mar 25, 2020 22:54
- * Description:
- *
- * Copyright (c) 2019 Ruixiang Du (rdu)
- */
-
 #include "scout_gazebo/scout_skid_steer.hpp"
-
-#include <xgc2_math/control/wheel_drive.hpp>
-
+#include <gazebo/common/Events.hh>
 #include <algorithm>
 #include <cmath>
-
-#include <geometry_msgs/Twist.h>
-#include <std_msgs/Float64.h>
+#include <stdexcept>
 
 namespace wescore {
-ScoutSkidSteer::ScoutSkidSteer(ros::NodeHandle *nh, std::string robot_name)
-    : robot_name_(robot_name), command_delay_s_(0.005), nh_(nh),
-      hold_gate_(xgc_chassis_hold::lastPath(robot_name)) {
-  ros::NodeHandle private_nh("~");
-  private_nh.param("wheel_separation", wheel_separation_, 0.416503);
-  private_nh.param("wheel_radius", wheel_radius_, 0.08);
-  private_nh.param("command_gain", command_gain_, 1.01);
-  private_nh.param("angular_command_gain", angular_command_gain_, 1.46);
-  private_nh.param("command_delay_s", command_delay_s_, 0.005);
-  private_nh.param("enable_command_limits", enable_command_limits_, true);
-  private_nh.param("max_linear_speed", max_linear_speed_, 1.5);
-  private_nh.param("max_angular_speed", max_angular_speed_, 1.0);
-
-  if (!std::isfinite(command_delay_s_) || command_delay_s_ < 0.0) {
-    ROS_WARN("Invalid Scout command_delay_s %.6f; using 0", command_delay_s_);
-    command_delay_s_ = 0.0;
+ScoutSkidSteer::ScoutSkidSteer(ros::NodeHandle* node, gazebo::physics::ModelPtr model, std::string robot_id)
+    : robot_id_(std::move(robot_id)), node_(node), model_(std::move(model)) {
+  ros::NodeHandle config(*node_, "skid_steer");
+  config.param("wheel_separation", track_, 0.416503);
+  config.param("wheel_radius", radius_, 0.08);
+  config.param("command_gain", gain_, 1.01);
+  config.param("angular_command_gain", yaw_gain_, 1.46);
+  config.param("wheel_pid_p", p_, 1.8);
+  config.param("wheel_pid_i", i_, 10.0);
+  config.param("max_linear_speed", max_v_, 1.5);
+  config.param("max_angular_speed", max_w_, 1.0);
+  config.param("enable_command_limits", limits_, true);
+  double delay;
+  config.param("command_delay_s", delay, 0.005);
+  if (!std::isfinite(delay) || delay < 0) throw std::invalid_argument("Scout command delay must be finite and nonnegative");
+  for (double value : {track_, radius_, max_v_, max_w_, i_})
+    if (!std::isfinite(value) || value <= 0) throw std::invalid_argument("Scout geometry, limits and I must be positive");
+  if (!std::isfinite(gain_) || !std::isfinite(yaw_gain_) || !std::isfinite(p_) || p_ < 0)
+    throw std::invalid_argument("Scout command gains and P must be finite; P must be nonnegative");
+  delay_.Configure(delay);
+  for (std::size_t index=0; index<4; ++index) {
+    joints_[index] = model_->GetJoint(names_[index]);
+    if (!joints_[index]) throw std::runtime_error("Scout native skid requires all four wheel joints");
+    effort_limit_[index] = joints_[index]->GetEffortLimit(0);
+    velocity_limit_[index] = joints_[index]->GetVelocityLimit(0);
+    if (!(effort_limit_[index] > 0 && velocity_limit_[index] > 0))
+      throw std::runtime_error("Scout native skid requires positive URDF wheel limits");
   }
-
-  if (!std::isfinite(wheel_radius_) || wheel_radius_ <= 0.0 ||
-      !std::isfinite(wheel_separation_) || wheel_separation_ <= 0.0 ||
-      !std::isfinite(command_gain_) || !std::isfinite(angular_command_gain_)) {
-    throw std::invalid_argument("Scout wheel geometry and command gains must be finite; geometry must be positive");
-  }
-  command_delay_.Configure(command_delay_s_);
-
-  motor_fr_topic_ = JoinTopic(robot_name_, "scout_motor_fr_controller/command");
-  motor_fl_topic_ = JoinTopic(robot_name_, "scout_motor_fl_controller/command");
-  motor_rl_topic_ = JoinTopic(robot_name_, "scout_motor_rl_controller/command");
-  motor_rr_topic_ = JoinTopic(robot_name_, "scout_motor_rr_controller/command");
-  cmd_topic_ = JoinTopic(robot_name_, "cmd_vel");
-
-  ROS_INFO(
-      "Scout skid steer: cmd=%s fr=%s fl=%s rl=%s rr=%s wheel_separation=%.6f "
-      "wheel_radius=%.6f gain=%.3f angular_gain=%.3f command_delay=%.3f "
-      "limits=%s max_linear=%.4f max_angular=%.4f",
-      cmd_topic_.c_str(), motor_fr_topic_.c_str(), motor_fl_topic_.c_str(),
-      motor_rl_topic_.c_str(), motor_rr_topic_.c_str(), wheel_separation_,
-      wheel_radius_, command_gain_, angular_command_gain_, command_delay_s_,
-      enable_command_limits_ ? "true" : "false",
-      max_linear_speed_, max_angular_speed_);
+  time_ = model_->GetWorld()->SimTime().Double();
 }
-
 ScoutSkidSteer::~ScoutSkidSteer() {
-  control_timer_.stop();
-  cmd_sub_.shutdown();
-  // remove() drains any UDP callback before the Gate and publishers die.
-  xgc_chassis_hold::Hub::instance().remove(&hold_gate_);
+  update_.reset();
+  command_.shutdown();
+  if (callbacks_) callbacks_->drain();
+  // Native RetireEntity already zeroed before Gazebo Fini; unregister only drains.
+  binding_.reset();
 }
-
 void ScoutSkidSteer::SetupSubscription() {
-  motor_fr_pub_ = nh_->advertise<std_msgs::Float64>(motor_fr_topic_, 50);
-  motor_fl_pub_ = nh_->advertise<std_msgs::Float64>(motor_fl_topic_, 50);
-  motor_rl_pub_ = nh_->advertise<std_msgs::Float64>(motor_rl_topic_, 50);
-  motor_rr_pub_ = nh_->advertise<std_msgs::Float64>(motor_rr_topic_, 50);
-  hold_gate_.setZeroThunk(&ScoutSkidSteer::HoldZeroThunk, this);
-  xgc_chassis_hold::Hub::instance().add(&hold_gate_);
-  cmd_sub_ = nh_->subscribe<geometry_msgs::Twist>(
-      cmd_topic_, 5, &ScoutSkidSteer::TwistCmdCallback, this);
-  // Use the queue's ROS clock so release latency does not scale with RTF.
-  // /clock and the physics step still quantize actual wheel actuation.
-  // UDP Hold publishes zero independently, including while time is paused.
-  control_timer_ = nh_->createTimer(
-      ros::Duration(0.001), &ScoutSkidSteer::ControlTick, this);
+  joint_states_ = node_->advertise<sensor_msgs::JointState>("joint_states", 1);
+  callbacks_.reset(new xgc2_gazebo_scene::ChassisRosCallbacks(model_->GetWorld()));
+  node_->setCallbackQueue(callbacks_->queue());
+  binding_.reset(new xgc2_gazebo_scene::ChassisBinding(
+      model_->GetWorld(), robot_id_, &ScoutSkidSteer::HoldZeroThunk, this));
+  command_ = node_->subscribe<geometry_msgs::Twist>("cmd_vel", 5,
+      callbacks_->wrap([this](const geometry_msgs::Twist::ConstPtr& command) { Command(command); }));
+  update_ = gazebo::event::Events::ConnectWorldUpdateBegin(
+      callbacks_->wrap([this](const gazebo::common::UpdateInfo& info) { Update(info); }));
+  callbacks_->invalidate();
+  binding_->Ready();
 }
-
-void ScoutSkidSteer::HoldZeroThunk(void *self) {
-  static_cast<ScoutSkidSteer *>(self)->PublishZeroMotors();
+void ScoutSkidSteer::HoldZeroThunk(void* context) { static_cast<ScoutSkidSteer*>(context)->Zero(); }
+void ScoutSkidSteer::Zero() {
+  if (callbacks_) callbacks_->invalidate();
+  delay_.Reset();
+  target_.fill(0.0);
+  state_ = {};
+  for (const auto& joint : joints_) if (joint) joint->SetForce(0, 0.0);
 }
-
-void ScoutSkidSteer::PublishZeroMotors() {
-  command_delay_.Reset();
-  published_sequence_ = command_delay_.OutputSequence();
-  if (!motor_fr_pub_) {
-    return;
-  }
-  std_msgs::Float64 motor_cmd[4];
-  motor_fr_pub_.publish(motor_cmd[0]);
-  motor_fl_pub_.publish(motor_cmd[1]);
-  motor_rl_pub_.publish(motor_cmd[2]);
-  motor_rr_pub_.publish(motor_cmd[3]);
-}
-
-void ScoutSkidSteer::TwistCmdCallback(
-    const geometry_msgs::Twist::ConstPtr &msg) {
-  double driving_vel = msg->linear.x;
-  double steering_vel = msg->angular.z;
-  if (!std::isfinite(driving_vel) || !std::isfinite(steering_vel) ||
-      wheel_radius_ <= 0.0) {
-    ROS_WARN_THROTTLE(1.0, "Ignoring invalid Scout cmd_vel or wheel radius");
-    return;
-  }
-  if (enable_command_limits_) {
-    double limited_driving_vel = Clamp(driving_vel, max_linear_speed_);
-    double limited_steering_cmd = Clamp(steering_vel, max_angular_speed_);
-    if (limited_driving_vel != driving_vel ||
-        limited_steering_cmd != steering_vel) {
-      ROS_WARN_THROTTLE(1.0,
-                        "Scout cmd_vel limited: linear %.4f -> %.4f, angular "
-                        "%.4f -> %.4f",
-                        driving_vel, limited_driving_vel, steering_vel,
-                        limited_steering_cmd);
-    }
-    driving_vel = limited_driving_vel;
-    steering_vel = limited_steering_cmd;
-  }
-  hold_gate_.withCommand([&](bool held) {
-    if (held) {
-      PublishZeroMotors();
-      return;
-    }
-    command_delay_.Push(ros::Time::now().toSec(), driving_vel, steering_vel);
+void ScoutSkidSteer::Reset() {
+  if (!binding_) return;
+  binding_->with_command([this](bool) {
+    Zero();
+    time_ = model_->GetWorld()->SimTime().Double();
+    publish_time_ = 0;
   });
 }
-
-void ScoutSkidSteer::ControlTick(const ros::TimerEvent &) {
-  hold_gate_.withCommand([this](bool held) {
-    if (held) {
-      // The Hold transition already clears the queue and publishes zero.
-      return;
-    }
-    const CommandVelocity command = command_delay_.Advance(ros::Time::now().toSec());
-    if (published_sequence_ == command_delay_.OutputSequence()) return;
-    published_sequence_ = command_delay_.OutputSequence();
-    // The wheel controllers retain their target between matured commands.
+void ScoutSkidSteer::Command(const geometry_msgs::Twist::ConstPtr& message) {
+  if (!std::isfinite(message->linear.x) || !std::isfinite(message->angular.z)) return;
+  binding_->with_command([this, &message](bool held) {
+    if (held || !callbacks_->current()) return;
+    const double v = limits_ ? std::clamp(message->linear.x, -max_v_, max_v_) : message->linear.x;
+    const double w = limits_ ? std::clamp(message->angular.z, -max_w_, max_w_) : message->angular.z;
+    delay_.Push(time_, v, w);
+  });
+}
+void ScoutSkidSteer::Update(const gazebo::common::UpdateInfo& info) {
+  binding_->with_command([this, &info](bool held) {
+    const double now = info.simTime.Double();
+    const double dt = now >= time_ ? now-time_ : 0;
+    if (now < time_) { Zero(); publish_time_ = 0; }
+    time_ = now;
+    if (held) { Zero(); } else {
+    const auto command = delay_.Advance(now);
     const auto wheels = xgc2_math::differentialDriveWheelVelocity(
-        command.linear, command.angular,
-        {wheel_radius_, wheel_separation_, command_gain_, angular_command_gain_});
-    std_msgs::Float64 motor_cmd[4];
-    motor_cmd[0].data = wheels.right_rad_s;
-    motor_cmd[1].data = wheels.left_rad_s;
-    motor_cmd[2].data = wheels.left_rad_s;
-    motor_cmd[3].data = wheels.right_rad_s;
-    motor_fr_pub_.publish(motor_cmd[0]);
-    motor_fl_pub_.publish(motor_cmd[1]);
-    motor_rl_pub_.publish(motor_cmd[2]);
-    motor_rr_pub_.publish(motor_cmd[3]);
+        command.linear, command.angular, {radius_, track_, gain_, yaw_gain_});
+    target_ = {{wheels.right_rad_s, wheels.left_rad_s, wheels.left_rad_s, wheels.right_rad_s}};
+    for (std::size_t index=0; index<4; ++index) {
+      target_[index] = std::clamp(target_[index], -velocity_limit_[index], velocity_limit_[index]);
+      if (dt > 0) state_[index] = xgc2_math::wheelVelocityIPStep(state_[index], target_[index],
+          joints_[index]->GetVelocity(0), dt, {p_, i_, effort_limit_[index]});
+      joints_[index]->SetForce(0, state_[index].effort_nm);
+    }
+    }
+    if (now >= publish_time_) {
+      sensor_msgs::JointState message;
+      message.header.stamp = ros::Time(now);
+      message.name.assign(names_.begin(), names_.end());
+      for (std::size_t index=0; index<4; ++index) {
+        message.position.push_back(joints_[index]->Position(0));
+        message.velocity.push_back(joints_[index]->GetVelocity(0));
+        message.effort.push_back(state_[index].effort_nm);
+      }
+      joint_states_.publish(message);
+      publish_time_ = now + 0.01;
+    }
   });
 }
-
-double ScoutSkidSteer::Clamp(double value, double limit) const {
-  if (limit <= 0.0) {
-    return value;
-  }
-  if (value > limit) {
-    return limit;
-  }
-  if (value < -limit) {
-    return -limit;
-  }
-  return value;
 }
-
-std::string ScoutSkidSteer::JoinTopic(const std::string &ns,
-                                      const std::string &topic) const {
-  if (ns.empty() || ns == "/") {
-    return "/" + topic;
-  }
-
-  std::string normalized = ns;
-  if (normalized.front() != '/') {
-    normalized = "/" + normalized;
-  }
-  while (!normalized.empty() && normalized.back() == '/') {
-    normalized.pop_back();
-  }
-  return normalized + "/" + topic;
-}
-
-} // namespace wescore

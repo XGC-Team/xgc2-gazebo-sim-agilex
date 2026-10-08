@@ -10,7 +10,8 @@
 #include <xgc2_math/control/delayed_planar_velocity.hpp>
 #include <xgc2_math/control/wheel_drive.hpp>
 
-#include "xgc_chassis_hold/udp.hpp"
+#include <xgc2_gazebo_scene/chassis_hold_bridge.hpp>
+#include <xgc2_gazebo_scene/chassis_ros_callbacks.hpp>
 
 #include <algorithm>
 #include <array>
@@ -31,10 +32,8 @@ class UnicyclePlugin : public gazebo::ModelPlugin {
   ~UnicyclePlugin() override {
     update_.reset();
     subscription_.shutdown();
-    running_.store(false);
-    queue_.disable();
-    if (thread_.joinable()) thread_.join();
-    if (gate_) xgc_chassis_hold::Hub::instance().remove(gate_.get());
+    if (callbacks_) callbacks_->drain();
+    gate_.reset();
   }
 
   void Load(gazebo::physics::ModelPtr model, sdf::ElementPtr sdf) override {
@@ -44,7 +43,8 @@ class UnicyclePlugin : public gazebo::ModelPlugin {
     if (!base_) throw std::runtime_error("Scout unicycle requires base_link");
     const std::string ns = sdf->Get<std::string>("robotNamespace");
     nh_.reset(new ros::NodeHandle(ns));
-    nh_->setCallbackQueue(&queue_);
+    callbacks_.reset(new xgc2_gazebo_scene::ChassisRosCallbacks(model_->GetWorld()));
+    nh_->setCallbackQueue(callbacks_->queue());
     ros::NodeHandle parameters(*nh_, "unicycle");
     xgc2_math::DelayedPlanarVelocityParameters p;
     parameters.param("command_delay_s", p.delay_s, 0.005);
@@ -70,27 +70,26 @@ class UnicyclePlugin : public gazebo::ModelPlugin {
     now_ = model_->GetWorld()->SimTime().Double();
     last_publish_ = now_ - 1.0 / publish_rate_;
     drive_->reset(now_);
-    gate_.reset(new xgc_chassis_hold::Gate(xgc_chassis_hold::lastPath(ns)));
-    gate_->setZeroThunk(&UnicyclePlugin::HoldZero, this);
-    xgc_chassis_hold::Hub::instance().add(gate_.get());
-    subscription_ = nh_->subscribe("cmd_vel", 1, &UnicyclePlugin::Command, this);
+    gate_.reset(new xgc2_gazebo_scene::ChassisBinding(
+        model_->GetWorld(), sdf->Get<std::string>("chassisRobotId"), &UnicyclePlugin::HoldZero, this));
+    subscription_ = nh_->subscribe<geometry_msgs::Twist>("cmd_vel", 1,
+        callbacks_->wrap([this](const geometry_msgs::Twist::ConstPtr& message) { Command(message); }));
     update_ = gazebo::event::Events::ConnectWorldUpdateBegin(
-        std::bind(&UnicyclePlugin::Update, this, std::placeholders::_1));
-    running_.store(true);
-    thread_ = std::thread([this] {
-      while (running_.load() && nh_->ok()) queue_.callAvailable(ros::WallDuration(0.01));
-    });
+        callbacks_->wrap([this](const gazebo::common::UpdateInfo& info) { Update(info); }));
     std_msgs::String mode;
     mode.data = "unicycle";
     mode_.publish(mode);
     ROS_INFO_STREAM("Scout " << ns << " unicycle: delay=" << p.delay_s
                     << " tau_v=" << p.linear_time_constant_s << " tau_w=" << p.yaw_time_constant_s
                     << "; unity gains; wheel effort controllers disabled");
+    callbacks_->invalidate();
+    gate_->Ready();
   }
 
   void Reset() override {
     if (!gate_) return;
-    gate_->withCommand([this](bool) {
+    gate_->with_command([this](bool) {
+      callbacks_->invalidate();
       now_ = model_->GetWorld()->SimTime().Double();
       drive_->reset(now_);
       angle_.fill(0.0);
@@ -103,10 +102,11 @@ class UnicyclePlugin : public gazebo::ModelPlugin {
  private:
   static void HoldZero(void* self) {
     auto& plugin = *static_cast<UnicyclePlugin*>(self);
-    // Called with Gate held, including while simulation time is frozen.
-    // Clear queued commands AND lag states immediately. Gazebo writes remain on
-    // its update thread: a paused world cannot move, and resume first writes zero.
+    // Called with the world domain held, including while simulation time is frozen.
+    // Clear queued commands, lag state and the native output under one domain.
+    plugin.callbacks_->invalidate();
     plugin.drive_->reset(plugin.now_);
+    plugin.Apply({});
     plugin.Publish({});
   }
 
@@ -115,8 +115,8 @@ class UnicyclePlugin : public gazebo::ModelPlugin {
       ROS_WARN_THROTTLE(1.0, "Ignoring nonfinite Scout unicycle command");
       return;
     }
-    gate_->withCommand([this, &message](bool held) {
-      if (held) return;
+    gate_->with_command([this, &message](bool held) {
+      if (held || !callbacks_->current()) return;
       xgc2_math::PlanarVelocity input{message->linear.x, message->angular.z};
       if (limits_) {
         input.linear_m_s = std::clamp(input.linear_m_s, -max_v_, max_v_);
@@ -135,7 +135,7 @@ class UnicyclePlugin : public gazebo::ModelPlugin {
   }
 
   void Update(const gazebo::common::UpdateInfo& info) {
-    gate_->withCommand([this, &info](bool held) {
+    gate_->with_command([this, &info](bool held) {
       const double time = info.simTime.Double();
       const double dt = std::max(0.0, time - now_);
       if (time < now_) {
@@ -198,13 +198,11 @@ class UnicyclePlugin : public gazebo::ModelPlugin {
   gazebo::physics::LinkPtr base_;
   gazebo::event::ConnectionPtr update_;
   std::unique_ptr<ros::NodeHandle> nh_;
-  std::unique_ptr<xgc_chassis_hold::Gate> gate_;
+  std::unique_ptr<xgc2_gazebo_scene::ChassisBinding> gate_;
   std::unique_ptr<xgc2_math::DelayedPlanarVelocity> drive_;
-  ros::CallbackQueue queue_;
+  std::unique_ptr<xgc2_gazebo_scene::ChassisRosCallbacks> callbacks_;
   ros::Subscriber subscription_;
   ros::Publisher joints_, velocity_, mode_;
-  std::thread thread_;
-  std::atomic<bool> running_{false};
   bool limits_{true};
   double now_{0.0}, last_publish_{0.0}, radius_{0.08}, track_{0.416503};
   double max_v_{1.5}, max_w_{1.0}, publish_rate_{50.0};

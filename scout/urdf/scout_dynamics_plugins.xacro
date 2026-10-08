@@ -6,6 +6,7 @@
     <gazebo>
       <plugin name="scout_unicycle" filename="libscout_unicycle_plugin.so">
         <robotNamespace>$(arg ns)</robotNamespace>
+        <chassisRobotId>$(arg chassis_robot_id)</chassisRobotId>
         <wheelRadius>$(arg wheel_radius)</wheelRadius>
         <wheelTrack>$(arg wheel_track)</wheelTrack>
       </plugin>
@@ -13,8 +14,13 @@
   </xacro:unless>
   <xacro:if value="$(arg enable_ros_control)">
     <gazebo>
+      <plugin name="scout_skid_steer" filename="libscout_gazebo.so">
+        <robotNamespace>$(arg ns)</robotNamespace>
+        <chassisRobotId>$(arg chassis_robot_id)</chassisRobotId>
+      </plugin>
       <plugin name="scout_wheel_diagnostics" filename="libscout_wheel_diagnostics.so">
         <robotNamespace>$(arg ns)</robotNamespace>
+        <chassisRobotId>$(arg chassis_robot_id)</chassisRobotId>
         <wheelRadius>$(arg wheel_radius)</wheelRadius>
       </plugin>
     </gazebo>

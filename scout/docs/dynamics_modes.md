@@ -47,17 +47,17 @@ status/RViz consumers, not measured wheel dynamics; physical wheel animation is
 not used to produce motion.
 
 Normal zero `cmd_vel` traverses the delay and lag and needs no repeat heartbeat.
-UDP Hold clears the delay queue and both lag states immediately, including while
-paused. It does not call Gazebo physics APIs from the UDP thread: the first
-physics update after resume applies zero under the same admission gate. World
-reset/time rollback clears old-epoch state. Resume does not resurrect old commands.
+Native world HOLD clears the delay queue, lag state and native outputs,
+including while paused, under the shared domain transaction. ROS queue admission
+epochs are invalidated for HOLD/release/reset. Delayed dispatch after release
+cannot restore old commands. See hold_contract.md for ownership and bounds.
 
 ## Selection and installation
 
 ```bash
-roslaunch gazebo_sim_scout accurate.launch dynamics_mode:=unicycle
-roslaunch gazebo_sim_scout accurate.launch dynamics_mode:=wheel_physics wheel_diagnostics:=true
-roslaunch gazebo_sim_scout multi_accurate.launch ugv1_dynamics_mode:=unicycle ugv2_dynamics_mode:=wheel_physics
+roslaunch gazebo_sim_scout accurate.launch world_name:="$SIMULATION_PREPARED_WORLD" simulation_service_ref_json:="$SIMULATION_SERVICE_REF_JSON" target_id:="$SIMULATION_TARGET_ID" dynamics_mode:=unicycle
+roslaunch gazebo_sim_scout accurate.launch world_name:="$SIMULATION_PREPARED_WORLD" simulation_service_ref_json:="$SIMULATION_SERVICE_REF_JSON" target_id:="$SIMULATION_TARGET_ID" dynamics_mode:=wheel_physics wheel_diagnostics:=true
+roslaunch gazebo_sim_scout multi_accurate.launch world_name:="$SIMULATION_PREPARED_WORLD" simulation_service_ref_json:="$SIMULATION_SERVICE_REF_JSON" target_id:="$SIMULATION_TARGET_ID" ugv1_dynamics_mode:=unicycle ugv2_dynamics_mode:=wheel_physics
 ```
 
 `simple.launch` now defaults to `unicycle`; all other existing entry defaults stay
@@ -155,19 +155,16 @@ g++ -std=c++17 -Wall -Wextra -Werror -pedantic -Iinclude test/delayed_planar_vel
 python3 scout/test/test_dynamics_modes.py
 ```
 
-The math tests check analytic delay/lag/Stop, independent channels, event splitting,
-step-size invariance, pause coalescing, reset/rewind, invalid inputs and contact
-kinematic/power identities. The Python suite checks source wiring and ownership,
-not a ROS or Gazebo experiment. Existing wheel defaults and controller law stay
-unchanged. This submission environment has no ROS/Gazebo SDK/runtime; full plugin
-compilation, xacro/SDF expansion, shared-world mixed modes, paused-Hold/resume,
-physics reset, step-size replay and joint-input field comparison remain acceptance
-gates. No live station, physical robot, estimator, DMPC or APT release is changed.
-High-fidelity response alignment remains open.
+The math tests cover analytic delay/lag/Stop and wheel kinematics; source
+checks cover wiring only. Existing wheel defaults and I/P law remain unchanged.
+The native migration compiled real ModelPlugins and verified five-model command
+ownership, blocked-dispatcher backlog rejection, paused HOLD and concurrent
+native Delete. SIGINT process shutdown failed and remains an open gate; see
+native-validation.md for actual logs/backtrace and the user hard stop.
 
-A real, separately marked Gazebo regression is registered as
-`test/unicycle_runtime.test` (port 11369, isolated test container only). It checks
-measured joint-input DC response, single-message Stop, and paused UDP Hold/resume.
-Its Python syntax was checked here, but the test itself was **not executed** in
-this environment. Run `rostest gazebo_sim_scout unicycle_runtime.test` after
-installing/building the dependencies. Do not run it against a live station.
+Full unicycle and wheel/implicit scientific regressions require a prepared
+isolated world, explicit simulation-v1 ServiceRef and target. They are registered
+only when CMake XGC2_TEST_WORLD, XGC2_TEST_SERVICE_REF_JSON and XGC2_TEST_TARGET_ID
+are supplied. They were not rerun for this migration. Focal controlled ABI,
+contact calibration, step-size replay and field alignment remain open. No live
+station, physical robot, estimator, DMPC or APT release was changed.

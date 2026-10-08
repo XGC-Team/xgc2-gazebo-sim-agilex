@@ -3,6 +3,7 @@
 <robot name="scout_mini"
     xmlns:xacro="http://ros.org/wiki/xacro">
 
+    <xacro:arg name="chassis_robot_id" default=""/>
     <xacro:arg name="ns" default="/" />
     <xacro:arg name="urdf_extras" default="empty.urdf" />
     <xacro:arg name="enable_ros_control" default="false" />

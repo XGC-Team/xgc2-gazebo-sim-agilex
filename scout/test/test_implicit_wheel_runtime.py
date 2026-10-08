@@ -8,7 +8,7 @@ try:
     import rostest
     from geometry_msgs.msg import Twist
     from std_msgs.msg import Float64MultiArray, String
-    from gazebo_msgs.srv import GetModelState
+    from native_simulation import NativeSimulation
     _HAS_ROS = True
 except ImportError:
     _HAS_ROS = False
@@ -21,8 +21,8 @@ class PhysicalBackend(unittest.TestCase):
         self.fs=rospy.Subscriber('/brush_test/simulation/dynamics_fault',String,lambda m:setattr(self,'fault',m.data))
         self.bs=rospy.Subscriber('/brush_test/simulation/wheel_physics_backend',String,lambda m:setattr(self,'backend',m.data))
         self.pub=rospy.Publisher('/brush_test/cmd_vel',Twist,queue_size=1)
-        rospy.wait_for_service('/gazebo/get_model_state',timeout=30)
-        self.state=rospy.ServiceProxy('/gazebo/get_model_state',GetModelState)
+        self.native=NativeSimulation()
+        self.state=self.native.model_state
         self.wait(lambda:len(self.rows)==4 and all(r[3]>1 for r in self.rows) and self.pub.get_num_connections()>0,30)
     def report(self,msg):
         if len(msg.data)==56:self.rows=[list(msg.data[i*14:(i+1)*14]) for i in range(4)]
@@ -53,7 +53,7 @@ class PhysicalBackend(unittest.TestCase):
         self.assertLess(abs(result.twist.angular.z),.04)
     def tearDown(self):
         self.command(0,0)
-        self.sub.unregister();self.fs.unregister();self.bs.unregister();self.pub.unregister()
+        self.sub.unregister();self.fs.unregister();self.bs.unregister();self.pub.unregister();self.native.close()
 if __name__=='__main__':
     if not _HAS_ROS:
         raise SystemExit('requires isolated ROS/Gazebo')

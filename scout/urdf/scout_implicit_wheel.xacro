@@ -3,6 +3,7 @@
   <gazebo>
     <plugin name="scout_implicit_wheel" filename="libscout_implicit_wheel_plugin.so">
       <robotNamespace>$(arg ns)</robotNamespace>
+        <chassisRobotId>$(arg chassis_robot_id)</chassisRobotId>
     </plugin>
   </gazebo>
 </robot>

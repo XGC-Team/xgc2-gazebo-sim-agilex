@@ -41,7 +41,9 @@ class DynamicsModesTest(unittest.TestCase):
         root = launch('spawn_accurate.launch')
         wheel_nodes = [node for node in root.findall('node')
                        if node.get('type') in ('spawner', 'scout_skid_steer_controller')]
-        self.assertEqual(len(wheel_nodes), 2)
+        self.assertEqual(len(wheel_nodes), 0)
+        wheel_parameters = root.find("group[@ns='$(arg ns)/skid_steer']")
+        self.assertEqual(wheel_parameters.get('if'), '$(arg wheel_physics)')
         for node in wheel_nodes:
             self.assertEqual(node.get('if'), '$(arg wheel_physics)')
         for group in root.findall('group'):
@@ -75,7 +77,7 @@ class DynamicsModesTest(unittest.TestCase):
         self.assertEqual(params['command_delay_s'], '$(arg command_delay_s)')
         self.assertEqual(params['linear_time_constant_s'], '$(arg unicycle_linear_time_constant_s)')
         self.assertEqual(params['angular_time_constant_s'], '$(arg unicycle_angular_time_constant_s)')
-        high = root.find("node[@type='scout_skid_steer_controller']")
+        high = root.find("group[@ns='$(arg ns)/skid_steer']")
         self.assertFalse(any('time_constant' in p.get('name') for p in high.findall('param')))
 
     def test_single_robot_forwarding(self):
@@ -101,7 +103,7 @@ class DynamicsModesTest(unittest.TestCase):
         self.assertEqual(root.find(ns + 'unless').get('value'), '$(arg enable_ros_control)')
         self.assertEqual(root.find(ns + 'if').get('value'), '$(arg enable_ros_control)')
         cmake = (PACKAGE / 'CMakeLists.txt').read_text()
-        self.assertIn('TARGETS scout_unicycle_plugin scout_wheel_diagnostics', cmake)
+        self.assertIn('TARGETS scout_gazebo scout_unicycle_plugin scout_wheel_diagnostics', cmake)
         self.assertIn('CATKIN_PACKAGE_SHARE_DESTINATION}/plugins', cmake)
         for name in ('scout_unicycle_plugin', 'scout_wheel_diagnostics'):
             self.assertIn('add_library(%s SHARED' % name, cmake)
@@ -118,7 +120,7 @@ class DynamicsModesTest(unittest.TestCase):
         text = (PACKAGE / 'src/scout_unicycle_plugin.cpp').read_text()
         self.assertIn('origin_velocity + omega.Cross(offset)', text)
         self.assertNotIn('SetWorldPose(', text)
-        self.assertIn('gate_->withCommand', text)
+        self.assertIn('gate_->with_command', text)
         self.assertIn('drive_->reset(plugin.now_)', text)
         self.assertIn('unicycle_virtual_wheels', text)
         self.assertNotIn('command_gain', text)

@@ -11,10 +11,10 @@ PACKAGE = Path(__file__).resolve().parents[1]
 class InnerLoopDelayTest(unittest.TestCase):
     def test_production_wiring(self):
         source=(PACKAGE/'src/scout_skid_steer.cpp').read_text()
-        self.assertIn('command_delay_.Configure(command_delay_s_);',source)
+        self.assertIn('delay_.Configure(delay);',source)
         self.assertNotIn('command_time_constant', source)
         self.assertNotIn('command_tau', source)
-        self.assertIn('private_nh.param("command_delay_s", command_delay_s_, 0.005);',source)
+        self.assertIn('config.param("command_delay_s", delay, 0.005);',source)
 
     def test_actual_delay_core(self):
         code=r'''

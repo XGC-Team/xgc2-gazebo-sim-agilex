@@ -1,5 +1,7 @@
 <?xml version="1.0"?>
 <launch>
+  <arg name="simulation_service_ref_json"/>
+  <arg name="target_id"/>
   <arg name="x" default="0.0"/>
   <arg name="y" default="0.0"/>
   <arg name="z" default="0.181"/>
@@ -76,7 +78,8 @@
     <arg name="wheel_inertial_axial_offset" value="$(arg wheel_inertial_axial_offset)"/>
     <arg name="wheel_effort_limit" value="$(arg wheel_effort_limit)"/>
     <arg name="wheel_velocity_limit" value="$(arg wheel_velocity_limit)"/>
-    <arg name="enable_ros_control" value="false"/>
+    <arg name="chassis_robot_id" value="$(arg model_name)"/>
+        <arg name="enable_ros_control" value="false"/>
     <arg name="urdf_extras" value="$(dirname)/../urdf/scout_implicit_wheel.xacro"/>
     <arg name="wheel_contact_mu1" value="0.0"/>
     <arg name="wheel_contact_mu2" value="0.0"/>
@@ -103,8 +106,8 @@
     <param name="simulation/dynamics_mode" value="wheel_physics"/>
     <param name="simulation/wheel_physics_backend" value="implicit_brush"/>
   </group>
-  <node name="$(arg ns)_spawn_scout_model" pkg="gazebo_ros" type="spawn_model"
-        args="-x $(arg x) -y $(arg y) -z $(arg z) -Y $(arg yaw) -urdf -param $(arg robot_description_param) -model $(arg model_name)"/>
+  <node name="$(arg ns)_spawn_scout_model" pkg="xgc2_gazebo_scene" type="spawn_robot_model"
+        args="-x $(arg x) -y $(arg y) -z $(arg z) -Y $(arg yaw) -urdf -param $(arg robot_description_param) -model $(arg model_name) -simulation_service_ref_json '$(arg simulation_service_ref_json)' -target_id $(arg target_id) -robot_namespace /$(arg ns)"/>
   <node name="$(arg ns)_gazebo_model_ground_truth" pkg="gazebo_sim_scout" type="gazebo_model_ground_truth" output="screen">
     <param name="model_name" value="$(arg model_name)"/>
     <param name="pose_topic" value="$(arg pose_topic)"/>

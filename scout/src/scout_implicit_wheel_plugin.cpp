@@ -13,7 +13,8 @@
 #include <std_msgs/String.h>
 #include <xgc2_math/control/delayed_planar_velocity.hpp>
 #include <xgc2_math/control/implicit_wheel_contact.hpp>
-#include "xgc_chassis_hold/udp.hpp"
+#include <xgc2_gazebo_scene/chassis_hold_bridge.hpp>
+#include <xgc2_gazebo_scene/chassis_ros_callbacks.hpp>
 
 #include <array>
 #include <atomic>
@@ -36,10 +37,9 @@ class ImplicitWheelPlugin final : public gazebo::ModelPlugin {
 public:
     ~ImplicitWheelPlugin() override {
         begin_.reset(); end_.reset();
-        stopping_.store(true); queue_.disable();
-        if (thread_.joinable()) thread_.join();
         command_sub_.shutdown();
-        if (gate_) xgc_chassis_hold::Hub::instance().remove(gate_.get());
+        if (callbacks_) callbacks_->drain();
+        gate_.reset();
         contact_sub_.reset();
         if (manager_ && !filter_.empty()) manager_->RemoveFilter(filter_);
         if (transport_) transport_->Fini();
@@ -57,7 +57,9 @@ public:
                 throw std::runtime_error("implicit wheels cannot share wheel or chassis actuation");
         }
         const auto ns=sdf->Get<std::string>("robotNamespace");
-        node_.reset(new ros::NodeHandle(ns)); node_->setCallbackQueue(&queue_);
+        node_.reset(new ros::NodeHandle(ns));
+        callbacks_.reset(new xgc2_gazebo_scene::ChassisRosCallbacks(world_));
+        node_->setCallbackQueue(callbacks_->queue());
         ros::NodeHandle config(*node_,"implicit_wheel");
         double stiffness, friction, length, delay;
         config.param("stiffness_n_m",stiffness,12000.0);
@@ -114,18 +116,21 @@ public:
         // Subscription requests per-wheel feedback; physics data is read ONLY
         // at UpdateEnd, not consumed from asynchronous message callbacks.
         contact_sub_=transport_->Subscribe(topic,&ImplicitWheelPlugin::ContactsKeepalive,this);
-        gate_.reset(new xgc_chassis_hold::Gate(xgc_chassis_hold::lastPath(ns)));
-        gate_->setZeroThunk(&ImplicitWheelPlugin::HoldThunk,this);
-        xgc_chassis_hold::Hub::instance().add(gate_.get());
-        command_sub_=node_->subscribe("cmd_vel",10,&ImplicitWheelPlugin::Command,this);
-        begin_=gazebo::event::Events::ConnectWorldUpdateBegin(std::bind(&ImplicitWheelPlugin::Update,this,std::placeholders::_1));
-        end_=gazebo::event::Events::ConnectWorldUpdateEnd(std::bind(&ImplicitWheelPlugin::Collect,this));
-        thread_=std::thread([this]{while(!stopping_.load() && node_->ok())queue_.callAvailable(ros::WallDuration(.01));});
+        gate_.reset(new xgc2_gazebo_scene::ChassisBinding(
+            world_, sdf->Get<std::string>("chassisRobotId"), &ImplicitWheelPlugin::HoldThunk, this));
+        command_sub_=node_->subscribe<geometry_msgs::Twist>("cmd_vel",10,
+            callbacks_->wrap([this](const geometry_msgs::Twist::ConstPtr& message){Command(message);}));
+        begin_=gazebo::event::Events::ConnectWorldUpdateBegin(
+            callbacks_->wrap([this](const gazebo::common::UpdateInfo& info){Update(info);}));
+        end_=gazebo::event::Events::ConnectWorldUpdateEnd(callbacks_->wrap([this]{Collect();}));
         ROS_WARN("Scout implicit_brush is an uncalibrated experimental force backend; no field-accuracy claim");
+        callbacks_->invalidate();
+        gate_->Ready();
     }
     void Reset() override {
         if(!gate_) return;
-        gate_->withCommand([this](bool){
+        gate_->with_command([this](bool){
+            callbacks_->invalidate();
             memory_={};patches_={};last_time_=world_->SimTime().Double();delayed_->reset(last_time_);fault_=false;
             std_msgs::String clear;fault_pub_.publish(clear);
         });
@@ -134,13 +139,15 @@ private:
     void ContactsKeepalive(const boost::shared_ptr<const gazebo::msgs::Contacts>&) {}
     static void HoldThunk(void* self) {
         auto* p=static_cast<ImplicitWheelPlugin*>(self);
+        p->callbacks_->invalidate();
         p->delayed_->reset(p->last_time_);p->memory_.drive_error_rad.fill(0);
-        // No physics API on UDP thread. Existing contact elasticity is preserved.
+        for (const auto& joint : p->joints_) if (joint) joint->SetForce(0, 0.0);
+        // Native motor output is zero; existing contact elasticity is preserved.
     }
     void Command(const geometry_msgs::Twist::ConstPtr& msg) {
         if(!std::isfinite(msg->linear.x)||!std::isfinite(msg->angular.z))return;
-        gate_->withCommand([&](bool held){
-            if(held||fault_)return;
+        gate_->with_command([&](bool held){
+            if(held||fault_||!callbacks_->current())return;
             try{delayed_->command(last_time_,{std::clamp(msg->linear.x,-max_v_,max_v_),
                                             std::clamp(msg->angular.z,-max_w_,max_w_)});}
             catch(const std::exception& e){Fault(e.what());}
@@ -153,7 +160,7 @@ private:
     }
     void Collect() {
         if(!gate_)return;
-        gate_->withCommand([&](bool){
+        gate_->with_command([&](bool){
             patches_={};
             const double now=world_->SimTime().Double();
             for(unsigned k=0;k<manager_->GetContactCount();++k) {
@@ -185,7 +192,7 @@ private:
         });
     }
     void Update(const gazebo::common::UpdateInfo& info) {
-        gate_->withCommand([&](bool held){
+        gate_->with_command([&](bool held){
             const double now=info.simTime.Double();
             if(now<last_time_){memory_={};patches_={};delayed_->reset(now);fault_=false;}
             last_time_=now;
@@ -291,9 +298,9 @@ private:
     gazebo::physics::ContactManager* manager_{nullptr};
     gazebo::event::ConnectionPtr begin_,end_;
     gazebo::transport::NodePtr transport_;gazebo::transport::SubscriberPtr contact_sub_;std::string filter_;
-    std::unique_ptr<ros::NodeHandle> node_;ros::CallbackQueue queue_;std::thread thread_;std::atomic<bool> stopping_{false};
+    std::unique_ptr<ros::NodeHandle> node_;std::unique_ptr<xgc2_gazebo_scene::ChassisRosCallbacks> callbacks_;
     ros::Subscriber command_sub_;ros::Publisher joint_pub_,report_pub_,fault_pub_,mode_pub_,backend_pub_;
-    std::unique_ptr<xgc_chassis_hold::Gate> gate_;
+    std::unique_ptr<xgc2_gazebo_scene::ChassisBinding> gate_;
     std::unique_ptr<xgc2_math::DelayedPlanarVelocity> delayed_;
     xgc2_math::ImplicitWheelParameters parameters_;xgc2_math::ImplicitWheelMemory memory_;
     std::array<Patch,4> patches_{};std::array<double,4> nominal_radius_{};std::array<std::string,4> support_{};

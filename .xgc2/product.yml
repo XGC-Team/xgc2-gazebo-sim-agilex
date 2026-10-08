@@ -1,7 +1,7 @@
 schema: xgc2.product.v1
 id: xgc2-gazebo-sim-scout
 name: XGC2 Gazebo Classic Scout
-version: 0.4.9-56
+version: 0.4.9-57
 kind: ros1-apt
 summary: AgileX Scout Gazebo Classic simulation package for ROS Noetic.
 ros:
@@ -19,14 +19,17 @@ apt:
     - amd64
     - arm64
   depends:
+  - libxgc2-xrpc1 (>= 0.1.0)
+  - ros-noetic-xgc2-gazebo-scene (>= 1.4.1-4)
   - ros-noetic-xgc2-simple-lidar (>= 1.4.0-2)
   - ros-noetic-scout-msgs (>= 0.3.3-5)
   - ros-noetic-urdf
   - ros-noetic-xacro
   - ros-noetic-xgc2-scout-description (>= 0.4.10-16)
-  - ros-noetic-xgc2-gazebo-sim-worlds (>= 1.1.0-14)
-  - ros-noetic-xgc2-gazebo-sim-vrpn-bridge (>= 1.1.0-13)
+  - ros-noetic-xgc2-gazebo-sim-worlds (>= 1.4.1-4)
+  - ros-noetic-xgc2-gazebo-sim-vrpn-bridge (>= 1.1.0-27)
 usage:
+  notes: Native world and spawn require caller-provided prepared world grant, explicit simulation-v1 ServiceRef and target. Source candidate only; Focal controlled ABI/deployment and graceful shutdown remain unverified.
   install: 'sudo apt update
 
     sudo apt install ros-noetic-xgc2-gazebo-sim-scout
@@ -34,28 +37,30 @@ usage:
     '
   smoke_test: 'test -f /opt/ros/noetic/share/gazebo_sim_scout/plugins/libscout_unicycle_plugin.so
 
-    roslaunch --files gazebo_sim_scout simple.launch rviz:=false
+    test -f /opt/ros/noetic/share/gazebo_sim_worlds/launch/native_world.launch
 
     '
 ownership:
   paths:
   - /opt/ros/noetic/share/gazebo_sim_scout
   - /opt/ros/noetic/lib/gazebo_sim_scout
-  - /opt/ros/noetic/lib/libscout_gazebo.a
+  - /opt/ros/noetic/share/gazebo_sim_scout/plugins/libscout_gazebo.so
   - /opt/ros/noetic/lib/libscout_wheel_velocity_controller.so
   - /opt/ros/noetic/share/gazebo_sim_scout/plugins/libscout_unicycle_plugin.so
   - /opt/ros/noetic/share/gazebo_sim_scout/plugins/libscout_wheel_diagnostics.so
   - /opt/ros/noetic/share/gazebo_sim_scout/plugins/libscout_implicit_wheel_plugin.so
 release:
   requires:
+  - xgc2-xrpc
   - xgc2-gazebo-sim-scenes
   - libxgc2-math-dev
   - xgc2-scout-description
   dependency_policy:
+    xgc2-xrpc: rebuild
     libxgc2-math-dev: rebuild
     xgc2-gazebo-sim-vrpn-bridge: verify
     xgc2-gazebo-sim-scenes: verify
     xgc2-scout-description: verify
     xgc2-scout-msgs: rebuild
   apt_versions:
-    focal: 0.4.9-56
+    focal: 0.4.9-57

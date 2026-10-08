@@ -2,7 +2,8 @@
 
 #include <cmath>
 #include <cstdint>
-#include <deque>
+#include <array>
+#include <cstddef>
 #include <stdexcept>
 
 namespace wescore {
@@ -25,7 +26,7 @@ class CommandDelay {
   }
 
   void Reset() {
-    history_.clear();
+    head_ = size_ = 0;
     delayed_ = {0.0, 0.0};
     initialized_ = false;
     last_time_ = 0.0;
@@ -42,10 +43,10 @@ class CommandDelay {
       throw std::invalid_argument("command and simulation time must be finite");
     }
     Advance(now);
-    history_.push_back({now + delay_, linear, angular});
-    // Preserve the original bounded history and retain the newest command,
-    // including a final zero. Normal command rates stay well below this limit.
-    while (history_.size() > 2048U) history_.pop_front();
+    // Preserve the 2048-entry newest-command policy without hot allocation.
+    if (size_ == history_.size()) { head_ = (head_+1)%history_.size(); --size_; }
+    history_[(head_+size_)%history_.size()] = {now + delay_, linear, angular};
+    ++size_;
   }
 
   CommandVelocity Advance(double now) {
@@ -59,11 +60,12 @@ class CommandDelay {
     }
     // Consume every due command, retaining the last one. This is a pure
     // transport delay and zero-order hold, without an actuator response model.
-    while (!history_.empty() && history_.front().due <= now) {
-      const Command next = history_.front();
+    while (size_ && history_[head_].due <= now) {
+      const Command next = history_[head_];
       delayed_ = {next.linear, next.angular};
       ++output_sequence_;
-      history_.pop_front();
+      head_ = (head_+1)%history_.size();
+      --size_;
     }
     last_time_ = now;
     return delayed_;
@@ -72,7 +74,8 @@ class CommandDelay {
  private:
   struct Command { double due; double linear; double angular; };
 
-  std::deque<Command> history_;
+  std::array<Command, 2048> history_{};
+  std::size_t head_ = 0, size_ = 0;
   CommandVelocity delayed_{0.0, 0.0};
   double delay_ = 0.0;
   double last_time_ = 0.0;

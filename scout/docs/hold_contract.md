@@ -1,29 +1,37 @@
-# Simulator HOLD routing
+# Native simulator HOLD
 
-## Simulator routing
+Scout ModelPlugins bind `xgc2_gazebo_scene::ChassisBinding` to their native world
+and explicit `chassisRobotId`. That ID must equal the public simulation-v1
+entity ID and occur in the prepared world's `chassis_robot_ids` grant. The ROS
+namespace routes user data. Missing authority, unknown identity, duplicate
+binding or failed native initialization fails creation. `Ready()` runs only
+when the complete native owner is usable.
 
-Each simulated robot exclusively binds a loopback UDP port computed from its
-UTF-8 robot ID: `20000 + FNV1a32(id) % 20000`. FNV-1a uses offset basis
-2166136261 and prime 16777619, with 32-bit unsigned overflow. Core uses the same
-mapping for simulation resources; physical firmware retains port 19520.
-IDs must be nonempty and shorter than 32 bytes. The datagram still contains the
-exact robot ID, and an endpoint rejects frames addressed to another ID.
+One world provider/listener owns the HOLD domain, with at most 16 chassis IDs.
+Robots open no control socket or control thread. `GET /v1/chassis/hold` reads the
+applied revision; `POST` supplies `expected_revision` and explicit
+`{robot_id, held}` changes. Applied HOLD includes completed zero-sink status.
+Release clears old state too. The old local UDP control entry is removed;
+physical firmware is outside this product.
 
-This permits multiple processes without `SO_REUSEADDR` packet competition.
-An occupied port (including a hash collision or duplicate robot ID) fails
-registration explicitly; choose a distinct ID instead of sharing an endpoint.
-Sender and simulator updates must be delivered together. This local simulator
-control protocol is not an authenticated remote control interface.
+Command admission, delayed targets, I/P state and native joint/velocity writes
+share one `with_command` transaction. Admission tries the world domain mutex
+once and skips a contended sample. It never waits or copies an old command for
+later execution. The domain always precedes vehicle state. HOLD clears pending
+commands, filtered state and native effort/velocity outputs even when physics
+is paused. Zero effort does not remove physical inertia or establish an
+instantaneous physical stop.
 
-## Runtime acceptance
+User cmd_vel, joints, truth, status and sensors retain ROS data interfaces.
+One fixed shared world dispatcher serves model subscriptions; models create no
+ROS queue/spinner threads. Owner-specific queue entries carry an epoch. HOLD,
+release and reset invalidate it in constant time. Old entries still drain the
+underlying SubscriptionQueue but skip their action, including when dispatch
+resumes only after release. Command admission rechecks the epoch inside the
+world transaction. A fresh command after draining remains usable.
 
-In a disposable Noetic/Gazebo 11 workspace containing both Scout and Mecanum
-packages and their descriptions, run `rostest gazebo_sim_scout scout_runtime.test`.
-It verifies two Scout spawns plus Mecanum remain paused until explicit unpause,
-one-shot zero input reaches both zero motor targets and physical rest, and three
-HOLD/release cycles reject continued commands without affecting another ID.
-Supported Focal full Noetic 1.0.1 builds passed this test normally and with
-`-fsanitize=address,undefined -fno-omit-frame-pointer` on package C++ targets.
-Gazebo requires libasan preloaded before loading instrumented plugins. The
-sanitizer run disables leak detection for third-party ROS/Gazebo shutdown and
-halts on address/undefined-behavior errors; this is not a TSan result.
+Delete retires/zeros before Gazebo link Fini. Models then disconnect updates,
+close subscriptions, drain admitted callbacks and unregister bindings. Binding
+destruction never dereferences finalized joints. Gazebo start/stop remains an
+explicit process workflow; native plugins load with the prepared world. The
+provider does not start Gazebo. See `native-validation.md` for evidence and gates.

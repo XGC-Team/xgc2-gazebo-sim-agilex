@@ -1,69 +1,46 @@
-/*
- * scout_skid_steer.hpp
- *
- * Created on: Mar 25, 2020 22:52
- * Description:
- *
- * Copyright (c) 2019 Ruixiang Du (rdu)
- */
-
-#ifndef SCOUT_SKID_STEER_HPP
-#define SCOUT_SKID_STEER_HPP
-
+#pragma once
+#include <gazebo/physics/physics.hh>
 #include <geometry_msgs/Twist.h>
 #include <ros/ros.h>
-
+#include <sensor_msgs/JointState.h>
+#include <xgc2_math/control/wheel_drive.hpp>
+#include <xgc2_gazebo_scene/chassis_hold_bridge.hpp>
+#include <xgc2_gazebo_scene/chassis_ros_callbacks.hpp>
+#include "scout_gazebo/command_delay.hpp"
+#include <array>
+#include <memory>
 #include <string>
 
-#include "xgc_chassis_hold/udp.hpp"
-#include "scout_gazebo/command_delay.hpp"
-
 namespace wescore {
+// Same delayed differential allocation and wheel I/P law, now owned by the
+// native Gazebo model. No intermediate ROS motor-control pipeline exists.
 class ScoutSkidSteer {
-public:
-  ScoutSkidSteer(ros::NodeHandle *nh, std::string robot_name = "");
+ public:
+  ScoutSkidSteer(ros::NodeHandle* node, gazebo::physics::ModelPtr model, std::string robot_id);
   ~ScoutSkidSteer();
-
   void SetupSubscription();
-
-private:
-  std::string robot_name_;
-  std::string motor_fr_topic_;
-  std::string motor_fl_topic_;
-  std::string motor_rl_topic_;
-  std::string motor_rr_topic_;
-  std::string cmd_topic_;
-
-  double wheel_separation_;
-  double wheel_radius_;
-  double command_gain_;
-  double angular_command_gain_;
-  double command_delay_s_;
-  bool enable_command_limits_;
-  double max_linear_speed_;
-  double max_angular_speed_;
-
-  CommandDelay command_delay_;
-  std::uint64_t published_sequence_ = 0;
-
-  ros::NodeHandle *nh_;
-
-  ros::Publisher motor_fr_pub_;
-  ros::Publisher motor_fl_pub_;
-  ros::Publisher motor_rl_pub_;
-  ros::Publisher motor_rr_pub_;
-
-  ros::Subscriber cmd_sub_;
-  ros::Timer control_timer_;
-  xgc_chassis_hold::Gate hold_gate_;
-
-  void TwistCmdCallback(const geometry_msgs::Twist::ConstPtr &msg);
-  void PublishZeroMotors();
-  static void HoldZeroThunk(void *self);
-  void ControlTick(const ros::TimerEvent &event);
-  double Clamp(double value, double limit) const;
-  std::string JoinTopic(const std::string &ns, const std::string &topic) const;
+  void Update(const gazebo::common::UpdateInfo& info);
+  void Reset();
+ private:
+  static void HoldZeroThunk(void* context);
+  void Zero();
+  void Command(const geometry_msgs::Twist::ConstPtr& command);
+  std::string robot_id_;
+  ros::NodeHandle* node_;
+  gazebo::physics::ModelPtr model_;
+  std::array<gazebo::physics::JointPtr, 4> joints_;
+  std::array<xgc2_math::WheelVelocityIPState, 4> state_{};
+  std::array<double, 4> target_{};
+  std::array<double, 4> effort_limit_{}, velocity_limit_{};
+  std::array<std::string, 4> names_{{"front_right_wheel", "front_left_wheel", "rear_left_wheel", "rear_right_wheel"}};
+  double track_{}, radius_{}, gain_{}, yaw_gain_{}, p_{}, i_{};
+  double max_v_{}, max_w_{}, time_{}, publish_time_{};
+  bool limits_ = true;
+  CommandDelay delay_;
+  ros::Publisher joint_states_;
+  ros::Subscriber command_;
+  gazebo::event::ConnectionPtr update_;
+  std::unique_ptr<xgc2_gazebo_scene::ChassisRosCallbacks> callbacks_;
+  std::unique_ptr<xgc2_gazebo_scene::ChassisBinding> binding_;
 };
-} // namespace wescore
-
-#endif /* SCOUT_SKID_STEER_HPP */
+}

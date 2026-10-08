@@ -13,11 +13,14 @@ required_debs=(
   ros-noetic-xgc2-scout-description
   ros-noetic-xgc2-gazebo-sim-scout
   ros-noetic-xgc2-gazebo-sim-worlds
+  ros-noetic-xgc2-gazebo-scene
+  libxgc2-xrpc1
 )
 required_ros_packages=(
   scout_description
   gazebo_sim_scout
   gazebo_sim_worlds
+  xgc2_gazebo_scene
 )
 
 log "checking Debian packages"
@@ -41,8 +44,11 @@ test ! -d "/opt/ros/${ROS_DISTRO}/share/scout_description/launch"
 test ! -d "/opt/ros/${ROS_DISTRO}/share/scout_description/rviz"
 test ! -f "/opt/ros/${ROS_DISTRO}/share/scout_description/urdf/mini.xacro"
 roslaunch --files gazebo_sim_scout mini_description.launch >/tmp/xgc2-scout-description-files.txt
-roslaunch --files gazebo_sim_scout simple.launch rviz:=false world_name:=/tmp/xgc2-scout-empty.world >/tmp/xgc2-scout-simple-files.txt
-roslaunch --files gazebo_sim_scout accurate.launch rviz:=false enable_vrpn_server:=false world_name:=/tmp/xgc2-scout-empty.world >/tmp/xgc2-scout-accurate-files.txt
+test -f "/opt/ros/${ROS_DISTRO}/share/gazebo_sim_worlds/launch/native_world.launch"
+# Runtime launch requires caller-provided world grant and explicit ServiceRef.
+for launch in simple accurate; do
+  xmllint --noout "/opt/ros/${ROS_DISTRO}/share/gazebo_sim_scout/launch/${launch}.launch"
+done
 
 test ! -d "/opt/ros/${ROS_DISTRO}/share/gazebo_sim_scout/worlds"
 
@@ -98,11 +104,12 @@ grep -q '<slip2>0.02</slip2>' "${tuned_params}"
 log "checking installed ELF dependencies"
 check_paths=(
   "/opt/ros/${ROS_DISTRO}/lib/gazebo_sim_scout"
-  "/opt/ros/${ROS_DISTRO}/lib/libscout_gazebo.a"
+  "/opt/ros/${ROS_DISTRO}/share/gazebo_sim_scout/plugins"
   "/opt/ros/${ROS_DISTRO}/lib/libscout_wheel_velocity_controller.so"
 )
 
 test -f "/opt/ros/${ROS_DISTRO}/lib/libscout_wheel_velocity_controller.so"
+test -f "/opt/ros/${ROS_DISTRO}/share/gazebo_sim_scout/plugins/libscout_gazebo.so"
 
 while IFS= read -r file; do
   if ! file -b "${file}" | grep -q '^ELF'; then

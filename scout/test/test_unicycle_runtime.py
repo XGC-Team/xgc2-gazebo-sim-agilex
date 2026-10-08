@@ -1,8 +1,6 @@
 #!/usr/bin/env python3
 """Real Gazebo smoke test; requires an isolated ROS/Gazebo test environment."""
 import math
-import socket
-import struct
 import threading
 import time
 import unittest
@@ -10,10 +8,9 @@ import unittest
 try:
     import rospy
     import rostest
-    from gazebo_msgs.srv import GetModelState
+    from native_simulation import NativeSimulation
     from geometry_msgs.msg import Twist, TwistStamped
     from std_msgs.msg import String
-    from std_srvs.srv import Empty
     _HAS_ROS = True
 except ImportError:
     _HAS_ROS = False
@@ -26,10 +23,10 @@ class UnicycleRuntimeTest(unittest.TestCase):
         self.drive = None
         self.sub = rospy.Subscriber('/unicycle_test/simulation/drive/velocity', TwistStamped, self.on_drive)
         self.pub = rospy.Publisher('/unicycle_test/cmd_vel', Twist, queue_size=1)
-        rospy.wait_for_service('/gazebo/get_model_state', timeout=30)
-        self.state = rospy.ServiceProxy('/gazebo/get_model_state', GetModelState)
-        self.pause = rospy.ServiceProxy('/gazebo/pause_physics', Empty)
-        self.unpause = rospy.ServiceProxy('/gazebo/unpause_physics', Empty)
+        self.native = NativeSimulation()
+        self.state = self.native.model_state
+        self.pause = self.native.pause
+        self.unpause = self.native.resume
         mode = rospy.wait_for_message('/unicycle_test/simulation/dynamics_mode', String, timeout=30)
         self.assertEqual(mode.data, 'unicycle')
         deadline = time.monotonic() + 10
@@ -57,21 +54,10 @@ class UnicycleRuntimeTest(unittest.TestCase):
         return v, state.twist.angular.z, lateral
 
     def hold(self, held):
-        robot = b'unicycle_test'
-        code = 2166136261
-        for byte in robot:
-            code = ((code ^ byte) * 16777619) & 0xffffffff
-        port = 20000 + code % 20000
-        packet = struct.pack('<IBBHI32s', 0x58474348, 1, int(held), 0, 17, robot)
-        with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as sock:
-            sock.settimeout(2)
-            sock.sendto(packet, ('127.0.0.1', port))
-            ack, _ = sock.recvfrom(64)
-        self.assertEqual(len(ack), 12)
-        self.assertEqual(struct.unpack_from('<I', ack)[0], 0x58474348)
-        self.assertEqual(ack[5], int(held))
-        self.assertEqual(ack[6], 0)
-        self.assertEqual(struct.unpack_from('<I', ack, 8)[0], 17)
+        self.native.hold('unicycle_test', held)
+
+    def tearDown(self):
+        self.sub.unregister(); self.pub.unregister(); self.native.close()
 
     def test_joint_input_stop_and_paused_hold(self):
         paused = False

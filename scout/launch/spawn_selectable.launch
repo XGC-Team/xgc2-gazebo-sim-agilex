@@ -1,5 +1,7 @@
 <?xml version="1.0"?>
 <launch>
+  <arg name="simulation_service_ref_json"/>
+  <arg name="target_id"/>
   <arg name="dynamics_mode" default="wheel_physics"/>
   <arg name="unicycle_linear_time_constant_s" default="0.005"/>
   <arg name="unicycle_angular_time_constant_s" default="0.005"/>
@@ -68,6 +70,8 @@
   <arg name="implicit_brush_selected" value="$(eval {'wheel_physics': {'ode': False, 'implicit_brush': True}, 'unicycle': {'ode': False}}[arg('dynamics_mode')][arg('wheel_physics_backend')])"/>
   <!-- Exactly one actuation stack. Existing backend stays available for A/B. -->
   <include unless="$(arg implicit_brush_selected)" file="$(dirname)/spawn_accurate.launch">
+    <arg name="simulation_service_ref_json" value="$(arg simulation_service_ref_json)"/>
+    <arg name="target_id" value="$(arg target_id)"/>
     <arg name="dynamics_mode" value="$(arg dynamics_mode)"/>
     <arg name="unicycle_linear_time_constant_s" value="$(arg unicycle_linear_time_constant_s)"/>
     <arg name="unicycle_angular_time_constant_s" value="$(arg unicycle_angular_time_constant_s)"/>
@@ -128,6 +132,8 @@
     <arg name="battery_voltage" value="$(arg battery_voltage)"/>
   </include>
   <include if="$(arg implicit_brush_selected)" file="$(dirname)/spawn_implicit_brush.launch">
+    <arg name="simulation_service_ref_json" value="$(arg simulation_service_ref_json)"/>
+    <arg name="target_id" value="$(arg target_id)"/>
     <arg name="x" value="$(arg x)"/>
     <arg name="y" value="$(arg y)"/>
     <arg name="z" value="$(arg z)"/>

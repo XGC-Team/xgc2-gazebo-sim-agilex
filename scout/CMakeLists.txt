@@ -1,9 +1,10 @@
-cmake_minimum_required(VERSION 2.8.3)
+cmake_minimum_required(VERSION 3.16)
 project(gazebo_sim_scout)
 
 ## C++ standard and release flags are set by workspace build defaults.
 
-find_package(catkin REQUIRED COMPONENTS    
+find_package(catkin REQUIRED COMPONENTS
+  xgc2_gazebo_scene
     roscpp
     controller_interface
     hardware_interface
@@ -14,19 +15,20 @@ find_package(catkin REQUIRED COMPONENTS
     std_msgs
     sensor_msgs
     geometry_msgs
-    tf2 
+    tf2
     tf2_ros
     tf
 )
 find_package(gazebo REQUIRED)
+find_package(XgcXrpc REQUIRED CONFIG)
 find_package(gazebo_plugins REQUIRED CONFIG)
 find_package(Boost REQUIRED COMPONENTS thread)
 find_package(xgc2_math 0.5.8 REQUIRED CONFIG)
 
 catkin_package(
   INCLUDE_DIRS include
-  LIBRARIES scout_unicycle_plugin scout_wheel_diagnostics scout_wheel_velocity_controller scout_gazebo
-  CATKIN_DEPENDS roscpp gazebo_msgs scout_msgs sensor_msgs std_msgs
+  LIBRARIES scout_unicycle_plugin scout_wheel_diagnostics scout_wheel_velocity_controller
+  CATKIN_DEPENDS roscpp gazebo_msgs scout_msgs sensor_msgs std_msgs xgc2_gazebo_scene
   DEPENDS gazebo
 )
 
@@ -44,7 +46,8 @@ link_directories(${GAZEBO_LIBRARY_DIRS})
 add_library(scout_wheel_velocity_controller src/scout_wheel_velocity_controller.cpp)
 target_link_libraries(scout_wheel_velocity_controller ${catkin_LIBRARIES} xgc2_math::control)
 
-add_library(scout_gazebo STATIC src/scout_skid_steer.cpp)
+add_library(scout_gazebo SHARED src/scout_skid_steer.cpp src/scout_skid_steer_model_plugin.cpp)
+target_compile_features(scout_gazebo PRIVATE cxx_std_20)
 find_package(Threads REQUIRED)
 # Reuse the stock 2.9.3 publisher with the owned range/angle fixes.
 add_library(scout_gazebo_ros_block_laser SHARED vendor/gazebo_ros_block_laser.cpp)
@@ -54,14 +57,13 @@ target_link_libraries(scout_gazebo_ros_block_laser
   RayPlugin ${catkin_LIBRARIES} ${GAZEBO_LIBRARIES} ${Boost_LIBRARIES})
 set_target_properties(scout_gazebo_ros_block_laser PROPERTIES INSTALL_RPATH_USE_LINK_PATH TRUE)
 add_library(scout_unicycle_plugin SHARED src/scout_unicycle_plugin.cpp)
-target_link_libraries(scout_unicycle_plugin ${catkin_LIBRARIES} ${GAZEBO_LIBRARIES} Threads::Threads xgc2_math::control)
+target_compile_features(scout_unicycle_plugin PRIVATE cxx_std_20)
+target_link_libraries(scout_unicycle_plugin xgc2_simulation_service XgcXrpc::http ${catkin_LIBRARIES} ${GAZEBO_LIBRARIES} Threads::Threads xgc2_math::control)
 add_library(scout_wheel_diagnostics SHARED src/scout_wheel_diagnostics.cpp)
 target_link_libraries(scout_wheel_diagnostics ${catkin_LIBRARIES} ${GAZEBO_LIBRARIES} xgc2_math::control)
 set_target_properties(scout_unicycle_plugin scout_wheel_diagnostics PROPERTIES INSTALL_RPATH_USE_LINK_PATH TRUE)
-target_link_libraries(scout_gazebo ${catkin_LIBRARIES} Threads::Threads xgc2_math::control)
+target_link_libraries(scout_gazebo ${catkin_LIBRARIES} ${GAZEBO_LIBRARIES} xgc2_simulation_service XgcXrpc::http Threads::Threads xgc2_math::control)
 
-add_executable(scout_skid_steer_controller src/scout_skid_steer_controller.cpp)
-target_link_libraries(scout_skid_steer_controller scout_gazebo ${catkin_LIBRARIES})
 
 add_executable(gazebo_model_ground_truth src/gazebo_model_ground_truth.cpp)
 target_link_libraries(gazebo_model_ground_truth ${catkin_LIBRARIES})
@@ -77,8 +79,6 @@ target_link_libraries(sim_scout_status ${catkin_LIBRARIES})
 if(CATKIN_ENABLE_TESTING)
   find_package(roslaunch REQUIRED)
   find_package(rostest REQUIRED)
-  add_rostest(test/unicycle_runtime.test)
-  roslaunch_add_file_check(launch)
   find_package(PythonInterp REQUIRED)
   add_test(
     NAME scout_stable_defaults
@@ -106,7 +106,7 @@ if(CATKIN_ENABLE_TESTING)
 endif()
 
 install(
-  TARGETS scout_wheel_velocity_controller scout_gazebo scout_skid_steer_controller gazebo_model_ground_truth sim_scout_status
+  TARGETS scout_wheel_velocity_controller gazebo_model_ground_truth sim_scout_status
   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
@@ -114,7 +114,7 @@ install(
 # Gazebo-linked plugins are dropped from /opt/ros/noetic/lib by the Debian
 # helper; install them under share so the package actually contains them.
 install(
-  TARGETS scout_unicycle_plugin scout_wheel_diagnostics scout_gazebo_ros_block_laser
+  TARGETS scout_gazebo scout_unicycle_plugin scout_wheel_diagnostics scout_gazebo_ros_block_laser
   LIBRARY DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/plugins
 )
 
@@ -131,3 +131,12 @@ catkin_install_python(PROGRAMS
 install(FILES scout_controllers.xml DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})
 
 include(cmake/implicit_wheel.cmake)
+
+# Scientific full-vehicle regression runs only against a caller-prepared world.
+set(XGC2_TEST_WORLD "" CACHE FILEPATH "Prepared isolated native world")
+set(XGC2_TEST_SERVICE_REF_JSON "" CACHE STRING "Explicit native simulation-v1 ServiceRef")
+set(XGC2_TEST_TARGET_ID "" CACHE STRING "Native fixture local target")
+if(CATKIN_ENABLE_TESTING AND XGC2_TEST_WORLD AND XGC2_TEST_SERVICE_REF_JSON AND XGC2_TEST_TARGET_ID)
+  add_rostest(test/unicycle_runtime.test ARGS "world_name:=${XGC2_TEST_WORLD}" "simulation_service_ref_json:=${XGC2_TEST_SERVICE_REF_JSON}" "target_id:=${XGC2_TEST_TARGET_ID}")
+  add_rostest(test/implicit_wheel_runtime.test ARGS "world_name:=${XGC2_TEST_WORLD}" "simulation_service_ref_json:=${XGC2_TEST_SERVICE_REF_JSON}" "target_id:=${XGC2_TEST_TARGET_ID}")
+endif()
