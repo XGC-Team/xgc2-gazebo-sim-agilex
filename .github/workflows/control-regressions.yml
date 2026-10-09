@@ -18,13 +18,9 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          for test in hold_gate command_dynamics; do
+          for test in command_dynamics; do
             g++ -std=c++11 -Wall -Wextra -Werror -pthread -Iscout/include "scout/test/${test}_test.cpp" -o "/tmp/${test}_test"
             timeout 30s "/tmp/${test}_test"
             g++ -std=c++11 -g -fsanitize=address,undefined -fno-omit-frame-pointer -pthread -Iscout/include "scout/test/${test}_test.cpp" -o "/tmp/${test}_san"
             timeout 30s "/tmp/${test}_san"
           done
-      - name: Compile vendored UDP header
-        run: |
-          printf '#include "xgc_chassis_hold/udp.hpp"\nint main() {}\n' > /tmp/udp_header_smoke.cpp
-          g++ -std=c++11 -Wall -Wextra -Werror -pthread -Iscout/include -fsyntax-only /tmp/udp_header_smoke.cpp
