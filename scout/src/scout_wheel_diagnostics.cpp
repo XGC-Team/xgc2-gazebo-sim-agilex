@@ -53,7 +53,7 @@ class WheelDiagnostics : public gazebo::ModelPlugin {
       const auto link = model_->GetLink(names[i] + "_wheel_link");
       if (!wheels_[i] || !link || link->GetCollisions().empty())
         throw std::runtime_error("Scout diagnostics missing wheel joint/collision: " + names[i]);
-      collisions_[i] = link->GetCollision(0u);
+      collisions_[i] = link->GetCollisions().front();
       subscriptions_[i] = nh_->subscribe<std_msgs::Float64>(
           "scout_motor_" + controllers[i] + "_controller/command", 1,
           [this, i](const std_msgs::Float64::ConstPtr& command) {
