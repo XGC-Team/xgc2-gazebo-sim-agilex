@@ -38,34 +38,28 @@ ScoutSkidSteer::ScoutSkidSteer(ros::NodeHandle* node, gazebo::physics::ModelPtr 
 ScoutSkidSteer::~ScoutSkidSteer() {
   update_.reset();
   command_.shutdown();
-  if (callbacks_) callbacks_->drain();
-  // Native RetireEntity already zeroed before Gazebo Fini; unregister only drains.
-  binding_.reset();
+  // The native removal already ended the HOLD seat before Gazebo finalized the joints; this only drains.
+  hold_.reset();
 }
 void ScoutSkidSteer::SetupSubscription() {
   joint_states_ = node_->advertise<sensor_msgs::JointState>("joint_states", 1);
-  callbacks_.reset(new xgc2_gazebo_scene::ChassisRosCallbacks(model_->GetWorld()));
-  node_->setCallbackQueue(callbacks_->queue());
-  binding_.reset(new xgc2_gazebo_scene::ChassisBinding(
-      model_->GetWorld(), robot_id_, &ScoutSkidSteer::HoldZeroThunk, this));
-  command_ = node_->subscribe<geometry_msgs::Twist>("cmd_vel", 5,
-      callbacks_->wrap([this](const geometry_msgs::Twist::ConstPtr& command) { Command(command); }));
+  hold_.reset(new xgc2_gazebo_scene::ChassisHold(
+      model_->GetWorld(), robot_id_, {[this] { Zero(); }, xgc2_gazebo_scene::BodySpeed(model_.get())}));
+  node_->setCallbackQueue(hold_->CommandQueue());
+  command_ = node_->subscribe<geometry_msgs::Twist>("cmd_vel", 5, &ScoutSkidSteer::Command, this);
   update_ = gazebo::event::Events::ConnectWorldUpdateBegin(
-      callbacks_->wrap([this](const gazebo::common::UpdateInfo& info) { Update(info); }));
-  callbacks_->invalidate();
-  binding_->Ready();
+      [this](const gazebo::common::UpdateInfo& info) { Update(info); });
+  hold_->Ready();
 }
-void ScoutSkidSteer::HoldZeroThunk(void* context) { static_cast<ScoutSkidSteer*>(context)->Zero(); }
 void ScoutSkidSteer::Zero() {
-  if (callbacks_) callbacks_->invalidate();
   delay_.Reset();
   target_.fill(0.0);
   state_ = {};
   for (const auto& joint : joints_) if (joint) joint->SetForce(0, 0.0);
 }
 void ScoutSkidSteer::Reset() {
-  if (!binding_) return;
-  binding_->with_command([this](bool) {
+  if (!hold_) return;
+  hold_->Control([this](bool) {
     Zero();
     time_ = model_->GetWorld()->SimTime().Double();
     publish_time_ = 0;
@@ -73,15 +67,14 @@ void ScoutSkidSteer::Reset() {
 }
 void ScoutSkidSteer::Command(const geometry_msgs::Twist::ConstPtr& message) {
   if (!std::isfinite(message->linear.x) || !std::isfinite(message->angular.z)) return;
-  binding_->with_command([this, &message](bool held) {
-    if (held || !callbacks_->current()) return;
+  hold_->Command([this, &message] {
     const double v = limits_ ? std::clamp(message->linear.x, -max_v_, max_v_) : message->linear.x;
     const double w = limits_ ? std::clamp(message->angular.z, -max_w_, max_w_) : message->angular.z;
     delay_.Push(time_, v, w);
   });
 }
 void ScoutSkidSteer::Update(const gazebo::common::UpdateInfo& info) {
-  binding_->with_command([this, &info](bool held) {
+  hold_->Control([this, &info](bool held) {
     const double now = info.simTime.Double();
     const double dt = now >= time_ ? now-time_ : 0;
     if (now < time_) { Zero(); publish_time_ = 0; }

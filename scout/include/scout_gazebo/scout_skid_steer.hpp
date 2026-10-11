@@ -4,8 +4,7 @@
 #include <ros/ros.h>
 #include <sensor_msgs/JointState.h>
 #include <xgc2_math/control/wheel_drive.hpp>
-#include <xgc2_gazebo_scene/chassis_hold_bridge.hpp>
-#include <xgc2_gazebo_scene/chassis_ros_callbacks.hpp>
+#include <xgc2_gazebo_scene/chassis_hold.hpp>
 #include "scout_gazebo/command_delay.hpp"
 #include <array>
 #include <memory>
@@ -22,7 +21,6 @@ class ScoutSkidSteer {
   void Update(const gazebo::common::UpdateInfo& info);
   void Reset();
  private:
-  static void HoldZeroThunk(void* context);
   void Zero();
   void Command(const geometry_msgs::Twist::ConstPtr& command);
   std::string robot_id_;
@@ -40,7 +38,6 @@ class ScoutSkidSteer {
   ros::Publisher joint_states_;
   ros::Subscriber command_;
   gazebo::event::ConnectionPtr update_;
-  std::unique_ptr<xgc2_gazebo_scene::ChassisRosCallbacks> callbacks_;
-  std::unique_ptr<xgc2_gazebo_scene::ChassisBinding> binding_;
+  std::unique_ptr<xgc2_gazebo_scene::ChassisHold> hold_;
 };
 }

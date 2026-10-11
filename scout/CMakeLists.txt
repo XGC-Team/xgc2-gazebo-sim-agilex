@@ -20,7 +20,6 @@ find_package(catkin REQUIRED COMPONENTS
     tf
 )
 find_package(gazebo REQUIRED)
-find_package(XgcXrpc REQUIRED CONFIG)
 find_package(gazebo_plugins REQUIRED CONFIG)
 find_package(Boost REQUIRED COMPONENTS thread)
 find_package(xgc2_math 0.5.8 REQUIRED CONFIG)
@@ -58,11 +57,11 @@ target_link_libraries(scout_gazebo_ros_block_laser
 set_target_properties(scout_gazebo_ros_block_laser PROPERTIES INSTALL_RPATH_USE_LINK_PATH TRUE)
 add_library(scout_unicycle_plugin SHARED src/scout_unicycle_plugin.cpp)
 target_compile_features(scout_unicycle_plugin PRIVATE cxx_std_20)
-target_link_libraries(scout_unicycle_plugin XgcXrpc::http ${catkin_LIBRARIES} ${GAZEBO_LIBRARIES} Threads::Threads xgc2_math::control)
+target_link_libraries(scout_unicycle_plugin ${catkin_LIBRARIES} ${GAZEBO_LIBRARIES} Threads::Threads xgc2_math::control)
 add_library(scout_wheel_diagnostics SHARED src/scout_wheel_diagnostics.cpp)
 target_link_libraries(scout_wheel_diagnostics ${catkin_LIBRARIES} ${GAZEBO_LIBRARIES} xgc2_math::control)
 set_target_properties(scout_unicycle_plugin scout_wheel_diagnostics PROPERTIES INSTALL_RPATH_USE_LINK_PATH TRUE)
-target_link_libraries(scout_gazebo ${catkin_LIBRARIES} ${GAZEBO_LIBRARIES} XgcXrpc::http Threads::Threads xgc2_math::control)
+target_link_libraries(scout_gazebo ${catkin_LIBRARIES} ${GAZEBO_LIBRARIES} Threads::Threads xgc2_math::control)
 
 
 add_executable(gazebo_model_ground_truth src/gazebo_model_ground_truth.cpp)
