@@ -1,3 +1,4 @@
+#include <xgc2_gazebo_scene/ros_master_registration.hpp>
 #include <gazebo/common/Events.hh>
 #include <gazebo/gazebo.hh>
 #include <gazebo/physics/physics.hh>
@@ -35,6 +36,7 @@ class ImplicitWheelPlugin final : public gazebo::ModelPlugin {
     struct Patch { double normal{0}; Vec point{0,0,0}; double time{-1}; std::string support; };
 public:
     ~ImplicitWheelPlugin() override {
+        registration_.reset();
         begin_.reset(); end_.reset();
         command_sub_.shutdown();
         hold_.reset();
@@ -43,6 +45,13 @@ public:
         if (transport_) transport_->Fini();
     }
     void Load(gazebo::physics::ModelPtr model, sdf::ElementPtr sdf) override {
+        if (!ros::isInitialized()) throw std::runtime_error("native robot requires the Gazebo ROS data owner");
+        registration_ = std::make_unique<xgc2_gazebo_scene::RosMasterRegistration>([this, model, sdf] {
+            Initialize(model, sdf);
+            initialized_.store(true, std::memory_order_release);
+        });
+    }
+    void Initialize(gazebo::physics::ModelPtr model, sdf::ElementPtr sdf) {
         if (!ros::isInitialized()) throw std::runtime_error("implicit wheels require gazebo_ros_api_plugin");
         model_=model; world_=model->GetWorld(); base_=model->GetLink("base_link");
         if (!base_ || world_->Physics()->GetType()!="ode")
@@ -79,6 +88,10 @@ public:
         last_time_=world_->SimTime().Double();delayed_->reset(last_time_);
         const std::array<std::string,4> names{{"front_left_wheel","front_right_wheel","rear_left_wheel","rear_right_wheel"}};
         std::vector<std::string> collisions;
+        {
+        // Only native surface setup needs the engine's writer lock. All ROS
+        // parameter reads and registrations happen outside it.
+        boost::recursive_mutex::scoped_lock physics(*world_->Physics()->GetPhysicsUpdateMutex());
         for(std::size_t i=0;i<4;++i) {
             joints_[i]=model->GetJoint(names[i]);wheels_[i]=model->GetLink(names[i]+"_link");
             if(!joints_[i] || !wheels_[i] || wheels_[i]->GetCollisions().size()!=1)
@@ -94,6 +107,7 @@ public:
             if(!friction_pyramid) throw std::runtime_error("wheel friction surface unavailable");
             friction_pyramid->SetMuPrimary(0);friction_pyramid->SetMuSecondary(0);friction_pyramid->SetMuTorsion(0);
             joints_[i]->SetDamping(0,0); // drag, if requested, is handled once in math
+        }
         }
         // Validate constitutive parameters before registering any command source.
         auto probe=xgc2_math::ImplicitWheelInput{};
@@ -124,6 +138,7 @@ public:
         hold_->Ready();
     }
     void Reset() override {
+        if (!initialized_.load(std::memory_order_acquire)) return;
         if(!hold_) return;
         hold_->Control([this](bool){
             memory_={};patches_={};last_time_=world_->SimTime().Double();delayed_->reset(last_time_);fault_=false;
@@ -131,6 +146,8 @@ public:
         });
     }
 private:
+    std::unique_ptr<xgc2_gazebo_scene::RosMasterRegistration> registration_;
+    std::atomic<bool> initialized_{false};
     void ContactsKeepalive(const boost::shared_ptr<const gazebo::msgs::Contacts>&) {}
     // The HOLD output: native motor output is zero; existing contact elasticity is preserved.
     void HoldZero() {

@@ -79,6 +79,8 @@ if(CATKIN_ENABLE_TESTING)
   find_package(roslaunch REQUIRED)
   find_package(rostest REQUIRED)
   find_package(PythonInterp REQUIRED)
+  add_test(NAME scout_parallel_launch
+    COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/test/test_parallel_launch.py)
   add_test(
     NAME scout_stable_defaults
     COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/test/test_stable_defaults.py

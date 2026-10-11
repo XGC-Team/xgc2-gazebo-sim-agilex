@@ -55,9 +55,9 @@ hold_contract.md for ownership and bounds.
 ## Selection and installation
 
 ```bash
-roslaunch gazebo_sim_scout accurate.launch world_name:="$SIMULATION_PREPARED_WORLD" simulation_service_ref_json:="$SIMULATION_SERVICE_REF_JSON" target_id:="$SIMULATION_TARGET_ID" dynamics_mode:=unicycle
-roslaunch gazebo_sim_scout accurate.launch world_name:="$SIMULATION_PREPARED_WORLD" simulation_service_ref_json:="$SIMULATION_SERVICE_REF_JSON" target_id:="$SIMULATION_TARGET_ID" dynamics_mode:=wheel_physics wheel_diagnostics:=true
-roslaunch gazebo_sim_scout multi_accurate.launch world_name:="$SIMULATION_PREPARED_WORLD" simulation_service_ref_json:="$SIMULATION_SERVICE_REF_JSON" target_id:="$SIMULATION_TARGET_ID" ugv1_dynamics_mode:=unicycle ugv2_dynamics_mode:=wheel_physics
+roslaunch --wait gazebo_sim_scout accurate.launch world_name:="$SIMULATION_PREPARED_WORLD" simulation_service_ref_json:="$SIMULATION_SERVICE_REF_JSON" target_id:="$SIMULATION_TARGET_ID" dynamics_mode:=unicycle
+roslaunch --wait gazebo_sim_scout accurate.launch world_name:="$SIMULATION_PREPARED_WORLD" simulation_service_ref_json:="$SIMULATION_SERVICE_REF_JSON" target_id:="$SIMULATION_TARGET_ID" dynamics_mode:=wheel_physics wheel_diagnostics:=true
+roslaunch --wait gazebo_sim_scout multi_accurate.launch world_name:="$SIMULATION_PREPARED_WORLD" simulation_service_ref_json:="$SIMULATION_SERVICE_REF_JSON" target_id:="$SIMULATION_TARGET_ID" ugv1_dynamics_mode:=unicycle ugv2_dynamics_mode:=wheel_physics
 ```
 
 `simple.launch` now defaults to `unicycle`; all other existing entry defaults stay

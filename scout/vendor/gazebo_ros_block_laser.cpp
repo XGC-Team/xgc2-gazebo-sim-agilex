@@ -1,3 +1,6 @@
+#include <xgc2_gazebo_scene/ros_master_registration.hpp>
+#include <memory>
+#include <atomic>
 /*
  * Copyright 2013 Open Source Robotics Foundation
  *
@@ -56,11 +59,28 @@
 namespace gazebo
 {
 // Register this plugin with the simulator
-GZ_REGISTER_SENSOR_PLUGIN(GazeboRosBlockLaser)
+class DeferredBlockLaser final : public GazeboRosBlockLaser {
+ public:
+  ~DeferredBlockLaser() override { registration_.reset(); }
+  void Load(sensors::SensorPtr parent, sdf::ElementPtr sdf) override {
+    registration_ = std::make_unique<xgc2_gazebo_scene::RosMasterRegistration>([this, parent, sdf] {
+      GazeboRosBlockLaser::Load(parent, sdf);
+      initialized_.store(true, std::memory_order_release);
+    });
+  }
+ protected:
+  void OnNewLaserScans() override {
+    if (initialized_.load(std::memory_order_acquire)) GazeboRosBlockLaser::OnNewLaserScans();
+  }
+ private:
+  std::atomic<bool> initialized_{false};
+  std::unique_ptr<xgc2_gazebo_scene::RosMasterRegistration> registration_;
+};
+GZ_REGISTER_SENSOR_PLUGIN(DeferredBlockLaser)
 
 ////////////////////////////////////////////////////////////////////////////////
 // Constructor
-GazeboRosBlockLaser::GazeboRosBlockLaser()
+GazeboRosBlockLaser::GazeboRosBlockLaser() : rosnode_(nullptr)
 {
 }
 
@@ -72,8 +92,8 @@ GazeboRosBlockLaser::~GazeboRosBlockLaser()
   // Finalize the controller / Custom Callback Queue
   this->laser_queue_.clear();
   this->laser_queue_.disable();
-  this->rosnode_->shutdown();
-  this->callback_laser_queue_thread_.join();
+  if (this->rosnode_) this->rosnode_->shutdown();
+  if (this->callback_laser_queue_thread_.joinable()) this->callback_laser_queue_thread_.join();
 
   delete this->rosnode_;
 }

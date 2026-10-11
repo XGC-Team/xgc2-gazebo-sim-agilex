@@ -7,16 +7,16 @@ switches keep their current sensors and settings.
 Enable it on one Scout with the default mount pose (`0 0 0.35 0 0 0`):
 
 ```bash
-roslaunch gazebo_sim_scout accurate.launch enable_simple_lidar:=true
+roslaunch --wait gazebo_sim_scout accurate.launch enable_simple_lidar:=true
 ```
 
 Set another pose with six space separated values, or enable both robots in the
 two Scout launch:
 
 ```bash
-roslaunch gazebo_sim_scout accurate.launch enable_simple_lidar:=true \
+roslaunch --wait gazebo_sim_scout accurate.launch enable_simple_lidar:=true \
   simple_lidar_pose:="0.12 -0.03 0.41 0 0 1.57"
-roslaunch gazebo_sim_scout multi_accurate.launch \
+roslaunch --wait gazebo_sim_scout multi_accurate.launch \
   ugv1_enable_simple_lidar:=true ugv2_enable_simple_lidar:=true
 ```
 

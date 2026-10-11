@@ -1,3 +1,4 @@
+#include <xgc2_gazebo_scene/ros_master_registration.hpp>
 #include <gazebo/common/Events.hh>
 #include <gazebo/common/Plugin.hh>
 #include <gazebo/physics/physics.hh>
@@ -23,12 +24,19 @@ namespace scout_gazebo {
 class WheelDiagnostics : public gazebo::ModelPlugin {
  public:
   ~WheelDiagnostics() override {
+    registration_.reset();
     update_.reset();
     for (auto& subscription : subscriptions_) subscription.shutdown();
     queue_.disable();
   }
 
   void Load(gazebo::physics::ModelPtr model, sdf::ElementPtr sdf) override {
+    if (!ros::isInitialized()) throw std::runtime_error("native robot requires the Gazebo ROS data owner");
+    registration_ = std::make_unique<xgc2_gazebo_scene::RosMasterRegistration>([this, model, sdf] {
+      Initialize(model, sdf);
+    });
+  }
+  void Initialize(gazebo::physics::ModelPtr model, sdf::ElementPtr sdf) {
     if (!ros::isInitialized()) throw std::runtime_error("Scout diagnostics requires gazebo_ros");
     model_ = model;
     nh_.reset(new ros::NodeHandle(sdf->Get<std::string>("robotNamespace")));
@@ -66,6 +74,7 @@ class WheelDiagnostics : public gazebo::ModelPlugin {
   }
 
  private:
+    std::unique_ptr<xgc2_gazebo_scene::RosMasterRegistration> registration_;
   void Update(const gazebo::common::UpdateInfo& info) {
     const double time = info.simTime.Double();
     if (time < last_seen_) {

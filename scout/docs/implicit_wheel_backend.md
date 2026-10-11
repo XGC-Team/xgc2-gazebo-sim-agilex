@@ -12,7 +12,7 @@ Neither PR has been promoted to APT or deployed to a live station.
 already running Gazebo world, use the installed entry:
 
 ```
-roslaunch gazebo_sim_scout spawn_selectable.launch ns:=ugv1 dynamics_mode:=wheel_physics wheel_physics_backend:=implicit_brush
+roslaunch --wait gazebo_sim_scout spawn_selectable.launch ns:=ugv1 dynamics_mode:=wheel_physics wheel_physics_backend:=implicit_brush
 ```
 
 `wheel_physics_backend=ode` delegates to the existing `spawn_accurate.launch`

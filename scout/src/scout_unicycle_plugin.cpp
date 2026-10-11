@@ -1,3 +1,4 @@
+#include <xgc2_gazebo_scene/ros_master_registration.hpp>
 #include <gazebo/common/Events.hh>
 #include <gazebo/common/Plugin.hh>
 #include <gazebo/physics/physics.hh>
@@ -29,12 +30,20 @@ namespace scout_gazebo {
 class UnicyclePlugin : public gazebo::ModelPlugin {
  public:
   ~UnicyclePlugin() override {
+    registration_.reset();
     update_.reset();
     subscription_.shutdown();
     hold_.reset();
   }
 
   void Load(gazebo::physics::ModelPtr model, sdf::ElementPtr sdf) override {
+    if (!ros::isInitialized()) throw std::runtime_error("native robot requires the Gazebo ROS data owner");
+    registration_ = std::make_unique<xgc2_gazebo_scene::RosMasterRegistration>([this, model, sdf] {
+      Initialize(model, sdf);
+      initialized_.store(true, std::memory_order_release);
+    });
+  }
+  void Initialize(gazebo::physics::ModelPtr model, sdf::ElementPtr sdf) {
     if (!ros::isInitialized()) throw std::runtime_error("Scout unicycle requires gazebo_ros");
     model_ = model;
     base_ = model_->GetLink("base_link");
@@ -83,6 +92,7 @@ class UnicyclePlugin : public gazebo::ModelPlugin {
   }
 
   void Reset() override {
+    if (!initialized_.load(std::memory_order_acquire)) return;
     if (!hold_) return;
     hold_->Control([this](bool) {
       now_ = model_->GetWorld()->SimTime().Double();
@@ -95,6 +105,8 @@ class UnicyclePlugin : public gazebo::ModelPlugin {
   }
 
  private:
+    std::unique_ptr<xgc2_gazebo_scene::RosMasterRegistration> registration_;
+    std::atomic<bool> initialized_{false};
   // The HOLD output, also while simulation time is frozen: clear the lag state and the native output.
   void HoldZero() {
     drive_->reset(now_);
