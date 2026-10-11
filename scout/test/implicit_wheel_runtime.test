@@ -4,8 +4,10 @@
   <arg name="simulation_service_ref_json"/>
   <arg name="target_id"/>
   <!-- Run only in an isolated ROS/Gazebo test container, never a live station. -->
-  <env name="GAZEBO_MASTER_URI" value="http://127.0.0.1:11473"/>
   <include file="$(find gazebo_sim_scout)/launch/implicit_brush.launch">
+    <arg name="world_name" value="$(arg world_name)"/>
+    <arg name="simulation_service_ref_json" value="$(arg simulation_service_ref_json)"/>
+    <arg name="target_id" value="$(arg target_id)"/>
     <arg name="ns" value="brush_test"/>
     <arg name="gui" value="false"/>
   </include>

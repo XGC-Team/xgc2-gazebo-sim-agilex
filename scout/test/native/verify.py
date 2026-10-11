@@ -16,6 +16,7 @@ import http.client
 import json
 import math
 import os
+import random
 from pathlib import Path
 import signal
 import socket
@@ -36,9 +37,15 @@ GAZEBO_TRANSPORT_ABORT = 'boost thread: trying joining itself'
 
 
 def free_port():
-    with socket.socket() as sock:
-        sock.bind(('127.0.0.1', 0))
-        return sock.getsockname()[1]
+    for _ in range(100):
+        port = random.randint(20000, 40000)
+        with socket.socket() as sock:
+            try:
+                sock.bind(('127.0.0.1', port))
+                return port
+            except OSError:
+                pass
+    raise RuntimeError('no private master port available')
 
 
 class UnixConnection(http.client.HTTPConnection):
@@ -537,7 +544,7 @@ def surface(run):
     for robot in world.state()['robots']:
         assert (robot['held'], robot['revision'], robot['stage']) == (False, 0, 'released'), robot
     # The method addressing: POST /v1/call/<service>/<Method>; closed request schemas.
-    assert world.raw('GET', HOLD_CALL + 'Describe')[0] == 404, 'a call is a POST'
+    assert world.raw('GET', HOLD_CALL + 'Describe')[0] == 405, 'a call is a POST'
     assert world.raw('POST', HOLD_CALL + 'Missing', {})[0] == 404
     assert world.raw('POST', '/v1/call/other.service/Describe', {})[0] == 404
     assert world.hold_raw('Describe', {'extra': 1})[0] == 400
@@ -546,7 +553,7 @@ def surface(run):
     assert world.hold_raw('Engage', {'robot_ids': ['a'], 'extra': 1})[0] == 400
     assert world.hold_raw('Release', {'changes': []})[0] == 400
     status, body = world.hold_raw('State', {'robot_ids': ['nobody']})
-    assert status == 404 and body['details']['robot_ids'] == ['nobody'], (status, body)
+    assert status == 404 and body['error']['details']['robot_ids'] == ['nobody'], (status, body)
     assert world.engage(['nobody'])['robots'] == [{'robot_id': 'nobody', 'outcome': 'unknown_robot'}]
     assert world.release([('nobody', 0)])['robots'] == [{'robot_id': 'nobody', 'outcome': 'unknown_robot'}]
     run.ok('surface: HOLD methods, describe facts, closed schemas, retired routes, shared instance')
@@ -698,7 +705,7 @@ def recreate(run, bot, held):
         wait_until(lambda: world.robot(bot.name)['stage'] in ('zero_written', 'stopped'), 5, bot.name + ' held')
     run.remove(bot)
     status, body = world.hold_raw('State', {'robot_ids': [bot.name]})
-    assert status == 404 and body['details']['robot_ids'] == [bot.name], 'a removed model leaves the roster'
+    assert status == 404 and body['error']['details']['robot_ids'] == [bot.name], 'a removed model leaves the roster'
     assert bot.name not in world.describe()['robots'] and bot.name not in world.hold_entities()
     assert world.engage([bot.name])['robots'][0]['outcome'] == 'unknown_robot'
     run.create(bot)

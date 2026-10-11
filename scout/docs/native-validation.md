@@ -68,8 +68,11 @@ dispatch time instead of their receipt time (check 5), and no periodic tick whil
 
 ## Result
 
-2026-10-10, Ubuntu 20.04, g++ 9.4, ROS Noetic, Gazebo Classic 11.15.1 (ODE), XRPC C++ at xgc2-xrpc `01c0dd5`,
-chassis-hold at `69a76ad`: all 24 checks pass in about a minute, in eight consecutive runs. This is a
+2026-10-10, Ubuntu 20.04, g++ 9.4, ROS Noetic, Gazebo Classic 11.15.1 (ODE), XRPC C++ 0.2.0 at `d33afa8`,
+chassis-hold 0.2.0 at `fcfe8f4`: all 24 checks pass in ten consecutive runs (240 checks total), taking
+59.2 to 72.0 seconds per run. Each run uses private master ports in 20000-40000 and its own ROS home;
+none left a surviving process or collected an orphan. The dependencies were built into
+`/home/node/workspace/build/gazebo-hold/prefix`, and all plugins were built against that prefix. This is a
 source-tree result on the development machine: the Focal controlled-toolchain ABI, installed packages, the
 real Scout and Mecanum description meshes, calibrated contact and deployment are not covered here.
 
@@ -79,10 +82,14 @@ real Scout and Mecanum description meshes, calibrated contact and deployment are
   Gazebo 11.15.1 that wrench follows the rotating wheel link: the load seen by the plugin is a half sine of the
   wheel angle, so the tires grip for half of the wheel angles and a vehicle commanded to stop may slide on. This is
   independent of HOLD (it happens with the HOLD tick disabled); see `implicit_wheel_backend.md`.
-* **Gazebo transport abort.** At SIGINT `gzserver` sometimes (twice in sixteen shutdowns of the last runs) aborts
+* **Gazebo transport abort.** At SIGINT `gzserver` sometimes (twice in twenty shutdowns of this series) aborts
   inside Gazebo's own transport library (`boost thread: trying joining itself`, every frame in
   `libgazebo_transport`). The test reports it and does not count it as a failure; any other exit status fails.
-The full-vehicle rostests (`unicycle_runtime.test`, `implicit_wheel_runtime.test`, `scout_runtime.test`) need
-a prepared world and the Python `xgc2_scene_runtime`; their HOLD helper (`test/native_simulation.py`) now calls the HOLD
-methods but they were not run for this migration. `test/test_source_rsp_clock.py` already needed the
-`simulation_service_ref_json` launch argument before this change and fails without it.
+The full-vehicle rostests were then run against an isolated prepared native world, its discovered ServiceRef
+and the Python `xgc2_scene_runtime`. `unicycle_runtime.test` passes, including HOLD while paused.
+`implicit_wheel_runtime.test` fails in setup waiting for all four normal loads to exceed 1 N;
+`scout_runtime.test` fails before its HOLD cycles because positive yaw input produces about -0.64 rad/s
+against the required positive yaw. Both failures reproduce with the preceding plugin build and foundation
+libraries, and the drive physics was left unchanged. The two Mecanum rostests and all four scene rostests pass.
+`test/test_source_rsp_clock.py` still needs the `simulation_service_ref_json` launch argument and was not
+part of this native HOLD validation.
