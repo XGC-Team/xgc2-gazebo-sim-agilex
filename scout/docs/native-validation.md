@@ -86,7 +86,8 @@ real Scout and Mecanum description meshes, calibrated contact and deployment are
   inside Gazebo's own transport library (`boost thread: trying joining itself`, every frame in
   `libgazebo_transport`). The test reports it and does not count it as a failure; any other exit status fails.
 The full-vehicle rostests were then run against an isolated prepared native world, its discovered ServiceRef
-and the Python `xgc2_scene_runtime`. `unicycle_runtime.test` passes, including HOLD while paused.
+and the Python simulation-v1 client, now owned by `xgc2_gazebo_scene.simulation_client`.
+`unicycle_runtime.test` passes, including HOLD while paused.
 `implicit_wheel_runtime.test` fails in setup waiting for all four normal loads to exceed 1 N;
 `scout_runtime.test` fails before its HOLD cycles because positive yaw input produces about -0.64 rad/s
 against the required positive yaw. Both failures reproduce with the preceding plugin build and foundation
