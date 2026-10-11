@@ -14,7 +14,6 @@ required_debs=(
   ros-noetic-xgc2-gazebo-sim-scout
   ros-noetic-xgc2-gazebo-sim-worlds
   ros-noetic-xgc2-gazebo-scene
-  libxgc2-xrpc1
 )
 required_ros_packages=(
   scout_description
