@@ -120,8 +120,9 @@ class DynamicsModesTest(unittest.TestCase):
         text = (PACKAGE / 'src/scout_unicycle_plugin.cpp').read_text()
         self.assertIn('origin_velocity + omega.Cross(offset)', text)
         self.assertNotIn('SetWorldPose(', text)
-        self.assertIn('gate_->with_command', text)
-        self.assertIn('drive_->reset(plugin.now_)', text)
+        self.assertIn('hold_->Control', text)
+        self.assertIn('hold_->Command', text)
+        self.assertIn('drive_->reset(now_)', text)
         self.assertIn('unicycle_virtual_wheels', text)
         self.assertNotIn('command_gain', text)
 
