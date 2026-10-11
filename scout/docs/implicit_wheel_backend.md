@@ -64,6 +64,16 @@ stale samples and detached geometry. No constant mg/4 fallback is supplied.
 Support changes reset tread state. Contact filtering/subscription is local to
 this model; SetNeverDropContacts is not changed globally.
 
+**Known limitation (observed with Gazebo 11.15.1, ODE).** The plugin takes the normal load from the
+Z component of `Contact::wrench`, which Contact.hh documents in world coordinates. In the HOLD fixture
+(`test/native/verify.py`) the same component followed the angle of the rotating wheel link instead: a half
+sine of the wheel angle, zero for half a wheel revolution, while rotating the force by the pose of the
+wheel link gave a constant load of mg/4. The tires then have grip only for half of the wheel angles, and a
+vehicle that has been commanded to stop can keep sliding. The fixture therefore reads the rest of this
+model from the speed of its wheels, which the plugin does control. A corrected load needs the wrench
+expressed in world coordinates (or the force projected on the contact normal) and a replay on the Gazebo
+versions that are deployed; it is not part of the HOLD work.
+
 The kernel predicts velocity while solving forces; those velocities are never
 written to Gazebo. Only `wheel->AddForceAtWorldPosition` and `joint->SetForce`
 are used. ODE integrates actual motion. Thus obstacle impulses are not erased

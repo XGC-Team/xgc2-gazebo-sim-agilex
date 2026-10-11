@@ -47,10 +47,10 @@ status/RViz consumers, not measured wheel dynamics; physical wheel animation is
 not used to produce motion.
 
 Normal zero `cmd_vel` traverses the delay and lag and needs no repeat heartbeat.
-Native world HOLD clears the delay queue, lag state and native outputs,
-including while paused, under the shared domain transaction. ROS queue admission
-epochs are invalidated for HOLD/release/reset. Delayed dispatch after release
-cannot restore old commands. See hold_contract.md for ownership and bounds.
+Native world HOLD clears the delay queue, lag state and native outputs on every
+tick, including while paused. A command is admitted by the time it was queued, so a
+command dispatched late, after a release, cannot restore old commands. See
+hold_contract.md for ownership and bounds.
 
 ## Selection and installation
 
@@ -157,10 +157,10 @@ python3 scout/test/test_dynamics_modes.py
 
 The math tests cover analytic delay/lag/Stop and wheel kinematics; source
 checks cover wiring only. Existing wheel defaults and I/P law remain unchanged.
-The native migration compiled real ModelPlugins and verified five-model command
-ownership, blocked-dispatcher backlog rejection, paused HOLD and concurrent
-native Delete. SIGINT process shutdown failed and remains an open gate; see
-native-validation.md for actual logs/backtrace and the user hard stop.
+The headless fixture `scout/test/native/verify.py` runs the real ModelPlugins in a
+Gazebo world and verifies HOLD on all five drive models, including a blocked
+command dispatcher, a paused world, deleting and creating held models and a
+restart of the world host; see native-validation.md.
 
 Full unicycle and wheel/implicit scientific regressions require a prepared
 isolated world, explicit simulation-v1 ServiceRef and target. They are registered

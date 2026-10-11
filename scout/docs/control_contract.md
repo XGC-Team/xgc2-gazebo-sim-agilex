@@ -14,11 +14,11 @@ array retaining at most the newest 2048 samples, with no native deque allocation
 Full-vehicle contact response and field alignment remain scientific acceptance
 gates.
 
-HOLD, acceptance and native output share the world transaction described in
-`hold_contract.md`; release never restores the old cache or ROS admission epoch.
+HOLD is described in `hold_contract.md`: a command is admitted by the time it was queued, the control
+step and the zero output of the HOLD tick share one lock, and release never restores a cached command.
 ROS namespaces may differ from explicit public chassis identities.
 
-Spawning requires an explicit simulation-v1 ServiceRef, target and prepared
-world roster. It submits one native creation operation and waits for its receipt.
+Spawning requires an explicit simulation-v1 ServiceRef and target. It submits one native creation
+operation and waits for its receipt.
 Spawning does not unpause the world. Gazebo start/stop remains explicit process
 management; domain control starts after the process and native plugin exist.
