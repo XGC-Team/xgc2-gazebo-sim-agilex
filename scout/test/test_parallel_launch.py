@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
-"""Check local launch composition and process readiness without any peer."""
-import json
+"""Check local launch composition and retired spawn packaging without any peer."""
 import re
 import unittest
 import xml.etree.ElementTree as ET
@@ -23,14 +22,13 @@ class ParallelLaunchTest(unittest.TestCase):
                     if element.get("type") == "spawn_robot_model":
                         self.assertNotRegex(element.get("args", ""), "controller|scene_service|scene_adapter")
 
-    def test_readiness_uses_only_owned_resources(self):
-        for path in (ROOT / "process-definitions").glob("*.json"):
-            for definition in json.loads(path.read_text())["definitions"]:
-                self.assertEqual(definition["readiness"], {"kind": "none"}, str(path))
-                args = definition["command"].get("args", [])
-                for index, arg in enumerate(args):
-                    if arg.endswith("/roslaunch"):
-                        self.assertEqual(args[index + 1], "--wait")
+    def test_retired_spawn_definition_is_not_packaged(self):
+        retired = "process-definitions/scout-gazebo-robot.json"
+        self.assertFalse((ROOT / retired).exists())
+        for relative in (".xgc2/product.yml", ".xgc2/scripts/package_debs.sh",
+                         ".xgc2/scripts/check_installed_packages.sh"):
+            with self.subTest(path=relative):
+                self.assertNotIn(retired, (ROOT / relative).read_text())
 
 
 if __name__ == "__main__":

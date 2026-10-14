@@ -134,8 +134,6 @@ build_deb() {
   fi
 
   write_control "${pkg_root}" "${package}" "${depends}" "${description}" "${extra_fields}"
-  install -D -m 0644 "${REPO_ROOT}/process-definitions/scout-gazebo-robot.json" \
-    "${pkg_root}/usr/share/xgc2/process-definitions/scout-gazebo-robot.json"
   fakeroot dpkg-deb --build "${pkg_root}" "${OUTPUT_DIR}/${package}_${VERSION}_${ARCH}.deb" >/dev/null
 }
 

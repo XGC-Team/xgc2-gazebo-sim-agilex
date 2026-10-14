@@ -48,7 +48,6 @@ ownership:
   - /opt/ros/noetic/share/gazebo_sim_scout/plugins/libscout_unicycle_plugin.so
   - /opt/ros/noetic/share/gazebo_sim_scout/plugins/libscout_wheel_diagnostics.so
   - /opt/ros/noetic/share/gazebo_sim_scout/plugins/libscout_implicit_wheel_plugin.so
-  - /usr/share/xgc2/process-definitions/scout-gazebo-robot.json
 release:
   requires:
   - xgc2-gazebo-sim-scenes
