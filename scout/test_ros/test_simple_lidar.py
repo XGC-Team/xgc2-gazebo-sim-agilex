@@ -110,12 +110,10 @@ class ScoutSimpleLidarTest(unittest.TestCase):
         sensors = root.findall("./gazebo[@reference='base_link']/sensor[@name='simple_lidar']")
         self.assertEqual(len(sensors), 1)
         sensor = sensors[0]
-        self.assertEqual(sensor.attrib.get("type"), "gpu_ray")
+        self.assertEqual(sensor.attrib.get("type"), "xgc2_gpu_lidar")
         self.assertEqual(sensor.findtext("pose"), POSE_DEFAULT)
-        plugin = sensor.find("plugin")
-        self.assertIsNotNone(plugin)
-        self.assertEqual(plugin.attrib.get("filename"), "libxgc2_simple_lidar.so")
-        self.assertEqual(plugin.findtext("robotNamespace"), "ugv1")
+        self.assertEqual(sensor.findall("plugin"), [])
+        self.assertEqual(sensor.findtext("topic"), "ugv1/simple_lidar/points")
 
     def test_cpu_native_scan_keeps_authored_parameters(self) -> None:
         root = self.render(["enable_simple_lidar:=true", "ns:=ugv2",
@@ -124,9 +122,9 @@ class ScoutSimpleLidarTest(unittest.TestCase):
                             "simple_lidar_vfov_deg:=40", "simple_lidar_hres:=90",
                             "simple_lidar_vres:=8"], shared_package_available=True)
         sensor = root.find("./gazebo[@reference='base_link']/sensor[@name='simple_lidar']")
-        self.assertEqual(sensor.get('type'), 'ray')
-        self.assertEqual(sensor.find('plugin').get('filename'), 'libxgc2_simple_lidar_cpu.so')
-        self.assertEqual(sensor.findtext('plugin/robotNamespace'), 'ugv2')
+        self.assertEqual(sensor.get('type'), 'xgc2_cpu_lidar')
+        self.assertEqual(sensor.findall('plugin'), [])
+        self.assertEqual(sensor.findtext('topic'), 'ugv2/simple_lidar/points')
         self.assertEqual(float(sensor.findtext('update_rate')), 12)
         self.assertEqual(float(sensor.findtext('ray/range/max')), 8)
         for direction, count, degrees in [('horizontal', 90, 120), ('vertical', 8, 40)]:
@@ -144,10 +142,10 @@ class ScoutSimpleLidarTest(unittest.TestCase):
             )
             sensors = root.findall("./gazebo[@reference='base_link']/sensor[@name='simple_lidar']")
             self.assertEqual(len(sensors), 1)
-            plugin = sensors[0].find("plugin")
-            self.assertIsNotNone(plugin)
-            self.assertEqual(plugin.findtext("robotNamespace"), namespace)
-            resolved_topics.append(f"/{namespace}/simple_lidar/points")
+            self.assertEqual(sensors[0].findall("plugin"), [])
+            topic = sensors[0].findtext("topic")
+            self.assertEqual(topic, f"{namespace}/simple_lidar/points")
+            resolved_topics.append("/" + topic)
         self.assertEqual(len(set(resolved_topics)), 2)
 
     def test_custom_pose_is_forwarded_to_the_shared_sensor(self) -> None:
@@ -171,7 +169,7 @@ class ScoutSimpleLidarTest(unittest.TestCase):
 
         manifest = ET.parse(PACKAGE / "package.xml").getroot()
         self.assertEqual(
-            [item.text for item in manifest.findall("./test_depend") if item.text == "xgc2_simple_lidar"],
+            [item.text for item in manifest.findall("./run_depend") if item.text == "xgc2_simple_lidar"],
             ["xgc2_simple_lidar"],
         )
 
