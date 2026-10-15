@@ -1,0 +1,51 @@
+{
+  "apiVersion": "xgc.execution.process/v1",
+  "definitions": [
+    {
+      "id": "scout-gazebo-runtime",
+      "version": "1.0.0",
+      "label": "Scout Gazebo runtime",
+      "description": "Per-robot Scout ground truth, status and state publishers; model placement is a separate finite operation.",
+      "parameters": {
+        "properties": {
+          "placementInput": {
+            "type": "json"
+          },
+          "rosMasterUri": {
+            "type": "string"
+          },
+          "rosIp": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "placementInput",
+          "rosMasterUri",
+          "rosIp"
+        ]
+      },
+      "command": {
+        "executable": "/opt/ros/noetic/lib/gazebo_sim_scout/start_scout_runtime",
+        "args": [],
+        "stdinParameter": "placementInput",
+        "env": {
+          "ROS_MASTER_URI": "${rosMasterUri}",
+          "ROS_IP": "${rosIp}"
+        }
+      },
+      "setupFiles": [
+        "/opt/ros/noetic/setup.bash"
+      ],
+      "readiness": {
+        "kind": "none"
+      },
+      "stop": {
+        "graceMs": 5000
+      },
+      "logs": {
+        "maxBytes": 1048576,
+        "files": 3
+      }
+    }
+  ]
+}

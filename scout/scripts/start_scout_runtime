@@ -1,0 +1,68 @@
+#!/usr/bin/env python3
+"""Start Scout ground truth, status and state publishers without spawning a model."""
+from pathlib import Path
+import signal
+import subprocess
+import sys
+import tempfile
+import xml.etree.ElementTree as ET
+
+from xgc2_gazebo_scene.robot_placement import ground_model, read_placement
+
+
+def launch_document(row, mode, description):
+    namespace, identity = row['namespace'], row['slotId']
+    root = ET.Element('launch')
+    ET.SubElement(root, 'param', name=namespace+'/robot_description', value=description)
+    group = ET.SubElement(root, 'group', ns=namespace)
+    for name, executable, values in [
+        ('ground_truth', 'gazebo_model_ground_truth', {
+            'model_name': identity, 'pose_topic': namespace+'/simulation/ground_truth/pose',
+            'twist_topic': namespace+'/simulation/ground_truth/twist', 'world_frame': 'world'}),
+        ('status', 'sim_scout_status', {
+            'joint_states_topic': namespace+'/joint_states', 'status_topic': namespace+'/scout_status',
+            'light_control_topic': namespace+'/scout_light_control', 'battery_voltage': 28.765,
+            'battery_publish_rate': 0.5, 'chassis_publish_rate': 1.0, 'control_mode': 1,
+            'wheel_radius': 0.08, 'wheel_track': 0.416503}),
+    ]:
+        node = ET.SubElement(group, 'node', pkg='gazebo_sim_scout', type=executable,
+                             name=name, output='screen')
+        for key, value in values.items():
+            ET.SubElement(node, 'param', name=key, value=str(value))
+        ET.SubElement(node, 'param', name='use_sim_time', type='bool', value=str(mode == 'simulation').lower())
+        ET.SubElement(node, 'remap', **{'from': '/use_sim_time', 'to': '~use_sim_time'})
+    include = ET.SubElement(root, 'include', file='$(find gazebo_sim_scout)/launch/source_robot_state_publisher.launch')
+    for key, value in {'ns': namespace.lstrip('/'), 'robot_state_publisher_ns': namespace,
+                       'tf_prefix': namespace.lstrip('/'), 'frame_prefix': namespace.lstrip('/')+'/',
+                       'run_mode': mode}.items():
+        ET.SubElement(include, 'arg', name=key, value=value)
+    return ET.tostring(root, encoding='unicode')
+
+
+def main():
+    import rospkg
+    row, mode = read_placement()
+    model = Path(rospkg.RosPack().get_path('gazebo_sim_scout')) / 'urdf/mini.xacro'
+    description = ground_model(row, mode, 'scout_mini', model, 'urdf')['content']
+    with tempfile.NamedTemporaryFile('w', suffix='.launch', prefix='scout-runtime-') as launch:
+        launch.write(launch_document(row, mode, description))
+        launch.flush()
+        child = subprocess.Popen(['roslaunch', '--wait', launch.name])
+        def stop(signum, frame):
+            if child.poll() is None:
+                child.send_signal(signum)
+        signal.signal(signal.SIGINT, stop)
+        signal.signal(signal.SIGTERM, stop)
+        try:
+            return child.wait()
+        finally:
+            if child.poll() is None:
+                child.terminate()
+                child.wait()
+
+
+if __name__ == '__main__':
+    try:
+        sys.exit(main())
+    except Exception as error:
+        sys.exit('start_scout_runtime: ' + ' '.join(str(error).splitlines()))

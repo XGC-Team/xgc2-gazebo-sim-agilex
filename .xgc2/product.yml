@@ -41,6 +41,7 @@ usage:
     '
 ownership:
   paths:
+  - /usr/share/xgc2/process-definitions/scout-gazebo-runtime.json
   - /opt/ros/noetic/share/gazebo_sim_scout
   - /opt/ros/noetic/lib/gazebo_sim_scout
   - /opt/ros/noetic/share/gazebo_sim_scout/plugins/libscout_gazebo.so

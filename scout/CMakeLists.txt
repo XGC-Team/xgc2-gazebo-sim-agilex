@@ -125,6 +125,8 @@ install(
 )
 
 catkin_install_python(PROGRAMS
+  scripts/prepare_scout_robot
+  scripts/start_scout_runtime
   scripts/pointcloud_to_pointcloud2
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )

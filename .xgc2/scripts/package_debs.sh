@@ -133,6 +133,11 @@ build_deb() {
     copy_libs "${pkg_root}" "$@"
   fi
 
+  if [[ "${ros_pkg}" == "gazebo_sim_scout" ]]; then
+    install -D -m 0644 "${REPO_ROOT}/scout/process-definitions/scout-gazebo-runtime.json" \
+      "${pkg_root}/usr/share/xgc2/process-definitions/scout-gazebo-runtime.json"
+  fi
+
   write_control "${pkg_root}" "${package}" "${depends}" "${description}" "${extra_fields}"
   fakeroot dpkg-deb --build "${pkg_root}" "${OUTPUT_DIR}/${package}_${VERSION}_${ARCH}.deb" >/dev/null
 }

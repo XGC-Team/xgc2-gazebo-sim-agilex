@@ -3,6 +3,10 @@ set -euo pipefail
 
 test -x /opt/ros/noetic/lib/xgc2_simple_lidar/launch_robot.py
 
+test -x /opt/ros/noetic/lib/gazebo_sim_scout/prepare_scout_robot
+test -x /opt/ros/noetic/lib/gazebo_sim_scout/start_scout_runtime
+test -f /usr/share/xgc2/process-definitions/scout-gazebo-runtime.json
+
 ROS_DISTRO="${ROS_DISTRO:-noetic}"
 
 source "/opt/ros/${ROS_DISTRO}/setup.bash"
